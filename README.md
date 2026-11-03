@@ -1,0 +1,17 @@
+# HyperSync recipes
+
+Ready-to-run scripts behind Envio's data posts. Each folder reads public onchain data with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview), prints the numbers from the post, and includes a prompt you can hand to a coding agent.
+
+| Recipe | Chain | What it shows |
+|---|---|---|
+| [polymarket-election-day](polymarket-election-day) | Polygon | Polymarket trading by hour on US election day |
+
+## Before you start
+
+Get a HyperSync API token from the [Envio Dashboard](https://envio.dev/app/api-tokens) and export it:
+
+```bash
+export ENVIO_API_TOKEN=your-token
+```
+
+Then follow the README in the recipe's folder.
