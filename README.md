@@ -6,6 +6,11 @@ Ready-to-run scripts behind Envio's data posts. Each folder reads public onchain
 |---|---|---|
 | [polymarket-election-day](polymarket-election-day) | Polygon | Polymarket trading by hour on US election day |
 | [arc-usdc-mint-burn](arc-usdc-mint-burn) | Arc | USDC minted and burned on Arc, and how much went through Circle Gateway and CCTP |
+| [uniswap-robinhood-chain](uniswap-robinhood-chain) | Robinhood Chain | Every Uniswap v2, v3 and v4 swap, milestones and stock tokens traded |
+| [uniswap-volatilepair-robinhood](uniswap-volatilepair-robinhood) | Robinhood Chain | Swaps, USDG volume and LP fees in Uniswap's VolatilePair pool |
+| [ondo-stocks-robinhood](ondo-stocks-robinhood) | Robinhood Chain | Uniswap v4 swaps in Ondo tokenized stock pools, first week |
+| [uni-new-holders](uni-new-holders) | Ethereum | New UNI holders per day since 2020 |
+| [uniswap-v4-hooks-ethereum](uniswap-v4-hooks-ethereum) | Ethereum | Uniswap v4 pools with a hook, month by month |
 
 ## Before you start
 
