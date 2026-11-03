@@ -11,6 +11,7 @@ Ready-to-run scripts behind Envio's data posts. Each folder reads public onchain
 | [ondo-stocks-robinhood](ondo-stocks-robinhood) | Robinhood Chain | Uniswap v4 swaps in Ondo tokenized stock pools, first week |
 | [uni-new-holders](uni-new-holders) | Ethereum | New UNI holders per day since 2020 |
 | [uniswap-v4-hooks-ethereum](uniswap-v4-hooks-ethereum) | Ethereum | Uniswap v4 pools with a hook, month by month |
+| [aave-v4-avalanche](aave-v4-avalanche) | Avalanche | Aave v4 deposits by asset, depositors and the biggest day |
 
 ## Before you start
 
