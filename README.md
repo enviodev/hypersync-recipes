@@ -12,6 +12,10 @@ Ready-to-run scripts behind Envio's data posts. Each folder reads public onchain
 | [uni-new-holders](uni-new-holders) | Ethereum | New UNI holders per day since 2020 |
 | [uniswap-v4-hooks-ethereum](uniswap-v4-hooks-ethereum) | Ethereum | Uniswap v4 pools with a hook, month by month |
 | [aave-v4-avalanche](aave-v4-avalanche) | Avalanche | Aave v4 deposits by asset, depositors and the biggest day |
+| [usdg-on-morpho](usdg-on-morpho) | Robinhood Chain, Arbitrum, Ethereum | Every USDG market on Morpho and how much is supplied to each |
+| [aero-tokenized-stocks-base](aero-tokenized-stocks-base) | Base | Tokenized stock trading on Aero, inside and outside US market hours |
+| [ondo-intelligent-portfolios](ondo-intelligent-portfolios) | Ethereum, BNB Chain | Ondo Intelligent Portfolios supply by portfolio and when it arrived |
+| [usdc-supply-ethereum](usdc-supply-ethereum) | Ethereum | USDC minted and burned on Ethereum per day |
 
 ## Before you start
 
