@@ -62,12 +62,14 @@ height = post("/height")["height"]
 first_block = height - (DAYS + (datetime.datetime.now(datetime.timezone.utc).date() - END).days + 2) * 7200
 
 txs = collections.defaultdict(set)
+wallets = collections.defaultdict(set)
+weekly = collections.defaultdict(lambda: [set(), set()])  # transactions in the first and last 7 days
 addresses = list(tokens)
 for i in range(0, len(addresses), 500):
     chunk = set(addresses[i:i + 500])
     body = {"from_block": first_block, "logs": [{"address": list(chunk), "topics": [[TRANSFER]]}],
             "field_selection": {"block": ["number", "timestamp"],
-                                "log": ["block_number", "address", "topic0", "transaction_hash"]}}
+                                "log": ["block_number", "address", "topic0", "topic1", "topic2", "transaction_hash"]}}
     while True:
         res = post("/query", body)
         for batch in res["data"]:
@@ -77,6 +79,14 @@ for i in range(0, len(addresses), 500):
                 address = log["address"].lower()
                 if address in chunk and log["topic0"] == TRANSFER and start_ts <= ts[log["block_number"]] < end_ts:
                     txs[address].add(log["transaction_hash"])
+                    for topic in (log.get("topic1"), log.get("topic2")):
+                        if topic and int(topic, 16):
+                            wallets[address].add(topic[-40:])
+                    t = ts[log["block_number"]]
+                    if t < start_ts + 7 * 86400:
+                        weekly[address][0].add(log["transaction_hash"])
+                    elif t >= end_ts - 7 * 86400:
+                        weekly[address][1].add(log["transaction_hash"])
         if res["next_block"] >= res["archive_height"]:
             break
         body["from_block"] = res["next_block"]
@@ -88,4 +98,6 @@ print(f"Tokens that moved  {len(txs):,}")
 for address in sorted(txs, key=lambda a: -len(txs[a]))[:10]:
     name, symbol = tokens[address]
     n = len(txs[address])
-    print(f"  {symbol:<9} {name[:28]:<28} {n:>8,}  {n / len(every_tx):6.1%}")
+    first, last = len(weekly[address][0]), len(weekly[address][1])
+    print(f"  {symbol:<9} {name[:28]:<28} {n:>8,}  {n / len(every_tx):6.1%}  "
+          f"{len(wallets[address]):>6,} wallets  first 7 days {first:>6,}  last 7 days {last:>6,}")

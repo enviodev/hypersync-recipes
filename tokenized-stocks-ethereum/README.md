@@ -25,11 +25,11 @@ python script.py 30 2026-11-04
 1843 Ondo and xStocks stock tokens on Ethereum
 Transactions with a stock token transfer, 05 Oct to 03 Nov UTC  173,408
 Tokens that moved  1,680
-  SPCXon    SpaceX                         51,705   29.8%
-  NVDAon    NVIDIA                         16,983    9.8%
-  TSLAon    Tesla                          16,159    9.3%
-  SPYon     SPDR S&P 500 ETF               10,286    5.9%
-  STRCx     Strategy PP Variable            7,569    4.4%
+  SPCXon    SpaceX                         51,705   29.8%   3,567 wallets  first 7 days 23,164  last 7 days  4,068
+  NVDAon    NVIDIA                         16,983    9.8%   2,205 wallets  first 7 days  8,222  last 7 days  1,689
+  TSLAon    Tesla                          16,159    9.3%   1,650 wallets  first 7 days  2,529  last 7 days  2,155
+  SPYon     SPDR S&P 500 ETF               10,286    5.9%   3,727 wallets  first 7 days  6,914  last 7 days    462
+  STRCx     Strategy PP Variable            7,569    4.4%   2,155 wallets  first 7 days  1,194  last 7 days  2,794
   ...
 ```
 
