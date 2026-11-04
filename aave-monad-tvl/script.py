@@ -50,7 +50,8 @@ def price(asset):
     # AaveOracle.getAssetPrice(asset), USD with 8 decimals
     body = {"jsonrpc": "2.0", "id": 1, "method": "eth_call",
             "params": [{"to": ORACLE, "data": "0xb3596f07" + asset[2:].rjust(64, "0")}, "latest"]}
-    req = urllib.request.Request(RPC, data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+    req = urllib.request.Request(RPC, data=json.dumps(body).encode(),
+                                 headers={"Content-Type": "application/json", "User-Agent": "Mozilla/5.0"})
     return int(json.load(urllib.request.urlopen(req, timeout=60))["result"], 16) / 1e8
 
 
