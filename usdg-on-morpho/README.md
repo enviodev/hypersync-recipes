@@ -16,18 +16,18 @@ python script.py
 ## What it prints
 
 ```
-Robinhood Chain   371 USDG markets  $514.3M supplied
+Robinhood Chain   371 USDG markets  $516.7M supplied
 Arbitrum            8 USDG markets  $143.2M supplied
 Ethereum            3 USDG markets  $0.0M supplied
 
-USDG supplied on Morpho: $657.5M
-  $  345.7M  Robinhood Chain  USDe collateral  (53%)
-  $  143.2M  Arbitrum         syrupUSDG collateral  (22%)
-  $  100.6M  Robinhood Chain  syrupUSDG collateral  (15%)
+USDG supplied on Morpho: $659.9M, of which $593.2M is borrowed (90%)
+  $  348.0M supplied  $  311.0M borrowed  Robinhood Chain  USDe collateral  (53%)
+  $  143.2M supplied  $  130.2M borrowed  Arbitrum         syrupUSDG collateral  (22%)
+  $  100.6M supplied  $   90.6M borrowed  Robinhood Chain  syrupUSDG collateral  (15%)
   ...
 ```
 
-The numbers move as people supply and withdraw, so yours will differ a little.
+The numbers move as people supply, borrow and repay, so yours will differ a little.
 
 ## How it counts
 

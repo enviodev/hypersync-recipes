@@ -1,6 +1,6 @@
 # USDG on Morpho: every market that lends Paxos USDG, and how much USDG each one holds.
 # Finds the markets with Envio HyperSync (every Morpho CreateMarket event whose loan token is USDG),
-# then reads each market's current totalSupplyAssets from the chain's public RPC.
+# then reads each market's current totalSupplyAssets and totalBorrowAssets from the chain's public RPC.
 # Python 3 standard library only. Set ENVIO_API_TOKEN first.
 import json
 import os
@@ -70,13 +70,16 @@ for chain, c in CHAINS.items():
         body["from_block"] = res["next_block"]
     chain_total = 0
     for market_id, collateral in markets:
-        supplied = int(call(c["rpc"], c["morpho"], MARKET + market_id[2:])[2:66] or "0", 16) / 1e6
+        state = call(c["rpc"], c["morpho"], MARKET + market_id[2:])[2:]
+        supplied = int(state[0:64] or "0", 16) / 1e6    # totalSupplyAssets, USDG has 6 decimals
+        borrowed = int(state[128:192] or "0", 16) / 1e6  # totalBorrowAssets
         if supplied >= 1:
             chain_total += supplied
-            rows.append((supplied, chain, symbol(c["rpc"], collateral) if int(collateral, 16) else "none"))
+            rows.append((supplied, borrowed, chain, symbol(c["rpc"], collateral) if int(collateral, 16) else "none"))
     total += chain_total
     print(f"{chain:16} {len(markets):>4} USDG markets  ${chain_total / 1e6:,.1f}M supplied")
 
-print(f"\nUSDG supplied on Morpho: ${total / 1e6:,.1f}M")
-for supplied, chain, collateral in sorted(rows, reverse=True)[:8]:
-    print(f"  ${supplied / 1e6:>7,.1f}M  {chain:16} {collateral} collateral  ({supplied / total:.0%})")
+borrowed_total = sum(r[1] for r in rows)
+print(f"\nUSDG supplied on Morpho: ${total / 1e6:,.1f}M, of which ${borrowed_total / 1e6:,.1f}M is borrowed ({borrowed_total / total:.0%})")
+for supplied, borrowed, chain, collateral in sorted(rows, reverse=True)[:8]:
+    print(f"  ${supplied / 1e6:>7,.1f}M supplied  ${borrowed / 1e6:>7,.1f}M borrowed  {chain:16} {collateral} collateral  ({supplied / total:.0%})")
