@@ -1,6 +1,6 @@
 # Coinbase tokenized stocks on Aero (Base)
 
-Finds every Aero pool on Base that holds a Coinbase tokenized stock, then reads every swap in those pools with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview). It prints the USDC-paired volume per stock and how much of it traded while US stock markets were closed.
+Finds every Aero pool on Base that holds a Coinbase tokenized stock, then reads every swap in those pools with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview). It prints the USDC-paired volume per stock and how much of it traded while US stock markets were closed and at the weekend.
 
 These are the numbers behind Envio's post on tokenized stock trading on Aero.
 
@@ -23,11 +23,12 @@ python script.py 7 2026-11-04T09:40:09
 
 ```
 Coinbase tokenized stocks on Aero (Base), 28 Oct 09:40 UTC to 04 Nov 09:40 UTC
-Pools holding a stock: 1,997
-USDC-paired volume: $780.3M, 77.5% while US markets were closed
-  MSTRc    $  135.7M   70.5% closed
-  SNDKc    $  131.8M   79.4% closed
-  METAc    $   76.6M   79.6% closed
+Pools holding a stock: 1,999
+USDC-paired volume: $780.8M across 774,920 swaps, 77.5% while US markets were closed
+Saturday and Sunday (ET): $192.3M
+  MSTRc    $  135.8M   70.5% closed  $  36.6M at the weekend
+  SNDKc    $  131.9M   79.5% closed  $  31.4M at the weekend
+  METAc    $   76.6M   79.7% closed  $  14.7M at the weekend
   ...
 ```
 

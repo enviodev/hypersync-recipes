@@ -78,6 +78,12 @@ def logs(body, check):
         body["from_block"] = res["next_block"]
 
 
+def et_time(ts):
+    # US Eastern time. Uses EDT before 1st Nov 2026 and EST after.
+    offset = 4 if ts < 1793512800 else 5
+    return datetime.datetime.fromtimestamp(ts - offset * 3600, datetime.timezone.utc)
+
+
 def market_open(ts):
     # US regular hours, 9:30am to 4pm ET on weekdays. Uses EDT before 1st Nov 2026 and EST after.
     offset = 4 if ts < 1793512800 else 5
@@ -112,7 +118,8 @@ end = END or block_time(height - 1)
 start = end - DAYS * 86400
 b0 = first_block_after(start, height - 50 * 43200 * DAYS // 7 - 1, height - 1)
 b1 = first_block_after(end + 1, b0, height)
-volume, closed = Counter(), Counter()
+volume, closed, weekend = Counter(), Counter(), Counter()
+swaps = 0
 body = {"from_block": b0, "to_block": b1, "logs": [{"address": sorted(pools), "topics": [[SWAP_V2, SWAP_CL]]}],
         "field_selection": {"block": ["number", "timestamp"], "log": ["address", "topic0", "data", "block_number"]}}
 for log, ts in logs(body, lambda l: l["address"].lower() in pools):
@@ -128,6 +135,9 @@ for log, ts in logs(body, lambda l: l["address"].lower() in pools):
         usd = (words[i] + words[i + 2]) / 1e6
     sym = stocks[b if a == USDC else a]
     volume[sym] += usd
+    swaps += 1
+    if et_time(ts).weekday() >= 5:
+        weekend[sym] += usd
     if not market_open(ts):
         closed[sym] += usd
 
@@ -135,6 +145,7 @@ total, shut = sum(volume.values()), sum(closed.values())
 fmt = lambda t: datetime.datetime.fromtimestamp(t, datetime.timezone.utc).strftime("%d %b %H:%M UTC")
 print(f"Coinbase tokenized stocks on Aero (Base), {fmt(start)} to {fmt(end)}")
 print(f"Pools holding a stock: {len(pools):,}")
-print(f"USDC-paired volume: ${total / 1e6:,.1f}M, {100 * shut / total:.1f}% while US markets were closed")
+print(f"USDC-paired volume: ${total / 1e6:,.1f}M across {swaps:,} swaps, {100 * shut / total:.1f}% while US markets were closed")
+print(f"Saturday and Sunday (ET): ${sum(weekend.values()) / 1e6:,.1f}M")
 for sym, v in volume.most_common(8):
-    print(f"  {sym:8} ${v / 1e6:7,.1f}M  {100 * closed[sym] / v:5.1f}% closed")
+    print(f"  {sym:8} ${v / 1e6:7,.1f}M  {100 * closed[sym] / v:5.1f}% closed  ${weekend[sym] / 1e6:6,.1f}M at the weekend")
