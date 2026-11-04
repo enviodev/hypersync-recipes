@@ -16,6 +16,9 @@ Ready-to-run scripts behind Envio's data posts. Each folder reads public onchain
 | [aero-tokenized-stocks-base](aero-tokenized-stocks-base) | Base | Tokenized stock trading on Aero, inside and outside US market hours |
 | [ondo-intelligent-portfolios](ondo-intelligent-portfolios) | Ethereum, BNB Chain | Ondo Intelligent Portfolios supply by portfolio and when it arrived |
 | [usdc-supply-ethereum](usdc-supply-ethereum) | Ethereum | USDC minted and burned on Ethereum per day |
+| [aave-monad-tvl](aave-monad-tvl) | Monad | What makes up the assets held in Aave's Monad pools |
+| [tokenized-stocks-ethereum](tokenized-stocks-ethereum) | Ethereum | Which Ondo and xStocks stock tokens move the most on Ethereum |
+| [tokenized-treasuries-solana](tokenized-treasuries-solana) | Solana | Supply of the five biggest tokenized Treasury funds, day by day |
 
 ## Before you start
 
