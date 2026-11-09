@@ -41,3 +41,9 @@ followed by USDC's supply at the end of each UTC day.
 ## Checked against RPC
 
 At block 30,336,095, `totalSupply()` from `https://rpc.mainnet.arc.io` returns 1,287,478,957.572406 USDC and 8,918,370.632218 EURC. Both match the script to the last unit. USDC also matches at blocks 25,000,000 and 30,000,000.
+
+## Learn more
+
+- [Arc on Envio](https://envio.dev/chains/arc): HyperSync and HyperIndex support for Arc
+- [Index Arc with HyperIndex](https://docs.envio.dev/docs/HyperIndex/arc-testnet): build a full indexer and GraphQL API for Arc contracts
+- [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview): how the queries in this script work
