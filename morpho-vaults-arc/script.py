@@ -29,6 +29,7 @@ WITHDRAW = "0xfbde797d201c681b91056529119e0b02407c7bb96a4a2c75c01fc9667232c8db" 
 CREATE_MARKET = "0xac4b2400f169220b0c0afdde7a0b32e775ba727ea1cb30b35f935cdaab8683ac"
 BORROW = "0x570954540bed6b1304a87dfe815a5eda4a648f7097a16240dcd85c9b5fd42a43"        # Borrow(id, caller, onBehalf, receiver, assets, shares)
 REPAY = "0x52acb05cebbd3cd39715469f22afbf5a17496295ef3bc9bb5944056c63ccaa09"         # Repay(id, caller, onBehalf, assets, shares)
+SUPPLY = "0xedf8870433c83823eb071d3df1caa8d008f12f6440918c20d75a3602cda30fe0"        # Supply(id, caller, onBehalf, assets, shares)
 
 
 def post(url, body, headers):
@@ -151,7 +152,7 @@ def main():
             print(f"    {d}  {daily[d]:>+15,.0f}  ->  ${running:>14,.0f}")
 
     # what the vault USDC is lent against: Morpho Blue USDC/cirBTC markets
-    events, _ = logs([MORPHO], [CREATE_MARKET, BORROW, REPAY], height)
+    events, _ = logs([MORPHO], [CREATE_MARKET, SUPPLY, BORROW, REPAY], height)
     markets = {l["topic1"] for l in events if l["topic0"] == CREATE_MARKET
                and addr(l["data"][2:66]) == USDC and addr(l["data"][66:130]) == CIRBTC}
     principal = collections.Counter()
@@ -167,14 +168,32 @@ def main():
             principal[addr(l["topic3"])] -= word(l["data"], 0) / 1e6
     owed = 0
     supplied = 0
+    market_state = {}
     for m in markets:
         raw = eth_call(MORPHO, "0x5c60e39a" + m[2:], height)
+        market_state[m] = (word(raw, 0), word(raw, 1))  # totalSupplyAssets, totalSupplyShares
         supplied += word(raw, 0) / 1e6
         owed += word(raw, 2) / 1e6
+
+    # how much of the vault USDC sits in the cirBTC markets: vaults supply to Morpho
+    # through adapter contracts, and each adapter reports its vault with parentVault()
+    suppliers = {(addr(l["topic3"]), l["topic1"]) for l in events if l["topic0"] == SUPPLY and l["topic1"] in markets}
+    in_cirbtc = collections.Counter()
+    for who, m in suppliers:
+        parent = eth_call(who, "0x0fe36536", height)
+        if len(parent) < 66 or addr(parent[:66]) not in total_assets:
+            continue
+        pos = eth_call(MORPHO, "0x93c52062" + m[2:] + who[2:].rjust(64, "0"), height)
+        assets, shares = market_state[m]
+        if shares:
+            in_cirbtc[addr(parent[:66])] += word(pos, 0) * assets / shares / 1e6
+    vault_total = sum(total_assets.values())
     print("\nUSDC lent against cirBTC on Morpho on Arc")
     print(f"  {len(markets)} USDC/cirBTC markets, {len(borrowers):,} wallets have borrowed")
     print(f"  principal outstanding from events: ${sum(x for x in principal.values() if x > 0):,.0f}")
     print(f"  owed now, totalBorrowAssets over RPC: ${owed:,.0f} of ${supplied:,.0f} supplied ({owed / supplied:.0%} lent out)")
+    print(f"  vault USDC supplied to the USDC/cirBTC markets: ${sum(in_cirbtc.values()):,.0f} "
+          f"({sum(in_cirbtc.values()) / vault_total:.0%} of the ${vault_total:,.0f} in the vaults)")
 
 
 if __name__ == "__main__":

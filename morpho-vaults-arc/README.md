@@ -1,6 +1,6 @@
 # Morpho vaults on Arc
 
-Morpho vaults on Arc, Circle's L1, hold about $161M of USDC, and most of it is lent out against cirBTC, Circle's wrapped bitcoin. This script reads every vault created by Morpho's vault factory on Arc, every deposit and withdrawal in those vaults, and every borrow and repay in the USDC/cirBTC markets on Morpho, all with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview). It then checks the vault totals against each vault's own `totalAssets()` over RPC.
+Morpho vaults on Arc, Circle's L1, hold about $161M of USDC, and 93% of it is lent to Morpho markets backed by cirBTC, Circle's wrapped bitcoin. This script reads every vault created by Morpho's vault factory on Arc, every deposit and withdrawal in those vaults, and every supply, borrow and repay in the USDC/cirBTC markets on Morpho, all with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview). It then checks the vault totals against each vault's own `totalAssets()` over RPC.
 
 These are the numbers behind Envio's post on Morpho vaults on Arc.
 
@@ -19,7 +19,7 @@ Add an Arc block number to rerun a past snapshot exactly. The post used block 30
 python script.py 30581168
 ```
 
-A full run takes a minute or two. Most of that is the RPC calls at the end.
+A full run takes a few minutes. Most of that is the RPC calls at the end.
 
 ## What it prints
 
@@ -43,6 +43,7 @@ USDC lent against cirBTC on Morpho on Arc
   2 USDC/cirBTC markets, 328 wallets have borrowed
   principal outstanding from events: $158,612,960
   owed now, totalBorrowAssets over RPC: $159,131,727 of $174,867,277 supplied (91% lent out)
+  vault USDC supplied to the USDC/cirBTC markets: $149,788,684 (93% of the $161,415,356 in the vaults)
 ```
 
 The numbers move as people deposit, borrow and repay, so a run without a block number will differ a little.
@@ -54,6 +55,7 @@ The numbers move as people deposit, borrow and repay, so a run without a block n
 - Each HyperSync query asks for one set of contracts and event signatures, and the script keeps only logs whose address and topic0 both match.
 - A depositor is any `onBehalf` address in a vault `Deposit` event. Vault totals are deposits minus withdrawals. The RPC `totalAssets()` figure is a little higher because it includes the interest the vaults have earned.
 - The cirBTC side covers the two USDC/cirBTC markets, both with an 86% LLTV. "Principal outstanding" is borrows minus repays from events. "Owed now" is each market's `totalBorrowAssets` over RPC, so it includes interest. The two agree to within about $0.5M.
+- Vaults lend to Morpho markets through adapter contracts. The script finds every address that supplied to the USDC/cirBTC markets, keeps the ones whose `parentVault()` is one of the USDC vaults, and reads each one's `position()` on Morpho to get the USDC it has supplied now. The rest of the vault USDC sits in other markets or in the vaults themselves.
 - Only USDC vaults are summed. Arc also has smaller vaults in EURC, MXNB, GBPA and wARS.
 
 ## Learn more
