@@ -41,7 +41,7 @@ Busiest stock tokens while the market is closed (volume in pools holding the tok
   ...
 ```
 
-"Swaps read" includes the ETH/USDG swaps used to price ETH. "night" is any weekday time outside 9:30 to 16:00, so it includes the early morning before the open. There were no NYSE holidays in this window; Labor Day (7th Sep) falls in a window that starts in August. The market is open for 32.5 of the week's 168 hours, about 19%, so 39% of the volume in that time still makes the regular session the busiest stretch. The single busiest half hour is 9:30 to 10:00.
+"Swaps read" includes the ETH/USDG swaps used to price ETH. "night" is any weekday time outside 9:30 to 16:00, so it includes the early morning before the open. There were no NYSE holidays in this window; Labor Day (7th Sep) falls in a window that starts in August. The market is open for 32.5 of the week's 168 hours, about 19%, so 39% of the volume in that time still makes the regular session the busiest stretch. The half hour from 9:30 to 10:00, summed over the weekdays in the window, is busier than any full hour of the day.
 
 The pull takes about 30 minutes for 30 days of swaps.
 
