@@ -1,0 +1,104 @@
+# yaml-language-server: $schema=./node_modules/envio/svm.schema.json
+name: solana-dex-swaps-by-program
+description: Daily swap counts by Solana DEX program (Raydium, Orca, Meteora, Pump.fun) plus Jupiter routes.
+ecosystem: svm
+chains:
+  - id: solana
+    # One UTC day, 9 Nov 2026. Change both to index another window.
+    start_slot: 467108373
+    end_slot: 467510826
+# Every program and discriminator below comes from the project's own repo or
+# published IDL. Only swap instructions are listed: liquidity, fee, position
+# and event-CPI (e445a52e51cb9a1d) instructions never match, so never count.
+programs:
+  - name: RaydiumAmmV4
+    program_id: 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8
+    # Not Anchor: a one-byte tag (raydium-amm program/src/instruction.rs).
+    instructions:
+      - { name: swapBaseIn, discriminator: "0x09" }
+      - { name: swapBaseOut, discriminator: "0x0b" }
+      - { name: swapBaseInV2, discriminator: "0x10" }
+      - { name: swapBaseOutV2, discriminator: "0x11" }
+  - name: RaydiumClmm
+    program_id: CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK
+    instructions:
+      - { name: swap, discriminator: "0xf8c69e91e17587c8" }
+      - { name: swapV2, discriminator: "0x2b04ed0b1ac91e62" }
+      - { name: swapRouterBaseIn, discriminator: "0x457d73daf5baf2c4" }
+  - name: RaydiumCpmm
+    program_id: CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C
+    instructions:
+      - { name: swapBaseInput, discriminator: "0x8fbe5adac41e33de" }
+      - { name: swapBaseOutput, discriminator: "0x37d96256a34ab4ad" }
+  - name: RaydiumLaunchLab
+    program_id: LanMV9sAd7wArD4vJFi2qDdfnVhFxYSUg6eADduJ3uj
+    instructions:
+      - { name: buyExactIn, discriminator: "0xfaea0d7bd59c13ec" }
+      - { name: buyExactOut, discriminator: "0x18d3742869039938" }
+      - { name: sellExactIn, discriminator: "0x9527de9bd37c981a" }
+      - { name: sellExactOut, discriminator: "0x5fc8472208090ba6" }
+  - name: OrcaWhirlpool
+    program_id: whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc
+    instructions:
+      - { name: swap, discriminator: "0xf8c69e91e17587c8" }
+      - { name: swapV2, discriminator: "0x2b04ed0b1ac91e62" }
+      - { name: twoHopSwap, discriminator: "0xc360ed6c44a2dbe6" }
+      - { name: twoHopSwapV2, discriminator: "0xba8fd11dfe02c275" }
+  - name: MeteoraDlmm
+    program_id: LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo
+    instructions:
+      - { name: swap, discriminator: "0xf8c69e91e17587c8" }
+      - { name: swap2, discriminator: "0x414b3f4ceb5b5b88" }
+      - { name: swapExactOut, discriminator: "0xfa49652126cf4bb8" }
+      - { name: swapExactOut2, discriminator: "0x2bd7f784893cf351" }
+      - { name: swapWithPriceImpact, discriminator: "0x38ade6d0ade49ccd" }
+      - { name: swapWithPriceImpact2, discriminator: "0x4a62c0d6b1334b33" }
+  - name: MeteoraDammV1
+    program_id: Eo7WjKq67rjJQSZxS6z3YkapzY3eMj6Xy8X5EQVn5UaB
+    instructions:
+      - { name: swap, discriminator: "0xf8c69e91e17587c8" }
+  - name: MeteoraDammV2
+    program_id: cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG
+    instructions:
+      - { name: swap, discriminator: "0xf8c69e91e17587c8" }
+      - { name: swap2, discriminator: "0x414b3f4ceb5b5b88" }
+  - name: PumpSwap
+    program_id: pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA
+    instructions:
+      - { name: buy, discriminator: "0x66063d1201daebea" }
+      - { name: sell, discriminator: "0x33e685a4017f83ad" }
+      - { name: buyExactQuoteIn, discriminator: "0xc62e1552b4d9e870" }
+      - { name: buyV2, discriminator: "0xb817ee6167c5d33d" }
+      - { name: sellV2, discriminator: "0x5df6823ce7e940b2" }
+      - { name: buyExactQuoteInV2, discriminator: "0xc2ab1c46684d5b2f" }
+      - { name: multiHopSwap, discriminator: "0x2b644913e9f66f94" }
+  - name: PumpCurve
+    program_id: 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P
+    instructions:
+      - { name: buy, discriminator: "0x66063d1201daebea" }
+      - { name: sell, discriminator: "0x33e685a4017f83ad" }
+      - { name: buyExactSolIn, discriminator: "0x38fc74089edfcd5f" }
+      - { name: buyV2, discriminator: "0xb817ee6167c5d33d" }
+      - { name: sellV2, discriminator: "0x5df6823ce7e940b2" }
+      - { name: buyExactQuoteInV2, discriminator: "0xc2ab1c46684d5b2f" }
+      - { name: buyV3, discriminator: "0x07051dc4f5176550" }
+      - { name: sellV3, discriminator: "0x1c92de7726c469d5" }
+      - { name: buyExactQuoteInV3, discriminator: "0xe1f7501ed5b38488" }
+      - { name: multiHopCurveSwap, discriminator: "0xe19a7516d756f667" }
+  # Jupiter routes are counted on their own: the pool swaps they trigger are
+  # already counted under each venue above.
+  - name: Jupiter
+    program_id: JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4
+    instructions:
+      - { name: route, discriminator: "0xe517cb977ae3ad2a" }
+      - { name: routeV2, discriminator: "0xbb64facc31c4af14" }
+      - { name: routeWithTokenLedger, discriminator: "0x96564774a75d0e68" }
+      - { name: sharedAccountsRoute, discriminator: "0xc1209b3341d69c81" }
+      - { name: sharedAccountsRouteV2, discriminator: "0xd19853937cfed8e9" }
+      - { name: sharedAccountsRouteWithTokenLedger, discriminator: "0xe6798f50779f6aaa" }
+      - { name: exactOutRoute, discriminator: "0xd033ef977b2bed5c" }
+      - { name: exactOutRouteV2, discriminator: "0x9d8ab85215f4f324" }
+      - { name: sharedAccountsExactOutRoute, discriminator: "0xb0d169a89a7d453e" }
+      - { name: sharedAccountsExactOutRouteV2, discriminator: "0x3560e5cad8bbfa18" }
+      - { name: routeWithAttestation, discriminator: "0xa0752c34dc4d5140" }
+      - { name: sharedAccountsRouteWithAttestation, discriminator: "0x252ef97ec9a238ca" }

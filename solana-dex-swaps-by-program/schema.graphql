@@ -1,0 +1,17 @@
+"""
+Swaps on one DEX program on one UTC day. Successful transactions only (HyperSync
+does not serve instructions of failed transactions).
+"""
+type DailyVenueSwaps {
+  "`<YYYY-MM-DD>-<program>`"
+  id: ID!
+  day: String! @index
+  "The program name from config.yaml, e.g. PumpSwap or Jupiter."
+  program: String! @index
+  "Every matched swap instruction, top-level or called by another program."
+  swaps: Int!
+  "Swaps sent straight to the DEX as a top-level instruction."
+  topLevel: Int!
+  "Swaps another program invoked by CPI: aggregators, bots and other routers."
+  inner: Int!
+}
