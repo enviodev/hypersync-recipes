@@ -18,18 +18,22 @@ It reads every swap since July in 48 block ranges, 16 at a time, and takes about
 ## What it prints
 
 ```
-PancakeSwap on Robinhood, blocks up to 111,812,059, first swap 2026-07-01
-912,495 swaps in 899,735 transactions from 68,685 wallets
-15,653 wallets (22.8%) traded a Robinhood Stock Token in 182,341 transactions
+PancakeSwap on Robinhood, blocks up to the chain head, first swap 2026-07-01
+914,111 swaps in 901,344 transactions from 68,726 wallets
+15,673 wallets (22.8%) traded a Robinhood Stock Token in 183,369 transactions
 Most traded stock tokens by wallets:
-  NVDA     8,167 wallets
+  NVDA     8,186 wallets
   QQQ      6,305 wallets
   AAPL     2,085 wallets
-  SPCX       810 wallets
+  SPCX       811 wallets
   SPY         89 wallets
+When stock token wallets traded (New York time):
+  only while US markets were closed   9,634 (61.5%)
+  both                                2,378 (15.2%)
+  only during market hours            3,661 (23.4%)
 ```
 
-That run was on 11th Nov 2026, at about 16:00 UTC.
+That run was on 11th Nov 2026, at about 17:50 UTC.
 
 ## How it counts
 
@@ -38,6 +42,7 @@ That run was on 11th Nov 2026, at about 16:00 UTC.
 - Swaps are the v3 pools' `Swap` events and the CLPoolManager's `Swap` events. HyperSync's default join returns each swap with its block and transaction. Only logs whose address and topic0 match a PancakeSwap pool and the swap event are kept.
 - A wallet is the address that sent the swap transaction.
 - The 203 Robinhood Stock Tokens come from Robinhood's asset API, `GET https://api.robinhood.com/rhj/assets`, documented on the [Stock Token APIs page](https://docs.robinhood.com/chain/stock-token-apis/). A swap counts as a stock token trade when its pool holds a stock token on either side.
+- US market hours are 9:30am to 4pm New York time on weekdays. Nights, weekends and the two NYSE holidays in the window (3 July and 7 September 2026) count as closed. A wallet is "only while closed" if every stock token trade it sent landed outside market hours.
 - A few automated wallets send a large share of transactions, so the post counts wallets, not transactions.
 - Checked against Robinhood's public RPC: `eth_getLogs` on six sample block windows returned the same 166 swap logs as HyperSync, and 25 random transactions had the same sender over `eth_getTransactionByHash`.
 

@@ -4,6 +4,7 @@ Reads every PancakeSwap v3 and Infinity CL swap on Robinhood (chain 4663) with E
 counts unique wallets (transaction senders), and splits out swaps in pools that hold a stock token.
 """
 import json, os, sys, time, urllib.request, urllib.error, collections, datetime
+from zoneinfo import ZoneInfo
 from concurrent.futures import ThreadPoolExecutor
 
 URL = "https://robinhood.hypersync.xyz"
@@ -93,6 +94,24 @@ def main():
     print("Most traded stock tokens by wallets:")
     for s, w in sorted(per_token.items(), key=lambda kv: -len(kv[1]))[:5]:
         print(f"  {s:6} {len(w):>7,} wallets")
+
+    # When stock token traders trade, in New York time. US market hours are 9:30am to 4pm on weekdays;
+    # NYSE holidays in the window (3 Jul, 7 Sep 2026) count as closed.
+    ny, holidays = ZoneInfo("America/New_York"), {datetime.date(2026, 7, 3), datetime.date(2026, 9, 7)}
+    def market_open(t):
+        d = datetime.datetime.fromtimestamp(t, ny)
+        return d.weekday() < 5 and d.date() not in holidays and 570 <= d.hour * 60 + d.minute < 960
+    when = collections.defaultdict(set)
+    for h in stock_txs:
+        t, sender = txs[h]
+        when[sender].add(market_open(t))
+    closed_only = sum(1 for v in when.values() if v == {False})
+    open_only = sum(1 for v in when.values() if v == {True})
+    both = len(when) - closed_only - open_only
+    print("When stock token wallets traded (New York time):")
+    print(f"  only while US markets were closed {closed_only:>7,} ({100*closed_only/len(when):.1f}%)")
+    print(f"  both                              {both:>7,} ({100*both/len(when):.1f}%)")
+    print(f"  only during market hours          {open_only:>7,} ({100*open_only/len(when):.1f}%)")
 
 if __name__ == "__main__":
     main()
