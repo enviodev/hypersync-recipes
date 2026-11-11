@@ -119,5 +119,10 @@ print("\nRecord full month: %s with %s Safes" % (best, format(full[best], ",")))
 for y in sorted({m[:4] for m in total})[-3:]:
     print("Created in %s: %s" % (y, format(sum(v for m, v in total.items() if m.startswith(y)), ",")))
 
+year = now.strftime("%Y")
+print("\nCreated in %s by chain" % year)
+for chain, c in sorted(per_chain.items(), key=lambda kv: -sum(v for m, v in kv[1].items() if m.startswith(year))):
+    print("  %-10s %12s" % (CHAINS[chain], format(sum(v for m, v in c.items() if m.startswith(year)), ",")))
+
 json.dump({"chains": {CHAINS[c]: dict(sorted(v.items())) for c, v in per_chain.items()}, "as_of": now.isoformat()},
           open("safes_by_month.json", "w"), indent=1)
