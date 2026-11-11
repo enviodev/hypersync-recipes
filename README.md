@@ -23,6 +23,7 @@ Ready-to-run scripts behind Envio's data posts. Each folder reads public onchain
 | [tokenized-treasuries-solana](tokenized-treasuries-solana) | Solana | Supply of the five biggest tokenized Treasury funds, day by day |
 | [privacy-rings-solana](privacy-rings-solana) | Solana | A HyperIndex indexer for Helius Privacy Rings: registrations, deposits, withdrawals and private transfers, live |
 | [solana-subscriptions](solana-subscriptions) | Solana | A HyperIndex indexer for Solana Subscriptions: subscriptions, plan pulls and allowance pulls, with Helius's USDC pulled since launch |
+| [safe-growth](safe-growth) | Ethereum, Base, Optimism, Polygon, Arbitrum, BNB Chain, Gnosis and 7 more | Every Safe created from Safe's 1.3.0, 1.4.1 and 1.5.0 factories, by month and by chain |
 
 ## Before you start
 
