@@ -1,0 +1,47 @@
+# yaml-language-server: $schema=./node_modules/envio/svm.schema.json
+name: privacy-rings-indexer
+description: Helius Privacy Rings on Solana mainnet - registrations, deposits, withdrawals and private transfers, indexed at the instruction level.
+ecosystem: svm
+chains:
+  - id: solana
+    # First mainnet activity on either program (27 Oct 2026). Use `latest` to start at the head.
+    start_slot: 462230000
+programs:
+  # Privacy Rings ships Pinocchio programs with no Anchor/Codama IDL. Each instruction is
+  # selected by its 1-byte tag from Helius's interface crates:
+  # https://github.com/helius-labs/privacy-rings/blob/main/program-libs/event/src/tag.rs
+  - name: ShieldedPool
+    program_id: ring1GaLCuJnkUMVkX2JeZLTTX17wKsV4fZmPVzXANW
+    instructions:
+      # Proofless public deposit into the default ring.
+      - name: deposit
+        discriminator: "0x0f"
+        accounts: [tree, depositor]
+      # Proven transactions. Public deposit/withdrawal legs ride along as
+      # `interface_transfers`; with none, it is a fully private transfer.
+      - name: transact
+        discriminator: "0x10"
+        accounts: [payer, outputTree]
+      - name: mergeTransact
+        discriminator: "0x11"
+      - name: ringDeposit
+        discriminator: "0x12"
+        accounts: [tree, depositor]
+      - name: ringTransact
+        discriminator: "0x13"
+      - name: ringMergeTransact
+        discriminator: "0x14"
+      - name: ringAuthorityTransact
+        discriminator: "0x15"
+  # https://github.com/helius-labs/privacy-rings/blob/main/program-libs/user-registry-interface/src/instruction.rs
+  - name: UserRegistry
+    program_id: regy3WAeRXMYuMYxr5iK3Bf9Arr3PcxGxyzAddbiqDQ
+    instructions:
+      - name: register
+        discriminator: "0x00"
+        accounts: [userRecord, owner, payer, systemProgram]
+        args:
+          - name: nullifierPubkey
+            type: { array: [u8, 32] }
+          - name: viewingPubkey
+            type: { array: [u8, 33] }

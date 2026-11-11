@@ -1,0 +1,33 @@
+"One shielded-pool instruction. Amounts are left out on purpose: the indexer counts activity."
+type PoolAction {
+  id: ID!
+  "Deposit, Withdrawal, PrivateTransfer or Merge"
+  kind: String!
+  instruction: String!
+  "Public deposit and withdrawal legs carried by a proven transaction"
+  depositLegs: Int!
+  withdrawalLegs: Int!
+  isInner: Boolean!
+  txSignature: String!
+  slot: Int!
+  timestamp: Int!
+}
+
+type Registration {
+  id: ID!
+  userRecord: String!
+  txSignature: String!
+  slot: Int!
+  timestamp: Int!
+}
+
+"Running totals, one row with id `mainnet`"
+type Totals {
+  id: ID!
+  registrations: Int!
+  deposits: Int!
+  withdrawals: Int!
+  privateTransfers: Int!
+  merges: Int!
+  lastSlot: Int!
+}
