@@ -22,6 +22,7 @@ Ready-to-run scripts behind Envio's data posts. Each folder reads public onchain
 | [tokenized-stocks-ethereum](tokenized-stocks-ethereum) | Ethereum | Which Ondo and xStocks stock tokens move the most on Ethereum |
 | [tokenized-treasuries-solana](tokenized-treasuries-solana) | Solana | Supply of the five biggest tokenized Treasury funds, day by day |
 | [privacy-rings-solana](privacy-rings-solana) | Solana | A HyperIndex indexer for Helius Privacy Rings: registrations, deposits, withdrawals and private transfers, live |
+| [solana-subscriptions](solana-subscriptions) | Solana | A HyperIndex indexer for Solana Subscriptions: subscriptions, plan pulls and allowance pulls, with Helius's USDC pulled since launch |
 
 ## Before you start
 

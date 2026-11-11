@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=./node_modules/envio/svm.schema.json
+name: solana-subscriptions-indexer
+description: Solana's Subscriptions and Allowances program on mainnet - plans, subscriptions, and every pull a merchant or delegatee makes, indexed from the program's Codama IDL.
+ecosystem: svm
+chains:
+  - id: solana
+    # The program's first mainnet transaction is in slot 416951425 (1 May 2026).
+    start_slot: 416950000
+programs:
+  # Solana Foundation reference program: https://github.com/solana-program/subscriptions
+  # The Codama IDL is copied unchanged from idl/subscriptions.json in that repo.
+  - name: Subscriptions
+    program_id: De1egAFMkMWZSN5rYXRj9CAdheBamobVNubTsi9avR44
+    idl: ./idls/subscriptions.json
+    instructions:
+      # codegen skips createPlan: its 128-byte metadataUri is a Codama fixedSizeTypeNode.
+      # Re-declaring the row with the same Borsh layout brings it back.
+      - name: createPlan
+        discriminator: "0x07"
+        accounts: [merchant, planPda, tokenMint, systemProgram, tokenProgram, payer]
+        args:
+          - { name: planId, type: u64 }
+          - { name: mint, type: pubkey }
+          - { name: amount, type: u64 }
+          - { name: periodHours, type: u64 }
+          - { name: createdAt, type: i64 }
+          - { name: endTs, type: i64 }
+          - { name: destinations, type: { array: [pubkey, 4] } }
+          - { name: pullers, type: { array: [pubkey, 4] } }
+          - { name: metadataUri, type: { array: [u8, 128] } }

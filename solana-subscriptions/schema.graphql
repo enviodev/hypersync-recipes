@@ -1,0 +1,63 @@
+"A merchant's published plan"
+type Plan {
+  id: ID!
+  merchant: String!
+  mint: String!
+  "Price per billing period, raw base units"
+  amount: BigInt!
+  periodHours: BigInt!
+  subscriptions: Int!
+  pulls: Int!
+  pulled: BigInt!
+  createdSlot: Int!
+}
+
+"One subscribe call"
+type Subscription {
+  id: ID!
+  subscriber: String!
+  plan: String!
+  merchant: String!
+  txSignature: String!
+  slot: Int!
+  timestamp: Int!
+}
+
+"One delegated transfer: a subscription pull, or a fixed / recurring allowance spend"
+type Pull {
+  id: ID!
+  "Subscription, Recurring or Fixed"
+  kind: String!
+  delegator: String!
+  mint: String!
+  amount: BigInt!
+  receiverAta: String!
+  caller: String!
+  plan: String
+  isInner: Boolean!
+  txSignature: String!
+  slot: Int!
+  timestamp: Int!
+}
+
+"Pulls per ISO week (Monday 00:00 UTC), USDC only"
+type WeeklyStat {
+  id: ID!
+  weekStart: Int!
+  pulls: Int!
+  usdcPulled: BigInt!
+  subscriptions: Int!
+}
+
+"Running totals, one row with id `mainnet`"
+type Totals {
+  id: ID!
+  plans: Int!
+  subscriptions: Int!
+  cancellations: Int!
+  allowances: Int!
+  pulls: Int!
+  usdcPulls: Int!
+  usdcPulled: BigInt!
+  lastSlot: Int!
+}
