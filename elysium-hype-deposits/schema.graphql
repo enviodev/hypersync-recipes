@@ -1,0 +1,25 @@
+type Totals {
+  id: ID! # "elysium"
+  messages: Int! # every message delivered from HyperEVM to Elysium
+  hypeDeposits: Int! # kind 12, native HYPE deposits
+  depositors: Int! # distinct wallets behind those deposits
+  hypeDepositedDirect: BigInt! # wei, sum of tx value for deposits sent straight to the Inbox
+  lastBlock: Int!
+}
+
+type MessageKind {
+  id: ID! # Arbitrum message kind (3 = L2 message, 9 = retryable, 12 = native deposit, ...)
+  messages: Int!
+}
+
+type Depositor {
+  id: ID! # wallet on HyperEVM
+  deposits: Int!
+  firstDay: String!
+}
+
+type DailyDeposits {
+  id: ID! # YYYY-MM-DD (UTC)
+  deposits: Int!
+  newDepositors: Int!
+}

@@ -1,0 +1,30 @@
+type Pool {
+  id: ID! # v4 pool id
+  currency0: String!
+  currency1: String!
+  pairedWithHype: Boolean! # currency0 is the native token (HYPE gas token on Elysium)
+  fee: Int!
+  tickSpacing: Int!
+  hooks: String!
+  day: String!
+  blockNumber: Int!
+  timestamp: Int!
+}
+
+type Totals {
+  id: ID! # "elysium"
+  pools: Int!
+  poolsPairedWithHype: Int!
+  poolsWithHooks: Int!
+  lastBlock: Int!
+}
+
+type DailyPools {
+  id: ID! # YYYY-MM-DD (UTC)
+  pools: Int!
+}
+
+type HookPools {
+  id: ID! # hook address, 0x000...000 = no hook
+  pools: Int!
+}

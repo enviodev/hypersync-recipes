@@ -1,0 +1,14 @@
+{
+  "name": "elysium-hype-deposits",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "engines": { "node": ">=22.15.0" },
+  "scripts": {
+    "dev": "envio dev",
+    "start": "envio start",
+    "codegen": "envio codegen"
+  },
+  "dependencies": { "envio": "3.15.0" },
+  "devDependencies": { "@types/node": "24.12.2", "typescript": "5.9.3" }
+}

@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=./node_modules/envio/evm.schema.json
+name: elysium-hype-deposits
+description: HYPE deposits from HyperEVM into Elysium, read from Elysium's Bridge contract on HyperEVM
+field_selection:
+  transaction_fields:
+    - hash
+    - from
+    - to
+    - value
+contracts:
+  - name: Bridge
+    events:
+      - event: MessageDelivered(uint256 indexed messageIndex, bytes32 indexed beforeInboxAcc, address inbox, uint8 kind, address sender, bytes32 messageDataHash, uint256 baseFeeL1, uint64 timestamp)
+chains:
+  - id: 999 # HyperEVM, synced with HyperSync
+    start_block: 48956737 # first Bridge activity (19 Oct 2026)
+    contracts:
+      - name: Bridge
+        # Elysium Bridge on HyperEVM, from elysium.kinetiq.xyz/docs/contract-addresses
+        address: 0x503D572157113fAaaD4DbeD2647Bb10b949216B6
