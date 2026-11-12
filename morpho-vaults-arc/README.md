@@ -1,6 +1,6 @@
 # Morpho vaults on Arc
 
-Morpho vaults on Arc, Circle's L1, hold about $161M of USDC, and 93% of it is lent to Morpho markets backed by cirBTC, Circle's wrapped bitcoin. This script reads every vault created by Morpho's vault factory on Arc, every deposit and withdrawal in those vaults, and every supply, borrow and repay in the USDC/cirBTC markets on Morpho, all with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview). It then checks the vault totals against each vault's own `totalAssets()` over RPC.
+Morpho vaults on Arc, Circle's L1, hold about $174M of USDC, and 84% of it is lent to Morpho markets backed by cirBTC, Circle's wrapped bitcoin. This script reads every vault created by Morpho's vault factory on Arc, every deposit and withdrawal in those vaults, and every supply, borrow and repay in the USDC/cirBTC markets on Morpho, all with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview). It then checks the vault totals against each vault's own `totalAssets()` over RPC.
 
 These are the numbers behind Envio's post on Morpho vaults on Arc.
 
@@ -13,10 +13,10 @@ export ENVIO_API_TOKEN=your-token
 python script.py
 ```
 
-Add an Arc block number to rerun a past snapshot exactly. The post used block 30,581,168:
+Add an Arc block number to rerun a past snapshot exactly. The post used block 30,839,502:
 
 ```bash
-python script.py 30581168
+python script.py 30839502
 ```
 
 A full run takes a few minutes. Most of that is the RPC calls at the end.
@@ -24,15 +24,15 @@ A full run takes a few minutes. Most of that is the RPC calls at the end.
 ## What it prints
 
 ```
-Morpho vaults on Arc, up to block 30,581,168
-  74 vaults created through VaultV2Factory, 52 of them USDC vaults
-  7,657 USDC deposits from 1,616 wallets into 39 vaults
-  USDC deposited, net of withdrawals: $160,913,052
-  USDC in the vaults now, from totalAssets() over RPC: $161,415,356
+Morpho vaults on Arc, up to block 30,839,502
+  75 vaults created through VaultV2Factory, 52 of them USDC vaults
+  7,882 USDC deposits from 1,658 wallets into 39 vaults
+  USDC deposited, net of withdrawals: $173,560,644
+  USDC in the vaults now, from totalAssets() over RPC: $174,083,432
   biggest USDC vaults (RPC totalAssets, depositor wallets)
-    Galaxy USDC                  $    80,029,562    790 wallets  0x8e357432cc12ff425c36432f312968aeb16112af
-    Keyrock Prime USDC           $    75,222,145    282 wallets  0x5befab92a5a3d60f578cb51eeb4e4fd50a1e3123
-    Steakhouse Prime USDC        $     5,290,468    203 wallets  0xbeef0016cb2fd5c352ea7ca08a9f54739dfa7298
+    Galaxy USDC                  $    92,633,842    807 wallets  0x8e357432cc12ff425c36432f312968aeb16112af
+    Keyrock Prime USDC           $    75,231,468    298 wallets  0x5befab92a5a3d60f578cb51eeb4e4fd50a1e3123
+    Steakhouse Prime USDC        $     5,287,038    205 wallets  0xbeef0016cb2fd5c352ea7ca08a9f54739dfa7298
     ...
   USDC in the vaults at the end of each day (deposits minus withdrawals)
     2026-09-15      +74,500,025  ->  $    74,500,095
@@ -40,10 +40,10 @@ Morpho vaults on Arc, up to block 30,581,168
     ...
 
 USDC lent against cirBTC on Morpho on Arc
-  2 USDC/cirBTC markets, 328 wallets have borrowed
-  principal outstanding from events: $158,612,960
-  owed now, totalBorrowAssets over RPC: $159,131,727 of $174,867,277 supplied (91% lent out)
-  vault USDC supplied to the USDC/cirBTC markets: $149,788,684 (93% of the $161,415,356 in the vaults)
+  2 USDC/cirBTC markets, 329 wallets have borrowed
+  principal outstanding from events: $155,622,772
+  owed now, totalBorrowAssets over RPC: $156,165,257 of $171,610,260 supplied (91% lent out)
+  vault USDC supplied to the USDC/cirBTC markets: $146,525,227 (84% of the $174,083,432 in the vaults)
 ```
 
 The numbers move as people deposit, borrow and repay, so a run without a block number will differ a little.
