@@ -29,6 +29,7 @@ Ready-to-run scripts behind Envio's data posts. Each folder reads public onchain
 | [elysium-hype-deposits](elysium-hype-deposits) | HyperEVM | A HyperIndex indexer for every message into Elysium through its HyperEVM bridge: HYPE deposits, depositors and deposits per day |
 | [metamask-money-account](metamask-money-account) | Monad | A HyperIndex indexer for MetaMask's Money Account vault: every deposit and withdrawal, wallet balances and new wallets per day |
 | [etherfi-cash-card-payments](etherfi-cash-card-payments) | Optimism | Every ether.fi card payment: payments, cardholders and spend per day, and each cardholder's typical payment |
+| [erc4337-user-operations-ethereum](erc4337-user-operations-ethereum) | Ethereum | Every ERC-4337 user operation: user operations and accounts per day, and how many had their gas paid by a paymaster |
 
 ## Before you start
 
