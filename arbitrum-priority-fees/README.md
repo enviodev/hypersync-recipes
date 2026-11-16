@@ -14,7 +14,7 @@ From 23 Sep 2026, when the first priority fee was paid (17:00 UTC), to the end o
 
 ## Why it matters
 
-Since [ArbOS 61](https://docs.arbitrum.io/run-arbitrum-node/arbos-releases/arbos61), Arbitrum One orders transactions by priority fee, so a tip on a normal transaction is how an app pays to go first. The fee isn't an event, so you can't get it from logs. You need each transaction's effective gas price and its block's base fee, for every transaction on the chain. HyperSync returns exactly those columns for a block range in one request, which makes a scan of about 100M transactions practical without running a node.
+[ArbOS 61](https://docs.arbitrum.io/run-arbitrum-node/arbos-releases/arbos61) let Arbitrum chains collect priority fees, and Arbitrum One then moved its ordering to [Priority Gas Auctions](https://docs.arbitrum.io/how-arbitrum-works/timeboost). The first tip on Arbitrum One landed on 23 Sep 2026. Transactions are now ordered by priority fee, so a tip on a normal transaction is how an app pays to go first. The fee isn't an event, so you can't get it from logs. You need each transaction's effective gas price and its block's base fee, for every transaction on the chain. HyperSync returns exactly those columns for a block range in one request, which makes a scan of about 100M transactions practical without running a node.
 
 ## What it pulls
 
