@@ -27,6 +27,7 @@ Ready-to-run scripts behind Envio's data posts. Each folder reads public onchain
 | [elysium-uniswap-v4-pools](elysium-uniswap-v4-pools) | Elysium | A HyperIndex indexer over RPC for every Uniswap v4 pool on Elysium: pools per day, pools paired with HYPE and pools with a hook |
 | [elysium-hype-deposits](elysium-hype-deposits) | HyperEVM | A HyperIndex indexer for every message into Elysium through its HyperEVM bridge: HYPE deposits, depositors and deposits per day |
 | [metamask-money-account](metamask-money-account) | Monad | A HyperIndex indexer for MetaMask's Money Account vault: every deposit and withdrawal, wallet balances and new wallets per day |
+| [etherfi-cash-card-payments](etherfi-cash-card-payments) | Optimism | Every ether.fi card payment: payments, cardholders and spend per day, and each cardholder's typical payment |
 
 ## Before you start
 
