@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=./node_modules/envio/evm.schema.json
+name: metamask-money-account-indexer
+description: Deposits, withdrawals and holders of MetaMask's Money Account vault (vmUSD) on Monad
+contracts:
+  - name: MoneyAccountVault
+    events:
+      - event: Transfer(address indexed from, address indexed to, uint256 amount)
+chains:
+  - id: 143 # Monad, synced with HyperSync
+    start_block: 78633433 # the vault's first Transfer (2 Jun 2026)
+    contracts:
+      - name: MoneyAccountVault
+        # Veda BoringVault behind the Money Account ("mUSD Vault", vmUSD).
+        # Listed as moneyAccountVaultConfig.boringVault in MetaMask's extension repo and as
+        # MoneyAccountVault in Monad's protocols registry (monad-crypto/protocols, mainnet/metamask.jsonc).
+        address: 0x1C8a336051D2024E318A229d01F9F6CF96efD316

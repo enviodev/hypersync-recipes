@@ -26,6 +26,7 @@ Ready-to-run scripts behind Envio's data posts. Each folder reads public onchain
 | [safe-growth](safe-growth) | Ethereum, Base, Optimism, Polygon, Arbitrum, BNB Chain, Gnosis and 7 more | Every Safe created from Safe's 1.3.0, 1.4.1 and 1.5.0 factories, by month and by chain |
 | [elysium-uniswap-v4-pools](elysium-uniswap-v4-pools) | Elysium | A HyperIndex indexer over RPC for every Uniswap v4 pool on Elysium: pools per day, pools paired with HYPE and pools with a hook |
 | [elysium-hype-deposits](elysium-hype-deposits) | HyperEVM | A HyperIndex indexer for every message into Elysium through its HyperEVM bridge: HYPE deposits, depositors and deposits per day |
+| [metamask-money-account](metamask-money-account) | Monad | A HyperIndex indexer for MetaMask's Money Account vault: every deposit and withdrawal, wallet balances and new wallets per day |
 
 ## Before you start
 
