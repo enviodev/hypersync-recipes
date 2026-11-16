@@ -58,8 +58,10 @@ def post(url, body, headers):
         except urllib.error.HTTPError as e:
             # HyperSync says how long until the rate-limit window resets
             wait = int(e.headers.get("x-ratelimit-reset") or 0) if e.code == 429 else 0
+            print(f"  HTTP {e.code}, retrying in {max(wait, 3)}s", file=sys.stderr)
             time.sleep(max(wait, 3 * min(attempt + 1, 5)))
-        except Exception:
+        except Exception as e:
+            print(f"  retrying after {type(e).__name__}", file=sys.stderr)
             time.sleep(3 * min(attempt + 1, 5))
     sys.exit("request kept failing: " + url)
 
@@ -95,7 +97,7 @@ def decode(data):
 
 def vault_balances(vaults, head):
     """Latest token balance of each vault from HyperSync account_activity, walking back from the chain head."""
-    found, to, step = {}, head, 200_000
+    found, to, step = {}, head, 25_000
     while len(found) < len(vaults) and head - to < 1_300_000:  # up to about 6 days of slots
         todo = [v for v in vaults if v not in found]
         body = {"from_slot": to - step, "to_slot": to, "account_activity": [{"account": todo}],
