@@ -31,6 +31,7 @@ Ready-to-run scripts behind Envio's data posts. Each folder reads public onchain
 | [metamask-money-account](metamask-money-account) | Monad | A HyperIndex indexer for MetaMask's Money Account vault: every deposit and withdrawal, wallet balances and new wallets per day |
 | [etherfi-cash-card-payments](etherfi-cash-card-payments) | Optimism | Every ether.fi card payment: payments, cardholders and spend per day, and each cardholder's typical payment |
 | [erc4337-user-operations-ethereum](erc4337-user-operations-ethereum) | Ethereum | Every ERC-4337 user operation: user operations and accounts per day, and how many had their gas paid by a paymaster |
+| [backpack-stocks-solana](backpack-stocks-solana) | Solana | Wallets holding Backpack's 94 tokenized stocks and ETFs, value per ticker, and every mint and burn |
 
 ## Before you start
 
