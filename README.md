@@ -34,6 +34,7 @@ Ready-to-run scripts behind Envio's data posts. Each folder reads public onchain
 | [aero-robinhood-ethereum](aero-robinhood-ethereum) | Robinhood, Ethereum | Aero's swap volume, swaps and wallets per day on both chains since launch, side by side |
 | [backpack-stocks-solana](backpack-stocks-solana) | Solana | Wallets holding Backpack's 94 tokenized stocks and ETFs, value per ticker, and every mint and burn |
 | [arbitrum-priority-fees](arbitrum-priority-fees) | Arbitrum | Every transaction that paid a priority fee since Arbitrum One switched them on, per day, with the fees in ETH |
+| [metric-first-month-ethereum](metric-first-month-ethereum) | Ethereum | Every swap on Metric's Ethereum pools in its first month: swaps, wallets and volume per day |
 
 ## Before you start
 
