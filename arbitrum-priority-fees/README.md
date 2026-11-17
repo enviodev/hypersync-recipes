@@ -1,71 +1,76 @@
-# Arbitrum priority fees
+# Arbitrum priority fees, day by day
 
-Reads every Arbitrum One transaction since priority fees were switched on and counts the ones that paid a tip to be ordered first, day by day, with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview).
+Arbitrum One started collecting priority fees on 23 Sep 2026, and the first tip landed at 17:00 UTC that day. From then to the end of 15 Nov 2026 (UTC), **39.4M transactions paid a priority fee, out of 87.5M on the chain, and those fees came to 181.95 ETH**.
 
-## What we found
+- In the week of 9 to 15 Nov, 51% of transactions paid a priority fee, up from 38% in the first full week.
+- The busiest day was 28 Oct, with 1.67M transactions paying a priority fee.
+- The running total passed 35M on 10 Nov, the figure [Arbitrum shared](https://x.com/arbitrum/status/2122052836171071756). Our total to 9 Nov is 34.6M.
+- At each day's ETH price the fees come to about $447K, and about $410K up to 9 Nov. The script reports ETH. The dollar figures used a daily ETH price from an outside price feed.
 
-From 23 Sep 2026, when the first priority fee was paid (17:00 UTC), to the end of 15 Nov 2026:
+## Why it's interesting
 
-- 39,382,591 transactions paid a priority fee, out of 87,539,107 on the chain
-- In the week of 9 to 15 Nov that was 51% of all transactions, up from 38% in the first full week
-- Those fees add up to 181.95 ETH, about $447K at each day's ETH price
-- The busiest day was 28 Oct, with 1,672,169 transactions paying a priority fee
-- The running total passed 35M on 10 Nov, the figure [Arbitrum shared](https://x.com/arbitrum/status/2122052836171071756) along with $400K+ in revenue. Our total to 9 Nov is 34.6M transactions and $410K
+[ArbOS 61](https://docs.arbitrum.io/run-arbitrum-node/arbos-releases/arbos61) let Arbitrum chains collect priority fees, and Arbitrum One then moved to ordering transactions by [priority fee](https://docs.arbitrum.io/launch-arbitrum-chain/chain-config/costs/priority-fees). So a tip on a normal transaction is now how an app pays to go first.
 
-## Why it matters
-
-[ArbOS 61](https://docs.arbitrum.io/run-arbitrum-node/arbos-releases/arbos61) let Arbitrum chains collect priority fees, and Arbitrum One then moved its ordering to [Priority Gas Auctions](https://docs.arbitrum.io/how-arbitrum-works/timeboost). The first tip on Arbitrum One landed on 23 Sep 2026. Transactions are now ordered by priority fee, so a tip on a normal transaction is how an app pays to go first. The fee isn't an event, so you can't get it from logs. You need each transaction's effective gas price and its block's base fee, for every transaction on the chain. HyperSync returns exactly those columns for a block range in one request, which makes a scan of about 100M transactions practical without running a node.
+The fee isn't an event, so logs won't give it to you. You need each transaction's effective gas price and its block's base fee, for every transaction on the chain. HyperSync returns exactly those columns for a whole block range in one request, which makes a scan of about 100M transactions doable without running a node.
 
 ## What it pulls
 
-| | |
-|---|---|
-| Chain | Arbitrum One, `https://arbitrum.hypersync.xyz` |
-| Transactions | `block_number`, `gas_used`, `effective_gas_price` for every transaction |
-| Blocks | `number`, `timestamp`, `base_fee_per_gas` |
-| Rule | A transaction paid a priority fee when `effective_gas_price` is above its block's `base_fee_per_gas`. The fee is the difference times `gas_used` |
-| Window | Block 507,945,268 (start of 23 Sep 2026 UTC) to the chain head |
+- **Chain.** Arbitrum One, from `https://arbitrum.hypersync.xyz`.
+- **Transactions.** `block_number`, `gas_used` and `effective_gas_price` for every transaction.
+- **Blocks.** `number`, `timestamp` and `base_fee_per_gas`, with `include_all_blocks` on.
+- **Rule.** A transaction paid a priority fee when `effective_gas_price` is above its block's `base_fee_per_gas`. The fee is the difference times `gas_used`.
+- **Window.** Block 507,945,268 (the start of 23 Sep 2026 UTC) to the chain head.
+
+Every count and the ETH total come from HyperSync.
 
 ## Run it
 
-You need Python 3 and a HyperSync API token from the [Envio Dashboard](https://envio.dev/app/api-tokens). There are no other dependencies.
+You need Python 3 and a free API token from [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens). There's nothing else to install.
 
 ```bash
 export ENVIO_API_TOKEN=your-token
-python script.py
-FROM_BLOCK=524000000 TO_BLOCK=524300000 python script.py     # a smaller range to try it
+FROM_BLOCK=524000000 TO_BLOCK=524000300 python3 script.py   # 300 blocks, a quick try
+python3 script.py                                            # 23 Sep 2026 to the chain head
 ```
 
-The full scan splits the range into 50K-block chunks across worker processes (`WORKERS`, default 12) and takes a while. It prints one row per UTC day and writes `arbitrum_priority_fees.json`.
+The full scan splits the range into 50K-block chunks across worker processes (`WORKERS`, default 12) and takes a while. It prints progress to stderr, then one row per UTC day with transactions, transactions with a priority fee, their share, fees in ETH and the running total of tipped transactions. It ends with the two totals and writes the daily numbers to `arbitrum_priority_fees.json` next to the script.
 
-## Check the numbers yourself
+## Change the window or chain
 
-- **Against an RPC:** for any block, call `eth_getBlockByNumber` for `baseFeePerGas` and `eth_getBlockReceipts` for each `effectiveGasPrice` and `gasUsed`. For blocks 524,000,000 to 524,000,299 both the public Arbitrum RPC and this script give 1,412 transactions, 797 with a priority fee, and 1,838,517,634,556,150 wei in fees.
-- **Against Arbitrum's figures:** the running total column passes 35M on 10 Nov, and fees to 9 Nov come to about $410K.
-- **Before the switch:** 20 to 22 Sep show zero transactions above the base fee, which is what you'd expect before priority fees were collected.
+- **Window.** Set `FROM_BLOCK` and `TO_BLOCK`. `TO_BLOCK` is exclusive, and leaving it out runs to the chain head. Arbiscan's [block by date](https://arbiscan.io/blockdateconverter) tool gives you a start block for any day.
+- **Chain.** Any Arbitrum chain on ArbOS 61 or later works the same way. Swap `URL` for its HyperSync endpoint from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks) and set `FROM_BLOCK` to the block where priority fees were switched on there.
 
-Dollar figures use the daily ETH price from [DefiLlama's coins API](https://api-docs.defillama.com/). The script itself reports ETH.
+## Check the numbers
+
+- **Against an RPC, as the comparison.** For blocks 524,000,000 to 524,000,299, call `eth_getBlockByNumber` for `baseFeePerGas` and `eth_getBlockReceipts` for each `effectiveGasPrice` and `gasUsed` on the public Arbitrum RPC. Both the RPC and the script give 1,412 transactions, 797 with a priority fee and 1,838,517,634,556,150 wei in fees. The quick-try command above runs exactly that range.
+- **Against Arbitrum's figure.** The running total column passes 35M on 10 Nov, the day Arbitrum shared it.
+- **Before the switch.** 20 to 22 Sep show no transactions above the base fee, which is what you'd expect before priority fees were collected.
 
 ## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
-```
-Use Envio HyperSync (https://docs.envio.dev/docs/HyperSync/overview, endpoint https://arbitrum.hypersync.xyz/query)
-to read every Arbitrum One transaction from block 507945268 to the head. Select transaction fields
-block_number, gas_used, effective_gas_price and block fields number, timestamp, base_fee_per_gas, with
-include_all_blocks true. Page with next_block and retry on HTTP 429. My API token is in ENVIO_API_TOKEN.
-A transaction paid a priority fee when effective_gas_price > base_fee_per_gas; the fee is the difference
-times gas_used. Print transactions, priority-fee transactions and fees in ETH per UTC day. Then group the
-priority fees by the transaction's `to` address to see which contracts pay the most.
+```text
+Read script.py and README.md in this folder. It uses HyperSync
+(https://docs.envio.dev/docs/HyperSync/overview) to read every Arbitrum One
+transaction's gas_used and effective_gas_price, plus each block's
+base_fee_per_gas, and counts the transactions that paid a priority fee per UTC
+day. My HyperSync token is in the ENVIO_API_TOKEN environment variable.
+
+Add the transaction's `to` address to the field selection and group the
+priority fees by it, so I can see which 20 contracts pay the most in tips.
+Keep the standard library only. Run it with FROM_BLOCK=524000000
+TO_BLOCK=524000300 first and check that the totals still come to 1,412
+transactions, 797 with a priority fee and 1,838,517,634,556,150 wei.
 ```
 
-To keep this running as a live index instead of a one-off scan, scaffold a HyperIndex project with `pnpx envio init`. It adds Envio's agent skills to the project's `.claude/skills/` folder, so your agent has the docs in context ([Quickstart with AI](https://docs.envio.dev/docs/HyperIndex/quickstart-with-ai)).
+To keep this running live instead of as a one-off scan, scaffold a [HyperIndex](https://docs.envio.dev/docs/HyperIndex/overview) project with `pnpx envio init` and deploy it on [Envio Cloud](https://docs.envio.dev/docs/HyperIndex/hosted-service).
 
 ## Links
 
-- [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview) and [supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks)
-- [HyperIndex on Envio Cloud](https://docs.envio.dev/docs/HyperIndex/hosted-service)
+- [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview)
+- [HyperSync query reference](https://docs.envio.dev/docs/HyperSync/hypersync-query)
+- [HyperSync supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks)
 - [ArbOS 61 release notes](https://docs.arbitrum.io/run-arbitrum-node/arbos-releases/arbos61) and the [upgrade notice](https://docs.arbitrum.io/notices/arbos61-upgrade-notice)
 - [Arbitrum docs on priority fees](https://docs.arbitrum.io/launch-arbitrum-chain/chain-config/costs/priority-fees)
-- Questions: [Envio Discord](https://discord.gg/envio)
+- [Envio Discord](https://discord.gg/envio)
