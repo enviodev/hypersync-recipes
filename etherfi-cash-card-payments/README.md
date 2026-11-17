@@ -61,7 +61,7 @@ day         payments  cardholders  usd
 
 ## Change the window
 
-Pass a start and an end date. The script works out a start block from the chain head at 43,200 blocks a day (one every 2 seconds), splits the range across 4 threads, and keeps only events whose block timestamp falls in the window. For a month or more, raise `THREADS` if you hit timeouts. ether.fi Cash runs on OP Mainnet, so the chain stays the same, but the same pattern works for any card program that logs its payments onchain. The [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks) has every HyperSync endpoint.
+Pass a start and an end date. The script works out a start block from the chain head at 43,200 blocks a day (one every 2 seconds), splits the range across 4 threads, and keeps only events whose block timestamp falls in the window. For a month or more, raise the `THREADS` constant in `script.py` if you hit timeouts. ether.fi Cash runs on OP Mainnet, so the chain stays the same, but the same pattern works for any card program that logs its payments onchain. The [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks) has every HyperSync endpoint.
 
 ## Check the numbers
 
