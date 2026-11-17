@@ -1,5 +1,8 @@
 # Tokenized Treasury funds on Solana, with Envio HyperSync.
 # Reads every token balance change of the five largest funds' mints, then rebuilds each fund's supply day by day.
+# JLTXX, SHVon and SWEEP launched after slot 391,000,000, where HyperSync's Solana history starts, so their
+# supply is the sum of every balance change HyperSync returns. BUIDL and USDY are older, so their rows start
+# from today's getTokenSupply on Solana RPC and walk back.
 # Python 3 standard library only. Set ENVIO_API_TOKEN first.
 import datetime
 import json
@@ -20,6 +23,9 @@ FUNDS = {
     "SWEEP (State Street, Galaxy)": "AgBSDfS7CNRunBeREHHdF9S57fai5b3EXH1hgvZkRPhB",
     "USDY (Ondo)": "A1KLoBrKBde8Ty9qtNQUtq3C2ortoC3u7twggz7sEto6",
 }
+# Funds whose first mint is inside HyperSync's Solana history. Their first balance change is after slot 416,000,000.
+FROM_LAUNCH = {"JLTXX (J.P. Morgan)", "SHVon (Ondo)", "SWEEP (State Street, Galaxy)"}
+LAUNCH_SLOT = 416_000_000
 DAYS = int(sys.argv[1]) if len(sys.argv) > 1 else 65
 
 TOKEN = os.environ.get("ENVIO_API_TOKEN")
@@ -70,19 +76,14 @@ def block_time(slot):
 
 
 # Measure the recent slot rate, then start a day early so the first day is complete.
+# Read from before the newer funds' launch too, so their supply can be summed from zero.
 rate = 1_000_000 / (block_time(height - 1000) - block_time(height - 1_001_000))
-start = height - int((DAYS + 1) * 86400 * rate)
+start = min(height - int((DAYS + 1) * 86400 * rate), LAUNCH_SLOT)
 step = 500_000
 ranges = [(s, s + step if s + step < height else None) for s in range(start, height, step)]
 print(f"Reading {len(ranges)} slot ranges from HyperSync...", file=sys.stderr)
 with ThreadPoolExecutor(16) as pool:
     rows = [r for part in pool.map(lambda a: pull(*a), ranges) for r in part]
-
-# Supply now, from Solana RPC, then walk back through each day's net mints and burns.
-supply, decimals = {}, {}
-for name, mint in FUNDS.items():
-    v = post(RPC, {"jsonrpc": "2.0", "id": 1, "method": "getTokenSupply", "params": [mint]}, auth=False)["result"]["value"]
-    supply[name], decimals[name] = int(v["amount"]), v["decimals"]
 
 by_mint = {m: n for n, m in FUNDS.items()}
 net = defaultdict(lambda: defaultdict(int))
@@ -90,6 +91,14 @@ for ts, r in rows:
     change = int(r.get("post_token_balance") or 0) - int(r.get("pre_token_balance") or 0)
     day = datetime.datetime.fromtimestamp(ts, datetime.timezone.utc).date()
     net[by_mint[r["mint"]]][day] += change
+
+# Supply now. For the newer funds it's every balance change HyperSync returned, summed from zero.
+# Solana RPC getTokenSupply is the check for those, and the starting point for BUIDL and USDY.
+rpc, decimals, supply = {}, {}, {}
+for name, mint in FUNDS.items():
+    v = post(RPC, {"jsonrpc": "2.0", "id": 1, "method": "getTokenSupply", "params": [mint]}, auth=False)["result"]["value"]
+    rpc[name], decimals[name] = int(v["amount"]), v["decimals"]
+    supply[name] = sum(net[name].values()) if name in FROM_LAUNCH else rpc[name]
 
 today = datetime.datetime.now(datetime.timezone.utc).date()
 days = [today - datetime.timedelta(d) for d in range(DAYS - 2, -1, -7)]
@@ -100,4 +109,10 @@ for name in FUNDS:
     for d in days:
         after = sum(v for k, v in net[name].items() if k > d)
         cells.append(f"{(supply[name] - after) / 10 ** decimals[name] / 1e6:8.1f}M")
-    print(name.ljust(30) + " ".join(cells))
+    print((name + ("" if name in FROM_LAUNCH else " *")).ljust(30) + " ".join(cells))
+print("* starts from Solana RPC getTokenSupply, since the fund is older than HyperSync's Solana history")
+print("Check (RPC getTokenSupply, read after the HyperSync pull)")
+for name in sorted(FROM_LAUNCH):
+    diff = (rpc[name] - supply[name]) / 10 ** decimals[name]
+    print(f"  {name}: HyperSync {supply[name] / 10 ** decimals[name]:,.2f}, RPC {rpc[name] / 10 ** decimals[name]:,.2f}"
+          + (" (match)" if diff == 0 else f" (RPC {diff:+,.2f}, mints or burns after the last slot HyperSync returned)"))
