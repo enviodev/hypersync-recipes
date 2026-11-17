@@ -4,7 +4,7 @@ Over the 30 UTC days from 10 Oct to 8 Nov 2026, **178M successful Solana transac
 
 ## Why it's interesting
 
-Durable nonces let a transaction be signed now and sent later, which custody setups, offline signers and some trading flows rely on. The Solana Foundation plans to replace them, with candidate successors named on the [Durable Nonce Deprecation](https://solana.com/upgrades/durable-nonce-deprecation) page and no date set yet. If you run or build on any of those flows, this is how to measure how much activity uses them, and the same instruction filter works for any program and instruction on Solana.
+Durable nonces let a transaction be signed now and sent later, which custody setups, offline signers and some trading flows rely on. As of Nov 2026, the Solana Foundation plans to replace them, with candidate successors named on the [Durable Nonce Deprecation](https://solana.com/upgrades/durable-nonce-deprecation) page and no date set. If you run or build on any of those flows, this is how to measure how much activity uses them, and the same instruction filter works for any program and instruction on Solana.
 
 ## What it pulls
 
@@ -49,7 +49,7 @@ Nine slots across 12 Oct, 25 Oct, 3 Nov and 9 Nov were checked against Solana RP
 
 ## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent from this folder.
 
 ```text
 Read script.py and README.md in this folder. It uses HyperSync on Solana
