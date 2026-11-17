@@ -23,7 +23,7 @@ CASH is a Token-2022 stablecoin, so every unit enters and leaves through `MintTo
 - **Filter.** One `instruction_calls` selection per side, matched on the server by program, the first data byte (`d1`) and the mint's account position (`a0` or `a1`). The [query reference](https://docs.envio.dev/docs/HyperSync/solana-query#instructionselection) has the details.
 - **Window.** Slot 391,000,000 (3 Jan 2026, where HyperSync's Solana history starts) to the chain head.
 
-Here's where each number comes from. The mints, burns and weekly changes come from [HyperSync on Solana](https://docs.envio.dev/docs/HyperSync/solana). The supply today comes from Solana RPC `getTokenSupply`, and the 3 Jan supply is that figure minus every mint and burn HyperSync returned in between. The holder counts come from `holders.py`, which reads every CASH token account with Solana RPC `getProgramAccounts`.
+Here's where each number comes from. The mints, burns and weekly changes come from [HyperSync on Solana](https://docs.envio.dev/docs/HyperSync/solana). The 16 Nov supply comes from Solana RPC `getTokenSupply` at run time, and the 3 Jan supply is that figure minus every mint and burn HyperSync returned in between. The holder counts come from `holders.py`, which reads every CASH token account with Solana RPC `getProgramAccounts`.
 
 ## Run it
 
@@ -48,7 +48,7 @@ python3 holders.py    # wallets holding CASH right now, over Solana RPC
 
 ## Check the numbers
 
-- **Supply today.** `holders.py` adds up every CASH token account's balance and prints it next to `getTokenSupply`. The two matched to the cent.
+- **Supply on 16 Nov.** `holders.py` adds up every CASH token account's balance and prints it next to `getTokenSupply`. The two matched to the cent.
 - **Supply at the start.** A public CASH supply chart showed $92,256,948 for 3 Jan 2026, as the comparison. The script's figure is $92,256,947.15, so the mint and burn history checks out to within a dollar.
 - **Single transactions.** Every row carries its slot. Look any of them up on a Solana explorer and compare the amount.
 

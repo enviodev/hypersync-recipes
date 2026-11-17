@@ -90,7 +90,7 @@ def main():
     for slot, ts, kind, amount in rows:
         s += amount if kind == "mint" else -amount
         if ts:
-            d = datetime.datetime.fromtimestamp(ts, datetime.UTC).date()
+            d = datetime.datetime.fromtimestamp(ts, datetime.timezone.utc).date()
             weekly[d - datetime.timedelta(days=d.weekday())] = s
     print("\nweek of     supply at week end")
     for wk, v in weekly.items():
