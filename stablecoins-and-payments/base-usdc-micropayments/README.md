@@ -75,6 +75,7 @@ its AuthorizationUsed and Transfer logs against the receipt on https://base-rpc.
 
 - [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview)
 - [HyperSync query reference](https://docs.envio.dev/docs/HyperSync/hypersync-query)
+- [Raw HTTP query examples](https://docs.envio.dev/docs/HyperSync/hypersync-curl-examples), the same plain requests this script makes
 - [HyperSync supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks)
 - [EIP-3009](https://eips.ethereum.org/EIPS/eip-3009)
 - [x402 exact scheme on EVM](https://github.com/x402-foundation/x402/blob/main/specs/schemes/exact/scheme_exact_evm.md)
