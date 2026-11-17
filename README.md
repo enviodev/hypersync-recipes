@@ -127,17 +127,20 @@ Every folder has its own README with what we found, what the script pulls, how t
 | [metadao-launchpad-raises](metadao-launchpad-raises) | Solana | Pull every MetaDAO launchpad raise on Solana |
 | [solana-durable-nonces](solana/solana-durable-nonces) | Solana | Count Solana transactions that use durable nonces |
 
-The Solana indexers are listed under HyperIndex indexers below.
-
-### HyperIndex indexers
-
-These run as live indexers with a GraphQL API. You can deploy them on [Envio Cloud](https://docs.envio.dev/docs/HyperIndex/hosted-service).
+These HyperIndex indexers keep Solana data live behind a GraphQL API.
 
 | Indexer | Chain | How to |
 | --- | --- | --- |
-| [solana-dex-swaps-by-program](indexers/solana-dex-swaps-by-program) | Solana | Index every swap on Solana's main DEX programs, direct and routed |
-| [solana-subscriptions](indexers/solana-subscriptions) | Solana | Index every plan, subscription and pull on Solana's Subscriptions program |
-| [privacy-rings-solana](indexers/privacy-rings-solana) | Solana | Index Privacy Rings deposits, withdrawals and private transfers on Solana |
+| [solana-dex-swaps-by-program](solana/solana-dex-swaps-by-program) | Solana | Index every swap on Solana's main DEX programs, direct and routed |
+| [solana-subscriptions](solana/solana-subscriptions) | Solana | Index every plan, subscription and pull on Solana's Subscriptions program |
+| [privacy-rings-solana](solana/privacy-rings-solana) | Solana | Index Privacy Rings deposits, withdrawals and private transfers on Solana |
+
+### EVM indexers
+
+These HyperIndex indexers run live behind a GraphQL API. You can deploy them on [Envio Cloud](https://docs.envio.dev/docs/HyperIndex/hosted-service).
+
+| Indexer | Chain | How to |
+| --- | --- | --- |
 | [metamask-money-account](metamask-money-account) | Monad | Index every MetaMask Money Account deposit, withdrawal and balance |
 | [elysium-uniswap-v4-pools](elysium-uniswap-v4-pools) | Elysium | Index every Uniswap v4 pool on Elysium over RPC |
 | [elysium-hype-deposits](elysium-hype-deposits) | HyperEVM | Index every HYPE deposit into Elysium through its bridge |
