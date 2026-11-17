@@ -1,6 +1,7 @@
 # What sits in Sentora's curated markets on Aave v4, with Envio HyperSync.
-# Reads every Supply, Withdraw and Borrow on Sentora's three Aave v4 spokes on Ethereum,
-# rebuilds what has been supplied and borrowed, and checks it against the spokes' own state onchain.
+# Reads every Supply, Withdraw, Borrow, Repay, LiquidationCall and ReportDeficit on Sentora's three Aave v4 spokes
+# on Ethereum and rebuilds what is supplied and borrowed from them. A public RPC gives oracle prices and token
+# details, and a labelled cross-check against the spokes' own state.
 # Python 3 standard library only. Set ENVIO_API_TOKEN first.
 import datetime
 import json
@@ -21,8 +22,11 @@ SPOKES = {
 SUPPLY = "0xd986db228cb1fe8392c5f45ff5f2c639b7db6cbd9ca7d1fe70b2de90c2c8c961"    # Supply(uint256,address,address,uint256,uint256)
 WITHDRAW = "0xfe7813e2866053d5c3938554e517b554fce6666a6561bed9eaa7419b29fa9b68"  # Withdraw(uint256,address,address,uint256,uint256)
 BORROW = "0xef18174796a5d2f91d51dc5e907a4d7867bbd6e800f6225168e0453d581d0dcd"    # Borrow(uint256,address,address,uint256,uint256)
+REPAY = "0xd765a0263e8a360da8dd4fdb8c0dc5553adec12a96f29a462cdb45e5bea407dd"     # Repay(uint256,address,address,uint256,uint256,(int256,int256,uint256))
+LIQUIDATION = "0x2a1f12d996f530f89d8038aa293f9fde81cac44b6dfd6225e3358d09b78a4a37"  # LiquidationCall(uint256,uint256,address,address,bool,uint256,uint256,(int256,int256,uint256),uint256,uint256,uint256)
+DEFICIT = "0x59932f333b3a5e3fec86e662babe8dd767529ed207420e7468bd220cdfb3f076"      # ReportDeficit(uint256,address,uint256,(int256,int256,uint256))
 ADD_RESERVE = "0xb2d3221c3db1eb0d586556ae23399acdfe3e52ff0fcd184c19069c730f9ca2e9"  # AddReserve(uint256,uint256,address)
-TOPICS = [SUPPLY, WITHDRAW, BORROW, ADD_RESERVE]
+TOPICS = [SUPPLY, WITHDRAW, BORROW, REPAY, LIQUIDATION, DEFICIT, ADD_RESERVE]
 HYPERSYNC = "https://eth.hypersync.xyz/query"
 RPC = "https://ethereum-rpc.publicnode.com"
 
@@ -65,7 +69,7 @@ def symbol(token, block):
 body = {
     "from_block": 23_000_000,
     "logs": [{"address": list(SPOKES), "topics": [TOPICS]}],
-    "field_selection": {"log": ["address", "topic0", "topic1", "topic3", "data", "block_number", "log_index"],
+    "field_selection": {"log": ["address", "topic0", "topic1", "topic2", "topic3", "data", "block_number", "log_index"],
                         "block": ["number", "timestamp"]},
 }
 logs, times = [], {}
@@ -92,37 +96,63 @@ for log in logs:
         underlying, decimals = "0x" + format(word(r, 0), "040x"), word(r, 3)
         price = word(call(SPOKES[spoke][1], "0xd45c35ff", rid, block), 0) / 1e8  # getReservePrice(uint256), 8 decimals
         reserves[(spoke, rid)] = {"symbol": symbol(underlying, block), "decimals": decimals, "price": price,
-                                  "supplied": 0, "borrowed": 0}
+                                  "supplied": 0, "borrowed": 0, "supply_shares": 0, "drawn_shares": 0,
+                                  "supply_rate": None, "drawn_rate": None}
 
-# 3. Replay supplies, withdrawals and borrows. The amount is the second data word in each event.
+# 3. Replay the spokes. Aave v4 keeps positions in shares, so each reserve tracks supply shares and drawn (debt)
+#    shares, and turns them into assets with the rate in its latest event: amount / shares in the last Supply or
+#    Withdraw for supply, and in the last Borrow for debt. "supplied" and "borrowed" are plain principal sums.
 daily = defaultdict(float)
 for log in logs:
     if log["topic0"] == ADD_RESERVE:
         continue
-    r = reserves[(log["address"].lower(), int(log["topic1"], 16))]
-    amount = word(log["data"], 1) / 10 ** r["decimals"]
+    spoke = log["address"].lower()
+    r = reserves[(spoke, int(log["topic1"], 16))]
+    w = [word(log["data"], i) for i in range((len(log["data"]) - 2) // 64)]
     day = datetime.datetime.fromtimestamp(times[log["block_number"]], datetime.timezone.utc).date()
     if log["topic0"] == SUPPLY:
-        r["supplied"] += amount
-        daily[day] += amount * r["price"]
+        r["supplied"] += w[1] / 10 ** r["decimals"]
+        r["supply_shares"] += w[0]
+        r["supply_rate"] = (w[1], w[0])
+        daily[day] += w[1] / 10 ** r["decimals"] * r["price"]
     elif log["topic0"] == WITHDRAW:
-        r["supplied"] -= amount
-        daily[day] -= amount * r["price"]
-    else:
-        r["borrowed"] += amount
+        r["supplied"] -= w[1] / 10 ** r["decimals"]
+        r["supply_shares"] -= w[0]
+        r["supply_rate"] = (w[1], w[0])
+        daily[day] -= w[1] / 10 ** r["decimals"] * r["price"]
+    elif log["topic0"] == BORROW:
+        r["borrowed"] += w[1] / 10 ** r["decimals"]
+        r["drawn_shares"] += w[0]
+        r["drawn_rate"] = (w[1], w[0])
+    elif log["topic0"] in (REPAY, DEFICIT):
+        r["drawn_shares"] -= w[0]
+    elif log["topic0"] == LIQUIDATION:
+        # topic1 is the collateral reserve, topic2 the debt reserve. Data: liquidator, receiveShares, debtRestored,
+        # drawnSharesLiquidated, premiumDelta (3 words), collateralAmountRemoved, collateralSharesLiquidated, sharesToLiquidator
+        reserves[(spoke, int(log["topic2"], 16))]["drawn_shares"] -= w[3]
+        r["supply_shares"] -= w[8] - (w[9] if w[1] else 0)
+        r["supplied"] -= (w[7] - (w[9] if w[1] else 0)) / 10 ** r["decimals"]
+        daily[day] -= (w[7] - (w[9] if w[1] else 0)) / 10 ** r["decimals"] * r["price"]
 
-# 4. Print, and check each reserve against getReserveSuppliedAssets() onchain.
-#    Onchain supply includes interest earned since each deposit, so it sits slightly above the replayed principal.
+
+def assets(shares, rate, decimals):
+    return (shares * rate[0] // rate[1] if rate and rate[1] else 0) / 10 ** decimals
+
+
+# 4. Print, and check each reserve against getReserveSuppliedAssets() and getReserveTotalDebt() over RPC.
+#    The rebuilt figures use the share rate from each reserve's latest event, so the spoke's own figures sit slightly
+#    higher by the interest earned since then. Debt from events is drawn debt only, without Aave v4's premium debt.
 total, checks, by_symbol = 0, [], defaultdict(float)
 for (spoke, rid), r in reserves.items():
-    onchain = word(call(spoke, "0x2fd00527", rid, block), 0) / 10 ** r["decimals"]   # getReserveSuppliedAssets
-    debt = word(call(spoke, "0x1cdc762c", rid, block), 0) / 10 ** r["decimals"]      # getReserveTotalDebt
-    total += onchain * r["price"]
-    by_symbol[r["symbol"]] += onchain * r["price"]
-    r["onchain"], r["debt"] = onchain, debt
-    if onchain or r["supplied"]:
-        gap = onchain - r["supplied"]
-        checks.append(f"  {SPOKES[spoke][0]:11} {r['symbol']:6} replayed {r['supplied']:>16,.2f}  onchain {onchain:>16,.2f}  interest {gap:>10,.2f}")
+    r["onchain"] = assets(r["supply_shares"], r["supply_rate"], r["decimals"])
+    r["debt"] = assets(r["drawn_shares"], r["drawn_rate"], r["decimals"])
+    total += r["onchain"] * r["price"]
+    by_symbol[r["symbol"]] += r["onchain"] * r["price"]
+    if r["onchain"] or r["supplied"]:
+        rpc = word(call(spoke, "0x2fd00527", rid, block), 0) / 10 ** r["decimals"]      # getReserveSuppliedAssets
+        rpc_debt = word(call(spoke, "0x1cdc762c", rid, block), 0) / 10 ** r["decimals"]  # getReserveTotalDebt
+        checks.append(f"  {SPOKES[spoke][0]:11} {r['symbol']:6} supplied {r['onchain']:>16,.2f}  RPC {rpc:>16,.2f}  gap {r['onchain'] - rpc:>10,.2f}"
+                      f"  |  borrowed {r['debt']:>16,.2f}  RPC {rpc_debt:>16,.2f}  gap {r['debt'] - rpc_debt:>10,.2f}")
 
 print(f"Supplied to Sentora's Aave v4 markets: ${total:,.0f}")
 for s, v in sorted(by_symbol.items(), key=lambda x: -x[1]):
@@ -131,10 +161,10 @@ for s, v in sorted(by_symbol.items(), key=lambda x: -x[1]):
 rl = reserves[("0x9ebf0c19bf7dfe859820cc09e846114b53814e52", 0)]
 print(f"RLUSD borrowed in the RLUSD Yield market: ${rl['debt'] * rl['price']:,.0f} of ${rl['onchain'] * rl['price']:,.0f} supplied "
       f"({100 * rl['debt'] / rl['onchain']:.1f}% utilization)")
-print("Supplied, day by day (USD at today's prices)")
+print("Supplied, day by day (USD at today's prices, principal)")
 running = 0
 for day in sorted(daily):
     running += daily[day]
     print(f"  {day}  {running:>16,.0f}")
-print(f"Checks at block {int(block, 16):,}")
+print(f"Check (RPC getReserveSuppliedAssets and getReserveTotalDebt at block {int(block, 16):,})")
 print("\n".join(checks))
