@@ -3,7 +3,7 @@
 Metric went public on 15 Oct 2026 and [said a month later](https://x.com/metricxyz/status/2121990150112645232) that it had traded $8.0B across all its chains. On Ethereum alone, from 15 Oct to 15 Nov 2026 (UTC), **$2.80B traded on Metric in 167K swaps, sent by 17.4K wallets**.
 
 - Daily volume averaged $47.6M in the first full week (16 to 22 Oct) and $198.9M in the latest one (9 to 15 Nov), 4.2 times as much.
-- The biggest day was 13 Nov at $284.8M, with 2,178 wallets trading.
+- The biggest day was 13 Nov at $284.9M, with 2,178 wallets trading.
 - USDC/USDT was the largest pair at $2.02B, then WETH/USDC at $384M and WETH/USDT at $149M.
 
 ## Why it's interesting
@@ -12,14 +12,14 @@ Metric went public on 15 Oct 2026 and [said a month later](https://x.com/metricx
 
 ## What it pulls
 
-- **Pools.** The 49 Ethereum pools listed by Metric's public API, `GET https://api.metric.xyz/public/v1/evm/1/metadata` ([API docs](https://docs.metric.xyz/reference/api/metadata)). They're created by `MetricOmmPoolFactory` [`0x2a53833cc95548cf52c7b159110e22D3a9018f32`](https://etherscan.io/address/0x2a53833cc95548cf52c7b159110e22D3a9018f32) ([contract addresses](https://docs.metric.xyz/reference/supported-chains-and-deployments)).
+- **Pools.** The 50 Ethereum pools listed by Metric's public API, `GET https://api.metric.xyz/public/v1/evm/1/metadata` ([API docs](https://docs.metric.xyz/reference/api/metadata)). They're created by `MetricOmmPoolFactory` [`0x2a53833cc95548cf52c7b159110e22D3a9018f32`](https://etherscan.io/address/0x2a53833cc95548cf52c7b159110e22D3a9018f32) ([contract addresses](https://docs.metric.xyz/reference/supported-chains-and-deployments)).
 - **Event.** `Swap(address indexed sender, address indexed recipient, uint256 details, uint256 amountDeltas, uint256 platformFees)`, topic0 `0x9734819749a91fc3be03ea83205f924ee08479bd3f0da48efc91d94d050cac1e`, from block 26,187,000 (14 Oct 2026).
 - **Amounts.** `amountDeltas` packs two int128 values, token0's change in the top 128 bits and token1's in the bottom 128.
 - **Joined.** Each log's transaction (`from`) and block (`timestamp`).
 
-Volume counts one side of each swap, in dollars. If either token in the pool is a dollar stablecoin, the volume is the stablecoin amount that moved. For the few pools with no stablecoin (WSTETH/WETH, WBTC/WETH and similar) it's the token0 amount at the price Metric's API reports when you run the script. Those pools are under 1% of the total. Wallets are the addresses that sent the swap transactions, so a router or solver that trades for many users counts once.
+Volume counts one side of each swap, in dollars. If either token in the pool is a dollar stablecoin, the volume is the stablecoin amount that moved. For the few pools with no stablecoin (WSTETH/WETH, WBTC/WETH, XAUt/WETH and similar) it's the WETH amount at the Chainlink ETH/USD answer in force at the swap's block, and for the two gold pools (XAUt/PAXG and PAXG/XAUt) it's the gold amount at the Chainlink XAU/USD answer. Those pools were 7,076 swaps and $15.0M, 0.53% of the total. Wallets are the addresses that sent the swap transactions, so a router or solver that trades for many users counts once.
 
-The swaps, wallets and stablecoin volume come from HyperSync. The pool list and the token decimals come from Metric's API, and so does the price for the non-stablecoin pools.
+The swaps, wallets, stablecoin volume and the dollar prices for the non-stablecoin pools come from HyperSync. The prices are the `AnswerUpdated` logs of the Chainlink ETH/USD and XAU/USD aggregators on Ethereum (`0x7d4E742018fb52E48b08BE73d041C18B21de6Fb5` and `0x0e3dd634FFbF7EA89BbDCF09Ccc463302FD5f903`), read for the same blocks as the swaps. The pool list and the token decimals come from Metric's API, which is also kept as a labelled price check.
 
 ## Run it
 
@@ -31,19 +31,22 @@ python3 script.py                                          # 15 Oct to 15 Nov 20
 FROM_DATE=2026-11-01 TO_DATE=2026-11-15 python3 script.py  # a shorter window
 ```
 
-It prints the totals, one row per day and the top 8 pairs, and writes the daily table to `metric_ethereum_daily.json`. The copy in this folder is from the 16 Nov run, which looked like this.
+It prints the totals, one row per day and the top 8 pairs, and writes the daily table to `metric_ethereum_daily.json`. The copy in this folder is from the 17 Nov run, which looked like this.
 
 ```
-Metric on Ethereum, 2026-10-15 to 2026-11-15, 49 pools
+Metric on Ethereum, 2026-10-15 to 2026-11-15, 50 pools
 ...
 day          swaps  wallets   volume
 2026-10-15   1,388      578  $   19.0M
-2026-10-16   4,275    1,094  $   65.7M
-2026-10-17   4,092      908  $   53.6M
+2026-10-16   4,275    1,094  $   65.8M
+2026-10-17   4,092      908  $   53.7M
 ...
-2026-11-13   7,995    2,178  $  284.8M
-2026-11-14   6,196    1,852  $  252.0M
+2026-11-13   7,995    2,178  $  284.9M
+2026-11-14   6,196    1,852  $  252.1M
 2026-11-15   5,149    1,485  $  241.4M
+...
+Pools with no stablecoin, 7,076 swaps: $14,954,468 at Chainlink prices read with HyperSync (0.53% of volume)
+Check (the same swaps at Metric's API price today): $13,518,304, gap +10.6%
 ```
 
 ## Change the window or chain
@@ -54,6 +57,7 @@ day          swaps  wallets   volume
 ## Check the numbers
 
 - **Swap count, as the comparison.** Call `eth_getLogs` on any Ethereum RPC for one pool and the `Swap` topic. For the USDC/USDT pool [`0xaef2ad7aBB651945e6D24276715f25BDED0ad41e`](https://etherscan.io/address/0xaef2ad7aBB651945e6D24276715f25BDED0ad41e), blocks 26,400,000 to 26,402,000, both the RPC and HyperSync return 426 swaps.
+- **Price check.** The script prints the same non-stablecoin swaps priced at Metric's API price on the day you run it. In the 17 Nov run that was $13.5M against $15.0M from Chainlink, a gap of 10.6% on 0.53% of volume, which moves the total by under 0.06%. The gap is expected, because the API gives today's price while Chainlink gives the price at each swap's block.
 - **Single swaps.** Open any transaction on [Etherscan](https://etherscan.io) and compare the token transfers with the decoded amounts.
 
 ## Build your own with an AI agent
