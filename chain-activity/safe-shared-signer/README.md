@@ -76,6 +76,7 @@ to the total the script already prints.
 
 - [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview)
 - [HyperSync query reference](https://docs.envio.dev/docs/HyperSync/hypersync-query)
+- [Raw HTTP query examples](https://docs.envio.dev/docs/HyperSync/hypersync-curl-examples), the same plain requests this script makes
 - [HyperSync supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks)
 - [Safe deployments](https://github.com/safe-global/safe-deployments)
 - [Safe docs](https://docs.safe.global)
