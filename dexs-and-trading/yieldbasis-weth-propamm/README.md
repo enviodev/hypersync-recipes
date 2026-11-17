@@ -23,7 +23,7 @@ All of it comes from HyperSync.
 - Every `TokenExchange` log on the crvUSD/WETH pool behind Yield Basis market 10 (yb-WETH), [`0x656341Ef90b622c6634e0573772FfB7f3669b9f3`](https://etherscan.io/address/0x656341Ef90b622c6634e0573772FfB7f3669b9f3), from about a week before the switch onwards.
 - The block timestamp and the transaction sender for each swap.
 
-Volume is the crvUSD side of each swap at $1. Swaps under $1 are zero-size calls rather than trades, so they're left out. Fees are the `fee` field of each swap, paid in the coin bought, and WETH fees are valued at that swap's own price, so there's no outside price feed. Wallets are the addresses that sent the swap transactions, so a trade routed through a solver shows the signer. Days are 24 hour blocks from the switch, not calendar days.
+Volume is the crvUSD side of each swap at $1. Swaps under $1 are zero-size calls rather than trades, so they're left out. Fees are the `fee` field of each swap, paid in the coin bought, and WETH fees are valued at that swap's own price, so there's no outside price feed. Wallets are the addresses that sent the swap transactions, so a trade routed through a solver shows the signer. Days are 24-hour periods counted from the switch, not calendar days.
 
 ## Run it
 
