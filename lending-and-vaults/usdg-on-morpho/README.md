@@ -1,8 +1,8 @@
 # Paxos USDG on Morpho
 
-**HyperSync finds 382 Morpho markets that lend Paxos USDG** across Robinhood Chain, Arbitrum and Ethereum. Read live in the run below, they held $659.9M of USDG, and $593.2M of it (90%) was borrowed. Robinhood Chain had 371 of the markets and $516.7M, and Arbitrum had 8 markets and $143.2M.
+**HyperSync finds 382 Morpho markets that lend Paxos USDG** across Robinhood Chain, Arbitrum and Ethereum. Read live in a run on 4 Nov 2026, they held $659.9M of USDG, and $593.2M of it (90%) was borrowed. Robinhood Chain had 371 of the markets and $516.7M, and Arbitrum had 8 markets and $143.2M.
 
-| Chain | USDG markets | Supplied |
+| 4 Nov 2026 | USDG markets | Supplied |
 | --- | --- | --- |
 | Robinhood Chain | 371 | $516.7M |
 | Arbitrum | 8 | $143.2M |
@@ -29,7 +29,7 @@ export ENVIO_API_TOKEN=your-token
 python3 script.py
 ```
 
-Sample output.
+Sample output from the 4 Nov 2026 run.
 
 ```
 Robinhood Chain   371 USDG markets  $516.7M supplied
