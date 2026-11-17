@@ -31,7 +31,7 @@ python3 script.py                  # the last 30 full UTC days
 python3 script.py 30 2026-11-04    # the window used above (end date is exclusive)
 ```
 
-Sample output for the window above:
+Sample output for the window above.
 
 ```
 1843 Ondo and xStocks stock tokens on Ethereum
@@ -53,7 +53,7 @@ Tokens that moved  1,680
 
 ## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
 ```text
 Read script.py and README.md in this folder. It uses HyperSync
