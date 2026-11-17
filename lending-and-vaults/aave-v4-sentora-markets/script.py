@@ -1,7 +1,8 @@
 # What sits in Sentora's curated markets on Aave v4, with Envio HyperSync.
 # Reads every Supply, Withdraw, Borrow, Repay, LiquidationCall and ReportDeficit on Sentora's three Aave v4 spokes
-# on Ethereum and rebuilds what is supplied and borrowed from them. A public RPC gives oracle prices and token
-# details, and a labelled cross-check against the spokes' own state.
+# on Ethereum and rebuilds what is supplied and borrowed from them. Dollar prices come from HyperSync too, from the
+# AnswerUpdated logs of the Chainlink aggregators behind each spoke's Aave oracle. A public RPC gives token details,
+# the oracle price as a labelled check, and a labelled cross-check against the spokes' own state.
 # Python 3 standard library only. Set ENVIO_API_TOKEN first.
 import datetime
 import json
@@ -27,6 +28,26 @@ LIQUIDATION = "0x2a1f12d996f530f89d8038aa293f9fde81cac44b6dfd6225e3358d09b78a4a3
 DEFICIT = "0x59932f333b3a5e3fec86e662babe8dd767529ed207420e7468bd220cdfb3f076"      # ReportDeficit(uint256,address,uint256,(int256,int256,uint256))
 ADD_RESERVE = "0xb2d3221c3db1eb0d586556ae23399acdfe3e52ff0fcd184c19069c730f9ca2e9"  # AddReserve(uint256,uint256,address)
 TOPICS = [SUPPLY, WITHDRAW, BORROW, REPAY, LIQUIDATION, DEFICIT, ADD_RESERVE]
+ANSWER_UPDATED = "0x0559884fd3a460db3073b7fc896cc77986f16e378210ded43186175bf646fc5f"  # AnswerUpdated(int256 indexed current, uint256 indexed roundId, uint256 updatedAt)
+# Chainlink aggregators behind the spokes' oracle adapters, as (aggregator, decimals). Found with each oracle's
+# getReserveSource(reserveId), which returns an adapter, then the adapter's price feed proxy and its aggregator().
+FEEDS = {
+    "RLUSD/USD": ("0x7d95b7bf7bB7750d818F42Df114739B6C88CF9bC", 8),
+    "USDe/USD": ("0xcC16f670129f965b396f2e81312F6e339FFDB18e", 8),
+    "OUSD/USD": ("0x07cd2979401f63F9DC95657B1529849cfA8440E2", 8),
+    "PYUSD/USD": ("0x39E31761911b9aaBAEF5fb81B18Fd1C24a60E884", 8),
+    "USDC/USD": ("0x54bCC589d9743E521c64233706FC8cB36D275b07", 8),
+    "BTC/USD": ("0x4a3411ac2948B33c69666B35cc6d055B27Ea84f1", 8),
+    "MWIN NAV": ("0xF8a4527C373dBcA70b302CE77af255439Fa2A5Df", 8),
+    "PRIME/wYLDS rate": ("0x48F9A46BA852B5c22D4153D0534397B59AbfdeF5", 18),
+    "PST/USDC rate": ("0x7842fe224A835f5587ac33d321Cb054A7dd65c98", 6),
+}
+# How each reserve is priced, by reserve id, the way the spoke's oracle builds it. wYLDS is fixed at $1 in the adapter.
+PRICING = {
+    "RLUSD Yield": {0: ("RLUSD/USD",), 1: ("USDe/USD",), 2: ("PRIME/wYLDS rate",), 3: ("MWIN NAV",), 4: ("PST/USDC rate", "USDC/USD")},
+    "OUSD Yield": {0: ("OUSD/USD",), 1: ("USDe/USD",), 2: ("PRIME/wYLDS rate",), 3: ("MWIN NAV",), 4: ("PST/USDC rate", "USDC/USD")},
+    "Bluechip": {0: ("RLUSD/USD",), 1: ("PYUSD/USD",), 2: ("OUSD/USD",), 3: ("BTC/USD",)},
+}
 HYPERSYNC = "https://eth.hypersync.xyz/query"
 RPC = "https://ethereum-rpc.publicnode.com"
 
@@ -87,15 +108,48 @@ while True:
 block = hex(res["archive_height"] - 1)  # read onchain state at the last block HyperSync returned
 logs.sort(key=lambda l: (l["block_number"], l["log_index"]))
 
-# 2. Reserve details (underlying, decimals) and current price for each reserve the spokes listed.
+# 2. Latest Chainlink answers at the snapshot block, then the details (underlying, decimals) of each reserve the spokes listed.
+def latest_answers(end):
+    """Latest AnswerUpdated of each feed before block `end`, read with HyperSync. Looks back over a growing window
+    of blocks until every feed has an answer. Returns {feed name: (price, updatedAt)}."""
+    by_addr = {a.lower(): (n, d) for n, (a, d) in FEEDS.items()}
+    found, window = {}, 200_000
+    while len(found) < len(FEEDS):
+        body = {"from_block": max(end - window, 0), "to_block": end,
+                "logs": [{"address": list(by_addr), "topics": [[ANSWER_UPDATED]]}],
+                "field_selection": {"log": ["block_number", "log_index", "address", "topic0", "topic1", "data"]}}
+        latest = {}
+        while True:
+            res = post(HYPERSYNC, body, auth=True)
+            for batch in res["data"]:
+                for log in batch.get("logs") or []:
+                    hit = by_addr.get(log["address"].lower())
+                    if hit and log["topic0"] == ANSWER_UPDATED:
+                        key = (log["block_number"], log["log_index"])
+                        if hit[0] not in latest or key > latest[hit[0]][0]:
+                            latest[hit[0]] = (key, int(log["topic1"], 16) / 10 ** hit[1], int(log["data"], 16))
+            if res["next_block"] >= end:
+                break
+            body["from_block"] = res["next_block"]
+        found = latest
+        if end - window <= 0:
+            break
+        window *= 4
+    return {n: (v[1], v[2]) for n, v in found.items()}
+
+
+answers = latest_answers(int(block, 16) + 1)
 reserves = {}
 for log in logs:
     if log["topic0"] == ADD_RESERVE:
         spoke, rid = log["address"].lower(), int(log["topic1"], 16)
         r = call(spoke, "0x77778db3", rid, block)                     # getReserve(uint256)
         underlying, decimals = "0x" + format(word(r, 0), "040x"), word(r, 3)
-        price = word(call(SPOKES[spoke][1], "0xd45c35ff", rid, block), 0) / 1e8  # getReservePrice(uint256), 8 decimals
-        reserves[(spoke, rid)] = {"symbol": symbol(underlying, block), "decimals": decimals, "price": price,
+        price = 1.0
+        for name in PRICING[SPOKES[spoke][0]][rid]:  # a rate feed times a base feed, or one feed on its own
+            price *= answers[name][0]
+        oracle = word(call(SPOKES[spoke][1], "0xd45c35ff", rid, block), 0) / 1e8  # getReservePrice(uint256), check only
+        reserves[(spoke, rid)] = {"symbol": symbol(underlying, block), "decimals": decimals, "price": price, "oracle": oracle,
                                   "supplied": 0, "borrowed": 0, "supply_shares": 0, "drawn_shares": 0,
                                   "supply_rate": None, "drawn_rate": None}
 
@@ -142,11 +196,14 @@ def assets(shares, rate, decimals):
 # 4. Print, and check each reserve against getReserveSuppliedAssets() and getReserveTotalDebt() over RPC.
 #    The rebuilt figures use the share rate from each reserve's latest event, so the spoke's own figures sit slightly
 #    higher by the interest earned since then. Debt from events is drawn debt only, without Aave v4's premium debt.
-total, checks, by_symbol = 0, [], defaultdict(float)
+total, checks, by_symbol, oracle_total, price_checks = 0, [], defaultdict(float), 0, {}
 for (spoke, rid), r in reserves.items():
     r["onchain"] = assets(r["supply_shares"], r["supply_rate"], r["decimals"])
     r["debt"] = assets(r["drawn_shares"], r["drawn_rate"], r["decimals"])
     total += r["onchain"] * r["price"]
+    oracle_total += r["onchain"] * r["oracle"]
+    if r["onchain"] * r["price"] >= 1e6:
+        price_checks[r["symbol"]] = (r["price"], r["oracle"])
     by_symbol[r["symbol"]] += r["onchain"] * r["price"]
     if r["onchain"] or r["supplied"]:
         rpc = word(call(spoke, "0x2fd00527", rid, block), 0) / 10 ** r["decimals"]      # getReserveSuppliedAssets
@@ -154,7 +211,7 @@ for (spoke, rid), r in reserves.items():
         checks.append(f"  {SPOKES[spoke][0]:11} {r['symbol']:6} supplied {r['onchain']:>16,.2f}  RPC {rpc:>16,.2f}  gap {r['onchain'] - rpc:>10,.2f}"
                       f"  |  borrowed {r['debt']:>16,.2f}  RPC {rpc_debt:>16,.2f}  gap {r['debt'] - rpc_debt:>10,.2f}")
 
-print(f"Supplied to Sentora's Aave v4 markets: ${total:,.0f}")
+print(f"Supplied to Sentora's Aave v4 markets: ${total:,.0f} at Chainlink feed prices read with HyperSync")
 for s, v in sorted(by_symbol.items(), key=lambda x: -x[1]):
     if v >= 1:
         print(f"  {s:6} ${v:>14,.0f}")
@@ -166,5 +223,8 @@ running = 0
 for day in sorted(daily):
     running += daily[day]
     print(f"  {day}  {running:>16,.0f}")
+print(f"Check (Aave oracle getReservePrice over RPC): the same supply is ${oracle_total:,.0f}, gap {100 * (total - oracle_total) / oracle_total:+.2f}%")
+for sym, (p, o) in price_checks.items():
+    print(f"  {sym:6} feed ${p:,.4f}  oracle ${o:,.4f}")
 print(f"Check (RPC getReserveSuppliedAssets and getReserveTotalDebt at block {int(block, 16):,})")
 print("\n".join(checks))
