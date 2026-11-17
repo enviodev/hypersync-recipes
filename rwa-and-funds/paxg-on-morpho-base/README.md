@@ -1,6 +1,6 @@
 # Borrowing USDC against gold on Base
 
-Up to Base block 55,205,406, **35 borrowers had taken 22.3K USDC against Paxos Gold (PAXG) on Morpho on Base, with 11.86 PAXG posted as collateral and no liquidations**. Almost all of it is in one market, created on 27 Oct 2026 with a 77% LLTV. PAXG on Base had grown to 406 PAXG since its first mint on 8 Sep 2026, and 2.9% of it was working as Morpho collateral.
+Up to Base block 55,205,406 on 9 Nov 2026, **35 borrowers had taken 22.3K USDC against Paxos Gold (PAXG) on Morpho on Base, with 11.86 PAXG posted as collateral and no liquidations**. Almost all of it is in one market, created on 27 Oct 2026 with a 77% LLTV. PAXG on Base had grown to 406 PAXG since its first mint on 8 Sep 2026, and 2.9% of it was working as Morpho collateral.
 
 ## Why it's interesting
 
@@ -26,7 +26,7 @@ python3 script.py              # full history up to now
 python3 script.py 55205406     # stop at the block used above
 ```
 
-Sample output at block 55,205,406:
+Sample output at block 55,205,406.
 
 ```
 Market 0x48dca3ed245fb30931013a676d3451f7602b11150f92743ad93159628cbbe392
@@ -55,7 +55,7 @@ Collateral from the events matches `collateralAssets` from the Morpho GraphQL AP
 
 ## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
 ```text
 Read script.py and README.md in this folder. It uses HyperSync
