@@ -10,7 +10,7 @@ Intelligent Portfolios wrap a basket of tokenized stocks and funds into one toke
 
 - Every ERC-20 `Transfer` of the seven portfolio tokens on Ethereum and BNB Chain, from [HyperSync](https://docs.envio.dev/docs/HyperSync/overview). Supply, holders and the arrived-since figure all come from HyperSync.
 - Token addresses from each portfolio's page on Ondo's app, app.ondo.finance. The seven are BLKHIon, BLKDIGon, BLKGRWon, YLD8on, YLD5on, MAG7Xon and BRAINon. BLKGRWon, for example, is [`0xc90341Cb9cb8D65AF044FaB23b659b7b4279399B`](https://etherscan.io/token/0xc90341Cb9cb8D65AF044FaB23b659b7b4279399B) on Ethereum.
-- Dollar values use the token prices shown on Ondo's app on 4 Nov 2026, kept in `PRICES` in the script. They don't come from HyperSync, so edit them for today's value.
+- Dollar values use the token prices shown on Ondo's app on 4 Nov 2026, kept in `PRICES` in the script. They don't come from HyperSync, so edit them for today's value. A portfolio token's price is the net asset value of a basket of stocks, ETFs and bonds that Ondo computes off chain and shows in its app. I found no onchain price feed or DEX pool for these seven tokens that HyperSync could read, so the script keeps the app price and the README says so plainly. Supply, holders and the arrivals since a date are all from HyperSync, and only the dollar value depends on the price.
 
 Supply is mints minus burns, and it matches each token's `totalSupply()` onchain. Holders are addresses with a positive balance. The portfolios on Solana aren't read here.
 
