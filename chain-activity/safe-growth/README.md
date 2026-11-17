@@ -1,21 +1,39 @@
 # Every Safe created, month by month
 
-Reads every `ProxyCreation` event from Safe's canonical proxy factories (1.3.0, 1.4.1 and 1.5.0) on 14 chains with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview), then counts the new Safes by month and by chain.
+Between 1 Jan and 11 Nov 2026, **4.67M Safes were created from Safe's 1.3.0, 1.4.1 and 1.5.0 factories on 14 chains, and new Safes per month grew more than 6x, from 132K in February to 825K in September**. Base accounted for 3.61M of this year's Safes. Across all time, the same factories have made 26.1M Safes.
 
-These are the numbers behind Envio's post on Safe's growth in 2026.
+| Month | New Safes |
+| --- | --- |
+| 2026-02 | 132,039 |
+| 2026-04 | 228,547 |
+| 2026-06 | 525,764 |
+| 2026-08 | 704,095 |
+| 2026-09 | 824,853 |
+| 2026-10 | 794,368 |
+
+## Why it's interesting
+
+Every Safe starts life as a `ProxyCreation` event from one of a few official factories, and those factories sit at the same addresses on most chains. So one query shape gives you every Safe on every chain, and you can see where smart accounts are actually being created month by month.
+
+## What it pulls
+
+All of it comes from HyperSync.
+
+- Every `ProxyCreation` log from Safe's 1.3.0 `proxy_factory` (canonical and EIP-155 builds) and the 1.4.1 and 1.5.0 `safe_proxy_factory`, on Ethereum, Base, Optimism, Polygon, Arbitrum, BNB Chain, Gnosis, Avalanche, Unichain, Berachain, Scroll, Celo, Linea and Ink.
+- Block timestamps, to date each Safe by its creation block in UTC.
+
+Factory and singleton addresses are read from Safe's own [safe-deployments](https://github.com/safe-global/safe-deployments) repo when the script starts. A Safe counts when the event's singleton is one of the official `safe` or `safe_l2` contracts for those versions. Safes made by older factories (1.0.0 to 1.2.0) or zkSync's separate deployments aren't included, so these totals sit below Safe's own all-network figure of 60M+ accounts.
 
 ## Run it
 
-You need Python 3 and a HyperSync API token from the [Envio Dashboard](https://envio.dev/app/api-tokens). The script has no other dependencies.
+You need Python 3 and a free API token from [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens). There's nothing else to install.
 
 ```bash
 export ENVIO_API_TOKEN=your-token
-python script.py
+python3 script.py
 ```
 
-It reads about 26 million factory events across all 14 chains and takes about 25 minutes, most of it on Optimism and Base. To run fewer chains, trim the `CHAINS` list at the top of the script. It also writes `safes_by_month.json` with every chain's monthly counts.
-
-## What it prints
+It reads about 26M factory events across all 14 chains and takes about 25 minutes, most of it on Optimism and Base. It also writes `safes_by_month.json` with every chain's monthly counts. Sample output from a run on 11 Nov 2026.
 
 ```
 Safes created from Safe's 1.3.0, 1.4.1 and 1.5.0 factories on 14 chains, as of 11 Nov 2026 12:20 UTC
@@ -85,22 +103,36 @@ Created in 2026 by chain
   Scroll              351
 ```
 
-Across the 14 chains, 4,673,124 Safes were created between 1st January and 11th November 2026, and new Safes per month went from 132,039 in February to 824,853 in September, more than 6x. Base made up 3,609,195 of this year's Safes, and September was its biggest month yet with 761,332. Your numbers will be higher, since Safes keep getting created.
+Safes keep getting created, so your numbers will be higher.
 
-## How it counts
+## Change the window or chain
 
-- Factory and singleton addresses come from Safe's own [safe-deployments](https://github.com/safe-global/safe-deployments) repo: the 1.3.0 `proxy_factory` (canonical and EIP-155 builds), the 1.4.1 and 1.5.0 `safe_proxy_factory`, and the `safe` and `safe_l2` singletons of each version.
-- A Safe counts when a factory emits `ProxyCreation` for a proxy whose singleton is one of those official Safe contracts, L1 or L2 build. Proxies pointing at anything else are left out.
-- Each Safe is dated by its creation block, grouped by calendar month in UTC.
-- Safes made by older factories (1.0.0 to 1.2.0) or zkSync's separate deployments are not included, so the totals here sit below Safe's own all-network figure of 60M+ accounts.
+- **Chains.** `CHAINS` maps a chain ID to a name, and the script calls `https://<chain id>.hypersync.xyz`. Trim it to run fewer chains, or add any chain from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks) where Safe's factories are deployed.
+- **Versions.** `FACTORY_FILES` and `SINGLETON_FILES` list the safe-deployments files to read. Add a version's files to include it.
+- **Window.** The script reads every block on each chain and groups by month. For a shorter period, read the monthly counts you need from `safes_by_month.json`.
 
-## Ask your coding agent
+## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
+```text
+Read script.py and README.md in this folder. It uses HyperSync
+(https://docs.envio.dev/docs/HyperSync/overview) to read every ProxyCreation
+event from Safe's 1.3.0, 1.4.1 and 1.5.0 proxy factories on 14 chains and counts
+new Safes by month and chain. My HyperSync token is in the ENVIO_API_TOKEN
+environment variable.
+
+Run it on Base only and split the 2026 Safes by week and by singleton version
+(1.3.0, 1.4.1 or 1.5.0, L1 or L2 build). Keep the standard library only. Then
+check that the weekly counts add up to the Base line under "Created in 2026
+by chain" from the original output.
 ```
-Use Envio HyperSync (https://docs.envio.dev/docs/HyperSync/overview) and Safe's deployments repo
-(https://github.com/safe-global/safe-deployments) to read every ProxyCreation event from Safe's
-1.3.0, 1.4.1 and 1.5.0 proxy factories on Base. My API token is in the ENVIO_API_TOKEN environment
-variable. Show me new Safes per week for 2026, and which singleton version each one uses.
-```
+
+## Links
+
+- [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview)
+- [HyperSync query reference](https://docs.envio.dev/docs/HyperSync/hypersync-query)
+- [HyperSync supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks)
+- [Safe deployments](https://github.com/safe-global/safe-deployments)
+- [Safe docs](https://docs.safe.global)
+- [Envio Discord](https://discord.gg/envio)
