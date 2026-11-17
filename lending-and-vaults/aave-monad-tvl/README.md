@@ -1,8 +1,8 @@
 # What sits in Aave on Monad
 
-Up to Monad block 119,308,836, **Aave v3 on Monad held $281.4M, and $276.9M of it (98.4%) was dollar tokens**. USDe was the biggest pool at $119.2M, then syrupUSDC at $85.8M and a Pendle PT on AUSD at $43.4M.
+Up to Monad block 119,308,836 on 4 Nov 2026, **Aave v3 on Monad held $281.4M, and $276.9M of it (98.4%) was dollar tokens**. USDe was the biggest pool at $119.2M, then syrupUSDC at $85.8M and a Pendle PT on AUSD at $43.4M.
 
-| Asset | Held | Share |
+| 4 Nov 2026 | Held | Share |
 | --- | --- | --- |
 | USDe | $119.18M | 42.3% |
 | syrupUSDC | $85.84M | 30.5% |
@@ -15,7 +15,7 @@ Up to Monad block 119,308,836, **Aave v3 on Monad held $281.4M, and $276.9M of i
 
 Aave's pools on Monad are almost all dollars, and a big part of that is yield-bearing dollars (USDe, syrupUSDC, Pendle PTs) rather than plain USDC. If you're building a vault, a looping strategy or a dashboard on Monad, this shows where the liquidity actually sits.
 
-It's also a simple way to get TVL with no node. Every aToken's balance is the sum of transfers in minus transfers out, and HyperSync returns every one of those transfers since genesis in about two minutes.
+It's also a simple way to get TVL with no node. What each aToken contract holds of its reserve token is the sum of transfers in minus transfers out, and HyperSync returns every one of those transfers since genesis in about two minutes.
 
 ## What it pulls
 
@@ -36,7 +36,7 @@ python3 script.py             # up to the latest block
 python3 script.py 119308836   # up to the block used above
 ```
 
-It takes about two minutes. Sample output from a run on 16 Nov 2026.
+It takes about two minutes. Sample output from a later run on 16 Nov 2026, at block 122,749,347, so it differs from the 4 Nov figures above.
 
 ```
 Held in Aave v3 on Monad up to block 122,749,347
@@ -54,7 +54,7 @@ Pool balances change every block, so your numbers will differ.
 
 ## Change the window or chain
 
-- **Block.** Pass a block number as the first argument to stop there. Prices always come from the oracle at the latest block, so a past block gives today's prices on that block's balances.
+- **Block.** Pass a block number as the first argument to stop there. Prices always come from the oracle at the latest block, so a past block gets that block's balances valued at the prices when you run it.
 - **Chain.** Aave v3 runs on many chains. Swap `URL` for that chain's HyperSync endpoint from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks), `RPC` for a public RPC on that chain, and `ORACLE` and `RESERVES` for the matching file in the [Aave address book](https://github.com/bgd-labs/aave-address-book/tree/main/src).
 
 ## Check the numbers
