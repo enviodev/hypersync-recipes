@@ -1,6 +1,6 @@
 # Coinbase borrowing on Morpho, Base
 
-Coinbase's bitcoin-backed loans run through the cbBTC/USDC market on Morpho on Base, and its newer gold-backed loans run through a PAXG/USDC market. Up to Base block 55,212,962 on 9 Nov 2026, **75.5K wallets had borrowed $3.76B of USDC against cbBTC since Sep 2024, and 40.6K cbBTC sat in the market as collateral**. At the market oracle's price that collateral was worth about $3.03B, against $1.62B of USDC owed.
+Coinbase's bitcoin-backed loans run through the cbBTC/USDC market on Morpho on Base, and its newer gold-backed loans run through a PAXG/USDC market. Up to Base block 55,212,962 on 9 Nov 2026, **75.5K wallets had borrowed $3.76B of USDC against cbBTC since Sep 2024, and 40.6K cbBTC sat in the market as collateral**. At the market oracle's price that collateral was worth about $3.03B, against $1.62B of USDC owed, which HyperSync also rebuilds from the market's events.
 
 | | cbBTC/USDC | PAXG/USDC |
 | --- | --- | --- |
@@ -21,9 +21,9 @@ When a big app runs loans through an open lending market, you can follow the who
   - PAXG/USDC `0x48dca3ed245fb30931013a676d3451f7602b11150f92743ad93159628cbbe392`
 - The market IDs come from the Morpho API, and the script reads each market's oracle back from Morpho's `idToMarketParams` onchain. cbBTC is [`0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf`](https://basescan.org/address/0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf) (8 decimals) and PAXG is [`0xe904AEA5E1b110c9174728fA2efFc8aeD19E98Ef`](https://basescan.org/address/0xe904AEA5E1b110c9174728fA2efFc8aeD19E98Ef) (18 decimals), from the [Paxos docs](https://docs.paxos.com/guides/stablecoin/paxg/mainnet).
 
-Collateral is `SupplyCollateral` minus `WithdrawCollateral` minus collateral seized in `Liquidate`. A borrower is any `onBehalf` address in a `Borrow` event. The cbBTC market is open to anyone on Morpho, so its totals cover every borrower in it, not only those who came through Coinbase.
+Collateral is `SupplyCollateral` minus `WithdrawCollateral` minus collateral seized in `Liquidate`. Morpho tracks debt in shares, and every `Borrow`, `Repay` and `Liquidate` carries the shares it adds or removes. USDC owed is the debt shares outstanding times the assets per share in the latest `Borrow` or `Repay`, so it includes interest. A borrower is any `onBehalf` address in a `Borrow` event. The cbBTC market is open to anyone on Morpho, so its totals cover every borrower in it, not only those who came through Coinbase.
 
-Collateral, borrowers, total borrowed and the monthly series come from HyperSync. "USDC owed now" is the market's `totalBorrowAssets` read over Base's public RPC, so it includes interest. Dollar values for collateral use each market's oracle `price()`, also read over RPC.
+Collateral, borrowers, total borrowed, USDC owed and the monthly series come from HyperSync. Dollar values for collateral use each market's oracle `price()`, read over Base's public RPC, and the script reads the market's `totalBorrowAssets` the same way as a check.
 
 ## Run it
 
@@ -35,12 +35,14 @@ python3 script.py              # up to the latest block
 python3 script.py 55212962     # up to the block used above
 ```
 
-The cbBTC market has more than 1.5M events, so a full run takes a while. Sample output from the block above.
+The cbBTC market has more than 1.5M events, so the script splits its history into block ranges and pulls them side by side. A full run takes about six minutes. Sample output from the block above.
 
 ```
 cbBTC/USDC market 0x9103c3b4e834476c9a62ea009ba2c884ee42e94e6e314a26f04d312434191836 (oracle 0x663becd10dae6c4a3dcd89f1d76c1174199639b9), up to Base block 55,212,962
   collateral now: 40,602.5463 cbBTC ~ $3,029,058,806 at $74,602.68 per cbBTC
-  USDC owed now: $1,623,913,618 (RPC, with interest); $3,757,272,323 borrowed in total since 2024-09-13
+  USDC owed now: $1,623,913,601 (HyperSync, debt shares outstanding times the latest borrow or repay rate)
+  Check (RPC totalBorrowAssets): $1,623,913,618, gap $-16.92
+  $3,757,272,323 borrowed in total since 2024-09-13
   75,465 unique borrowers, 1,550,996 collateral, borrow, repay and liquidation events
   end of each month: collateral, USDC principal outstanding (borrows minus repays)
     2024-09         16.8918 cbBTC  $         561,934
@@ -49,7 +51,9 @@ cbBTC/USDC market 0x9103c3b4e834476c9a62ea009ba2c884ee42e94e6e314a26f04d31243419
 
 PAXG/USDC market 0x48dca3ed245fb30931013a676d3451f7602b11150f92743ad93159628cbbe392 (oracle 0x6a47f48780eaeb07ee18ca47a9c33c925961bfad), up to Base block 55,212,962
   collateral now: 11.8555 PAXG ~ $48,785 at $4,114.98 per PAXG
-  USDC owed now: $21,074 (RPC, with interest); $22,275 borrowed in total since 2026-10-27
+  USDC owed now: $21,074 (HyperSync, debt shares outstanding times the latest borrow or repay rate)
+  Check (RPC totalBorrowAssets): $21,074, gap $-0.00
+  $22,275 borrowed in total since 2026-10-27
   35 unique borrowers, 304 collateral, borrow, repay and liquidation events
 ```
 
@@ -63,7 +67,7 @@ Without a block number your numbers will differ a little.
 
 ## Check the numbers
 
-As an outside comparison, at block 55,212,962 the rebuilt cbBTC collateral matches the Morpho API's `collateralAssets` to within 0.05 cbBTC, the gap being blocks between the two reads. The month-end principal from events ($1.54B) sits below `totalBorrowAssets` over RPC ($1.62B) because the RPC figure includes interest.
+The script checks itself against Base's public RPC at the same block. At block 55,212,962 the USDC owed rebuilt from events ($1,623,913,601) sat $17 below the market's `totalBorrowAssets` ($1,623,913,618), the interest accrued since the market's last borrow or repay. The PAXG market matched to the cent. As an outside comparison, the rebuilt cbBTC collateral matches the Morpho API's `collateralAssets` to within 0.05 cbBTC, the gap being blocks between the two reads. The month-end principal (borrows minus repays, $1.54B) leaves interest out, so it sits below USDC owed.
 
 ## Build your own with an AI agent
 

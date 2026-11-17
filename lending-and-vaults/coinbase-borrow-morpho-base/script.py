@@ -1,7 +1,8 @@
 # Coinbase borrowing on Morpho, Base: the cbBTC/USDC market behind Coinbase's bitcoin-backed loans,
 # plus the new PAXG/USDC market behind its gold-backed loans.
 # Reads every SupplyCollateral, WithdrawCollateral, Borrow, Repay and Liquidate event in both markets with
-# Envio HyperSync, rebuilds collateral and borrowers from them, and checks the result against Base's public RPC.
+# Envio HyperSync and rebuilds collateral, borrowers and USDC owed from them. Base's public RPC is
+# used for the oracle price and as a labelled cross-check of USDC owed.
 # Python 3 standard library only. Set ENVIO_API_TOKEN first.
 #   python script.py              # full history up to now
 #   python script.py 55220000     # stop at a fixed Base block to rerun a past snapshot exactly
@@ -10,6 +11,7 @@ import os
 import sys
 import time
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from collections import defaultdict
 from datetime import datetime, timezone
 
@@ -30,10 +32,12 @@ T = {
     "0xa4946ede45d0c6f06a0f5ce92c9ad3b4751452d2fe0e25010783bcab57a67e41": "Liquidate",
 }
 
+
 TOKEN = os.environ.get("ENVIO_API_TOKEN")
 if not TOKEN:
     sys.exit("Set ENVIO_API_TOKEN (get one at https://envio.dev/app/api-tokens)")
 TO_BLOCK = int(sys.argv[1]) if len(sys.argv) > 1 else None
+POOL = ThreadPoolExecutor(12)
 
 
 def request(url, body, headers):
@@ -52,26 +56,40 @@ def call(to, data, block):
     return res.get("result", "0x")[2:]
 
 
-def events(market_id):
-    """Every collateral, borrow, repay and liquidation log in one market, with its block time."""
-    body = {"from_block": 0, "logs": [{"address": [MORPHO], "topics": [list(T), [market_id]]}],
-            "field_selection": {"log": ["block_number", "address", "topic0", "topic1", "topic2", "topic3", "data"],
-                                "block": ["number", "timestamp"]}}
-    if TO_BLOCK:
-        body["to_block"] = TO_BLOCK + 1
+def page(body):
+    """Page through one HyperSync query over [from_block, to_block). Returns its logs and block times."""
     out, ts = [], {}
     while True:
         res = request(HYPERSYNC + "/query", body, {"Authorization": "Bearer " + TOKEN})
         for batch in res["data"]:
             for b in batch.get("blocks") or []:
                 ts[b["number"]] = int(b["timestamp"], 16)
-            for log in batch.get("logs") or []:
-                if log["address"].lower() == MORPHO and log["topic0"] in T and log["topic1"] == market_id:
-                    out.append(log)
-        last = res["next_block"] - 1
-        if (TO_BLOCK and res["next_block"] > TO_BLOCK) or res["next_block"] >= res["archive_height"]:
-            break
+            out += batch.get("logs") or []
+        if res["next_block"] >= body["to_block"]:
+            return out, ts
         body["from_block"] = res["next_block"]
+
+
+def pull(selection, fields, parts=48):
+    """One query split into block ranges and pulled side by side (the cbBTC market has millions of logs).
+    Logs come back in block order."""
+    end = TO_BLOCK + 1 if TO_BLOCK else request(HYPERSYNC + "/query", {"from_block": 0, "to_block": 1, "logs": [selection]},
+                                                {"Authorization": "Bearer " + TOKEN})["archive_height"]
+    edges = [end * i // parts for i in range(parts)] + [end]
+    jobs = [{"from_block": a, "to_block": b, "logs": [selection], "field_selection": fields} for a, b in zip(edges, edges[1:])]
+    out, ts = [], {}
+    for logs, times in POOL.map(page, jobs):
+        out += logs
+        ts.update(times)
+    return out, ts, end - 1
+
+
+def events(market_id):
+    """Every collateral, borrow, repay and liquidation log in one market, with its block time."""
+    logs, ts, last = pull({"address": [MORPHO], "topics": [list(T), [market_id]]},
+                          {"log": ["block_number", "address", "topic0", "topic1", "topic2", "topic3", "data"],
+                           "block": ["number", "timestamp"]})
+    out = [log for log in logs if log["address"].lower() == MORPHO and log["topic0"] in T and log["topic1"] == market_id]
     for log in out:
         log["time"] = ts[log["block_number"]]
     return out, last
@@ -91,6 +109,7 @@ for name, m in MARKETS.items():
     snapshot = snapshot or last
     scale = 10 ** m["decimals"]
     collateral, borrowed, repaid = 0.0, 0.0, 0.0
+    debt_shares, rate = 0, (0, 1)   # Morpho tracks debt in shares; rate is assets per share from the latest event
     borrowers, monthly = set(), {}
     for log in logs:
         kind, w = T[log["topic0"]], words(log["data"])
@@ -99,18 +118,25 @@ for name, m in MARKETS.items():
         elif kind == "WithdrawCollateral":
             collateral -= w[1] / scale
         elif kind == "Borrow":
+            debt_shares += w[2]
+            rate = (w[1], w[2])
             borrowed += w[1] / 1e6
             borrowers.add("0x" + log["topic2"][-40:])
         elif kind == "Repay":
+            debt_shares -= w[1]
+            rate = (w[0], w[1])
             repaid += w[0] / 1e6
         elif kind == "Liquidate":
+            debt_shares -= w[1] + w[4]   # repaid shares and bad debt shares
             collateral -= w[2] / scale
             repaid += (w[0] + w[3]) / 1e6
         monthly[month(log["time"])] = (collateral, borrowed - repaid)
 
-    # Live state from RPC at the same block: Morpho market() and the market's own oracle price().
+    owed = debt_shares * rate[0] / rate[1] / 1e6   # debt shares outstanding at the latest event's rate, so with interest
+
+    # Oracle price over RPC for dollar values, and Morpho market() over RPC as a cross-check of owed.
     s = call(MORPHO, "0x5c60e39a" + m["id"][2:], snapshot)
-    owed = int(s[128:192], 16) / 1e6                                   # totalBorrowAssets, includes interest
+    rpc_owed = int(s[128:192], 16) / 1e6                               # totalBorrowAssets
     params = call(MORPHO, "0x2c3c9157" + m["id"][2:], snapshot)        # idToMarketParams(bytes32)
     oracle = "0x" + params[64 * 2 + 24:64 * 3]
     price = int(call(oracle, "0xa035b1fe", snapshot), 16) / 10 ** (36 + 6 - m["decimals"])  # USDC per token
@@ -118,7 +144,9 @@ for name, m in MARKETS.items():
 
     print(f"{name}/USDC market {m['id']} (oracle {oracle}), up to Base block {snapshot:,}")
     print(f"  collateral now: {collateral:,.4f} {name} ~ ${collateral * price:,.0f} at ${price:,.2f} per {name}")
-    print(f"  USDC owed now: ${owed:,.0f} (RPC, with interest); ${borrowed:,.0f} borrowed in total since {first}")
+    print(f"  USDC owed now: ${owed:,.0f} (HyperSync, debt shares outstanding times the latest borrow or repay rate)")
+    print(f"  Check (RPC totalBorrowAssets): ${rpc_owed:,.0f}, gap ${owed - rpc_owed:,.2f}")
+    print(f"  ${borrowed:,.0f} borrowed in total since {first}")
     print(f"  {len(borrowers):,} unique borrowers, {len(logs):,} collateral, borrow, repay and liquidation events")
     print("  end of each month: collateral, USDC principal outstanding (borrows minus repays)")
     for mo, (c, d) in sorted(monthly.items()):
