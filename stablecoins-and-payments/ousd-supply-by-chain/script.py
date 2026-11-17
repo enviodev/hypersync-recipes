@@ -1,6 +1,7 @@
 # Where Open USD (OUSD) sits, with Envio HyperSync.
 # Replays every OUSD Transfer on Ethereum, Base and Tempo to rebuild supply and every holder's balance,
-# checks the result against totalSupply() and balanceOf() onchain, and reads Solana supply from Solana's RPC.
+# checks the result against totalSupply() and balanceOf() onchain, and rebuilds Solana supply from every OUSD
+# token balance change HyperSync returns on Solana, checked against getTokenSupply on Solana's RPC.
 # Python 3 standard library only. Set ENVIO_API_TOKEN first.
 import collections
 import json
@@ -8,6 +9,7 @@ import os
 import sys
 import time
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 
 # Official contract addresses from https://joinopenstandard.com/integrate
 EVM = {
@@ -17,6 +19,9 @@ EVM = {
 }
 SOLANA_MINT = "ousd2mJsPEckLHcSCDxyKD7NDGARZcfLbDZkKiatYHB"
 SOLANA_RPC = "https://api.mainnet-beta.solana.com"
+SOLANA_HYPERSYNC = "https://solana.hypersync.xyz"
+# OUSD's first balance change on Solana is at slot 415,382,345, inside HyperSync's Solana history (from 391,000,000).
+SOLANA_FROM = 415_000_000
 TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 ZERO = "0" * 40
 DECIMALS = 10 ** 6
@@ -71,8 +76,36 @@ for chain, (slug, rpc, token) in EVM.items():
     checks.append(f"  {chain}: replayed supply {'matches' if minted == onchain else 'DOES NOT MATCH'} totalSupply() "
                   f"at block {int(block, 16):,}, top 10 balances {'match' if balance_ok else 'DO NOT MATCH'} balanceOf()")
 
-sol = post(SOLANA_RPC, {"jsonrpc": "2.0", "id": 1, "method": "getTokenSupply", "params": [SOLANA_MINT]})["result"]["value"]
-supply["Solana"] = int(sol["amount"]) * DECIMALS // 10 ** sol["decimals"]
+# Solana: every OUSD token account's balance change, summed. Transfers cancel out, so what's left is mints minus burns.
+def solana_changes(a, b):
+    body = {"from_slot": a, "to_slot": b, "account_activity": [{"mint": [SOLANA_MINT]}],
+            "field_selection": {"account_activity": ["mint", "pre_token_balance", "post_token_balance"]}}
+    total = 0
+    while body["from_slot"] < b:
+        res = post(SOLANA_HYPERSYNC + "/query", body, auth=True)
+        for batch in res.get("account_activity") or []:
+            for r in batch:
+                if r.get("mint") == SOLANA_MINT:
+                    total += int(r.get("post_token_balance") or 0) - int(r.get("pre_token_balance") or 0)
+        if res["next_slot"] <= body["from_slot"]:
+            time.sleep(2)
+            continue
+        body["from_slot"] = res["next_slot"]
+    return total
+
+
+# Read the RPC check first, then sum HyperSync up to the same slot so both describe the same moment.
+sol = post(SOLANA_RPC, {"jsonrpc": "2.0", "id": 1, "method": "getTokenSupply",
+                        "params": [SOLANA_MINT, {"commitment": "confirmed"}]})["result"]
+sol_slot = sol["context"]["slot"]
+sol_rpc = int(sol["value"]["amount"]) * DECIMALS // 10 ** sol["value"]["decimals"]
+step = 1_000_000
+with ThreadPoolExecutor(16) as pool:
+    supply["Solana"] = sum(pool.map(lambda a: solana_changes(a, min(a + step, sol_slot + 1)),
+                                    range(SOLANA_FROM, sol_slot + 1, step)))
+diff = (sol_rpc - supply["Solana"]) / DECIMALS
+checks.append(f"  Solana: rebuilt supply {'matches' if diff == 0 else f'is {diff:+,.2f} off'} getTokenSupply on Solana's "
+              f"public RPC at slot {sol_slot:,}")
 
 total = sum(supply.values())
 print(f"Open USD (OUSD) supply: ${total / DECIMALS:,.0f}")
@@ -87,4 +120,3 @@ print(f"Across Ethereum, Base and Tempo, the top 10 holders on each chain hold "
 print(f"The top 10 holders on Tempo hold {100 * top10['Tempo'] / total:.1f}% of all OUSD")
 print("Checks")
 print("\n".join(checks))
-print("  Solana supply read from getTokenSupply on Solana's public RPC")
