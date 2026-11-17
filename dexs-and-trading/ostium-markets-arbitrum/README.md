@@ -1,20 +1,42 @@
 # Ostium's biggest markets on Arbitrum
 
-Reads every position opened on [Ostium](https://www.ostium.com) on Arbitrum over the last 30 days with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview), then groups the size of those positions by pair and by asset group: indices, forex, commodities, stocks, ETFs and crypto. It also reads open interest for every pair straight from Ostium's contracts.
+In the 30 days to 00:00 UTC on 5 Nov 2026, **traders opened $57.1M of positions on [Ostium](https://www.ostium.com), and 80.2% of that size was outside crypto**. Indices led with $34.9M, mostly the S&P 500 (US500, $18.3M) and the Nasdaq 100 (US100, $15.6M). That came from 6.7K trades by 335 traders.
 
-These are the numbers behind Envio's post on Ostium's biggest markets.
+| Asset group | Size opened | Share of size | Share of trades |
+| --- | --- | --- | --- |
+| Indices | $34.9M | 61.1% | 18.8% |
+| Crypto | $11.3M | 19.8% | 47.7% |
+| Forex | $7.2M | 12.6% | 9.1% |
+| Commodities | $2.8M | 5.0% | 10.6% |
+| Stocks | $0.9M | 1.5% | 12.2% |
+| ETFs | $0.0M | 0.0% | 1.7% |
+
+## Why it's interesting
+
+Ostium lists perps on stock indices, forex, commodities and stocks next to crypto, all settled onchain in USDC. Crypto pairs get almost half the trades but indices get most of the size, so trade counts and dollar size tell very different stories here. Every position is an event, so you can rebuild the whole picture from the chain.
+
+## What it pulls
+
+- Every `MarketOpenExecuted` and `LimitOpenExecuted` log from Ostium's TradingCallbacks contract, `0x7720fC8c8680bF4a1Af99d44c6c265a74e9742a9`. Each position's size is collateral times leverage, in USDC. Event layouts come from `IOstiumTradingCallbacks.sol` in [Ostium's contracts repo](https://github.com/0xOstium/smart-contracts-public).
+- Pair names and asset groups from Ostium's PairsStorage contract (`0x260E349F643f12797fDc6f8c9d3df211D5577823`) with `pairs(i)` and `groups(g)`, through Arbitrum's public RPC.
+- Open interest for every pair from `openInterest(pair, 0)` and `openInterest(pair, 1)` on TradingStorage (`0xccd5891083a8acd2074690f65d3024e7d13d66e7`), also through Arbitrum's public RPC.
+- Live mid prices and display names from Ostium's [Builder API](https://docs.ostium.com/developer/builder-api/get-prices).
+
+All three contract addresses are in the mainnet table in [Ostium's docs](https://docs.ostium.com/protocol/security/audits).
+
+The positions opened, their size, trades and traders come from HyperSync. Open interest comes from public RPC calls, valued at Ostium's live API prices, with pairs quoted in yen, euros, pounds or Hong Kong dollars converted with Ostium's own FX pairs. The contract calls two of the indices `SPX/USD` and `NDX/USD`, and the script prints the app's names, US500 and US100. Only new positions count, not closes, take profits, stop losses or liquidations.
 
 ## Run it
 
-You need Python 3 and a HyperSync API token from the [Envio Dashboard](https://envio.dev/app/api-tokens). The script has no other dependencies.
+You need Python 3 and a free API token from [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens). There's nothing else to install.
 
 ```bash
 export ENVIO_API_TOKEN=your-token
-python script.py              # 30 days ending at the last 00:00 UTC
-python script.py 2026-11-05   # 30 days ending at 00:00 UTC on that date
+python3 script.py              # 30 days ending at 00:00 UTC today
+python3 script.py 2026-11-05   # 30 days ending at 00:00 UTC on 5 Nov 2026, as above
 ```
 
-## What it prints
+Sample output for `2026-11-05`.
 
 ```
 Ostium on Arbitrum, positions opened 2026-10-06 to 2026-11-05 (UTC, 30 days)
@@ -58,29 +80,39 @@ Top 5 pairs by open interest
   BRENT/USD  $     0.5M    6.1%
 ```
 
-Open interest is read live, so that part changes every time you run it.
+The 30-day window is fixed by the date, so the positions part stays the same. Open interest is read live, so that part changes every time you run it.
 
-## How it counts
+## Change the window or chain
 
-- Contract addresses come from the mainnet table in [Ostium's docs](https://docs.ostium.com/protocol/security/audits). Event layouts come from `IOstiumTradingCallbacks.sol` in [Ostium's contracts repo](https://github.com/0xOstium/smart-contracts-public).
-- A new position is a `MarketOpenExecuted` or `LimitOpenExecuted` event from the TradingCallbacks contract (`0x7720fC8c8680bF4a1Af99d44c6c265a74e9742a9`). Its size is collateral times leverage, in USDC.
-- Pair names and asset groups are read from Ostium's PairsStorage contract with `pairs(i)` and `groups(g)`, so nothing is guessed. Ostium's app shows two of the contract names differently: `SPX/USD` is US500 and `NDX/USD` is US100. The script prints the app names from Ostium's price API.
-- The window is 30 full UTC days, found by block timestamp.
-- Open interest is long plus short notional from `openInterest(pair, 0)` and `openInterest(pair, 1)` on TradingStorage, valued at Ostium's live mid prices from its [Builder API](https://docs.ostium.com/developer/builder-api/get-prices). Pairs quoted in yen, euros, pounds or Hong Kong dollars are converted with Ostium's own FX pairs.
-- Closes, take profits, stop losses and liquidations are not counted, only new positions.
+- **Window.** Pass the end date. The window is the 30 full UTC days before 00:00 on that date, found by binary search on block timestamps. For a different length, change the `30 * 86400` in the script.
+- **Chain.** Ostium runs on Arbitrum. To reuse the pattern for another protocol, swap `HS` for that chain's HyperSync endpoint from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks) and the event signatures and contracts for that protocol's.
 
-## Check it another way
+## Check the numbers
 
-The opened totals match Ostium's own subgraph (`https://builder.prod.bedrock.ostium.io/v1/subgraph/gn`, `orders` with `orderAction: "Open"`) for the same window, trade for trade. Open interest matches the `longOI` and `shortOI` fields on the subgraph's `pairs`.
+As a comparison, Ostium runs its own subgraph at `https://builder.prod.bedrock.ostium.io/v1/subgraph/gn`. Its `orders` with `orderAction: "Open"` matched the opened totals trade for trade for the same window, and the `longOI` and `shortOI` fields on its `pairs` matched the open interest.
 
-## Ask your coding agent
+## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
+```text
+Read script.py and README.md in this folder. It uses HyperSync
+(https://docs.envio.dev/docs/HyperSync/overview) to read every
+MarketOpenExecuted and LimitOpenExecuted event from Ostium's TradingCallbacks
+contract on Arbitrum and groups position size by pair and asset group. My
+HyperSync token is in the ENVIO_API_TOKEN environment variable.
+
+Add a weekly breakdown, with size opened per asset group for each 7-day block of
+the window, and split each group into longs and shorts using the buy flag in the
+Trade struct. Keep the standard library only. Run it for 2026-11-05 and check
+that the weekly sizes add up to the $57.1M total.
 ```
-Use Envio HyperSync (https://docs.envio.dev/docs/HyperSync/overview) to read every MarketOpenExecuted
-and LimitOpenExecuted event from Ostium's TradingCallbacks contract on Arbitrum
-(0x7720fC8c8680bF4a1Af99d44c6c265a74e9742a9). My API token is in the ENVIO_API_TOKEN environment
-variable. Size each position as collateral x leverage, name pairs with pairs(i) on PairsStorage
-(0x260E349F643f12797fDc6f8c9d3df211D5577823), and chart weekly new position size by asset group.
-```
+
+## Links
+
+- [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview)
+- [HyperSync query reference](https://docs.envio.dev/docs/HyperSync/hypersync-query)
+- [HyperSync supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks)
+- [Ostium docs](https://docs.ostium.com)
+- [Ostium contracts](https://github.com/0xOstium/smart-contracts-public)
+- [Envio Discord](https://discord.gg/envio)
