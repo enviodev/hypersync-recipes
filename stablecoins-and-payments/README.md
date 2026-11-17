@@ -1,6 +1,6 @@
 # Stablecoins and payments
 
-Stablecoin and payment examples for Envio HyperSync. Pull every mint, burn and transfer of a stablecoin, rebuild supply day by day, and size onchain payments.
+Scripts for stablecoins and payments. Pull every mint, burn and transfer of a stablecoin, rebuild its supply day by day, or size up onchain payments, all with [HyperSync](https://docs.envio.dev/docs/HyperSync/overview).
 
 | Example | Chain | How to |
 | --- | --- | --- |
@@ -17,4 +17,4 @@ Stablecoin and payment examples for Envio HyperSync. Pull every mint, burn and t
 | [sofiusd-solana](../sofiusd-solana) | Solana | Rebuild SoFiUSD supply on Solana from every mint and burn |
 | [huma-payfi-solana](../huma-payfi-solana) | Solana | Pull every Huma Institutional drawdown and repayment on Solana |
 
-To run any of them, get a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow the example's README. See the [full list of examples](../README.md) for every topic.
+To run one, grab a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow that example's README. The [main README](../README.md) has every topic.

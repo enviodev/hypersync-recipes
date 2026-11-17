@@ -1,6 +1,6 @@
 # HyperIndex indexers
 
-HyperIndex indexers that keep onchain data up to date and serve it as a GraphQL API. Run them locally or deploy them on [Envio Cloud](https://docs.envio.dev/docs/HyperIndex/hosted-service).
+HyperIndex indexers that keep the data up to date and serve it over GraphQL. Run them locally, or deploy them on [Envio Cloud](https://docs.envio.dev/docs/HyperIndex/hosted-service) and get a hosted endpoint.
 
 | Indexer | Chain | How to |
 | --- | --- | --- |
@@ -11,4 +11,4 @@ HyperIndex indexers that keep onchain data up to date and serve it as a GraphQL 
 | [elysium-uniswap-v4-pools](../elysium-uniswap-v4-pools) | Elysium | Index every Uniswap v4 pool on Elysium over RPC |
 | [elysium-hype-deposits](../elysium-hype-deposits) | HyperEVM | Index every HYPE deposit into Elysium through its bridge |
 
-To run any of them, get a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow the example's README. See the [full list of examples](../README.md) for every topic.
+To run one, grab a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow that example's README. The [main README](../README.md) has every topic.

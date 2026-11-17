@@ -1,6 +1,6 @@
 # Tokenized funds and real-world assets
 
-Real-world asset examples for Envio HyperSync. Track tokenized Treasury funds, money market funds and other RWAs from every mint, burn and transfer.
+Scripts for tokenized funds and real-world assets. Track Treasury funds, money market funds and other RWAs from every mint, burn and transfer, all with [HyperSync](https://docs.envio.dev/docs/HyperSync/overview).
 
 | Example | Chain | How to |
 | --- | --- | --- |
@@ -13,4 +13,4 @@ Real-world asset examples for Envio HyperSync. Track tokenized Treasury funds, m
 | [pendle-strcx](pendle-strcx) | Ethereum | Find every STRCx holder and how much sits in Pendle |
 | [paxg-on-morpho-base](paxg-on-morpho-base) | Base | Track USDC borrowed against Paxos Gold (PAXG) on Morpho |
 
-To run any of them, get a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow the example's README. See the [full list of examples](../README.md) for every topic.
+To run one, grab a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow that example's README. The [main README](../README.md) has every topic.

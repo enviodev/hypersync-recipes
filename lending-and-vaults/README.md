@@ -1,6 +1,6 @@
 # Lending and vaults
 
-Lending and vault examples for Envio HyperSync. Pull every supply, borrow, repay and withdrawal on Aave and Morpho markets and vaults.
+Scripts for lending markets and vaults. Pull every supply, borrow, repay and withdrawal on Aave and Morpho, all with [HyperSync](https://docs.envio.dev/docs/HyperSync/overview).
 
 | Example | Chain | How to |
 | --- | --- | --- |
@@ -15,4 +15,4 @@ Lending and vault examples for Envio HyperSync. Pull every supply, borrow, repay
 | [robinhood-earn-usdg-vault](robinhood-earn-usdg-vault) | Robinhood Chain | Count depositors in the USDG vault behind Robinhood Earn |
 | [safenet-staking](safenet-staking) | Ethereum | Track SAFE staked in Safenet and active stakers week by week |
 
-To run any of them, get a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow the example's README. See the [full list of examples](../README.md) for every topic.
+To run one, grab a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow that example's README. The [main README](../README.md) has every topic.

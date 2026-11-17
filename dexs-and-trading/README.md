@@ -1,6 +1,6 @@
 # DEXs, perps and prediction markets
 
-DEX and trading examples for Envio HyperSync. Pull every swap, pool and position on Uniswap, Aero, Ostium, Polymarket and more.
+Scripts for DEXs, perps and prediction markets. Pull every swap, pool and position on Uniswap, Aero, Ostium, Polymarket and more, all with [HyperSync](https://docs.envio.dev/docs/HyperSync/overview).
 
 | Example | Chain | How to |
 | --- | --- | --- |
@@ -18,4 +18,4 @@ DEX and trading examples for Envio HyperSync. Pull every swap, pool and position
 | [polymarket-election-night](polymarket-election-night) | Polygon | Get Polymarket trading volume hour by hour on US election night |
 | [metadao-launchpad-raises](../metadao-launchpad-raises) | Solana | Pull every MetaDAO launchpad raise on Solana |
 
-To run any of them, get a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow the example's README. See the [full list of examples](../README.md) for every topic.
+To run one, grab a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow that example's README. The [main README](../README.md) has every topic.

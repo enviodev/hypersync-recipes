@@ -1,6 +1,6 @@
 # Tokenized stocks
 
-Tokenized stock examples for Envio HyperSync. Find every holder of a stock token, pull every transfer and swap, and track trading in and out of US market hours.
+Scripts for tokenized stocks. Find everyone holding a stock token, pull every transfer and swap, or see how much trading happens when US markets are shut, all with [HyperSync](https://docs.envio.dev/docs/HyperSync/overview).
 
 | Example | Chain | How to |
 | --- | --- | --- |
@@ -16,4 +16,4 @@ Tokenized stock examples for Envio HyperSync. Find every holder of a stock token
 | [jupiter-lend-stock-collateral](../jupiter-lend-stock-collateral) | Solana | Pull every Jupiter Lend borrow position, grouped by collateral |
 | [backpack-stocks-solana](../backpack-stocks-solana) | Solana | Track Backpack tokenized stock holders, mints and burns on Solana |
 
-To run any of them, get a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow the example's README. See the [full list of examples](../README.md) for every topic.
+To run one, grab a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow that example's README. The [main README](../README.md) has every topic.

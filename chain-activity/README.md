@@ -1,6 +1,6 @@
 # Chain activity, wallets and accounts
 
-Chain activity examples for Envio HyperSync. Count transactions, active addresses, fees, Safes and smart accounts across whole chains.
+Scripts for chain-wide activity. Count transactions, active addresses, fees, Safes and smart accounts across a whole chain, all with [HyperSync](https://docs.envio.dev/docs/HyperSync/overview).
 
 | Example | Chain | How to |
 | --- | --- | --- |
@@ -19,4 +19,4 @@ Chain activity examples for Envio HyperSync. Count transactions, active addresse
 | [uni-new-holders](uni-new-holders) | Ethereum | Count new UNI holders per day since 2020 |
 | [solana-durable-nonces](solana-durable-nonces) | Solana | Count Solana transactions that use durable nonces |
 
-To run any of them, get a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow the example's README. See the [full list of examples](../README.md) for every topic.
+To run one, grab a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow that example's README. The [main README](../README.md) has every topic.

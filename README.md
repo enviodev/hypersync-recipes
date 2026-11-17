@@ -1,17 +1,17 @@
 # HyperSync examples
 
-Curated, ready-to-run HyperSync example scripts for onchain data. Each one uses [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview), Envio's blockchain data API, to answer one specific question, such as how much USDC was minted on Ethereum this week or who holds a tokenized stock, and prints the answer in your terminal.
+Curated, ready-to-run scripts that pull onchain data with [HyperSync](https://docs.envio.dev/docs/HyperSync/overview). Each one answers a real question, like how much USDC was minted on Ethereum this week or who holds a tokenized stock, and prints the answer in your terminal.
 
-Use them as starting points for your own analytics, backfills and data pipelines. Copy an example and change the contract, chain or time window. Every example comes with a prompt you can paste into Claude Code, Cursor or any coding agent to adapt it for you.
+Pick the one closest to what you need, swap in your contract, chain or dates, and you've got the start of your own dashboard, backfill or pipeline. Each one also has a prompt you can paste into Claude Code or Cursor if you'd rather your agent did the editing.
 
 - **74 examples** across Ethereum, Base, Arbitrum, Optimism, Polygon, BNB Chain, Avalanche, Monad, Gnosis, Ink, Arc, Robinhood Chain, HyperEVM, Tempo and Solana.
-- **Python standard library only** for the HyperSync scripts. No SDK to install, no node to run.
-- **HyperIndex indexers** for the examples that need a live GraphQL API.
+- **Plain Python.** Standard library only, so there's nothing to install and no node to run.
+- **A few HyperIndex indexers** for when you want the data live behind a GraphQL API.
 
 ## Quick start
 
 1. Get a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens).
-2. Clone the repo and run an example.
+2. Clone the repo and run one.
 
 ```bash
 git clone https://github.com/enviodev/hypersync-recipes.git
@@ -20,7 +20,7 @@ export ENVIO_API_TOKEN=your-token
 python3 script.py
 ```
 
-Each folder's README explains the finding, what the script pulls, how to change the window or chain, how to check the numbers and the agent prompt for that example.
+Every folder has its own README with what we found, what the script pulls, how to point it at another chain or window, and how to check the numbers.
 
 ## Examples
 
@@ -137,12 +137,12 @@ These run as live indexers with a GraphQL API. You can deploy them on [Envio Clo
 
 ## Use these examples with an AI agent
 
-Every example README ends with a "Build your own with an AI agent" prompt written for that example. For anything new, paste this into Claude Code, Cursor or another coding agent from the repo root:
+Each example's README ends with a prompt written for that example. If you want something new, open the repo in Claude Code, Cursor or whatever agent you use and paste this:
 
 ```text
 Read README.md and two examples in this repo that are close to what I want, for
-example usdc-supply-ethereum and aave-v4-avalanche. Then read the Envio HyperSync
-docs at https://docs.envio.dev/llms.txt.
+example usdc-supply-ethereum and aave-v4-avalanche. Then read the HyperSync docs
+at https://docs.envio.dev/llms.txt.
 
 Write a new example in its own folder that answers: <YOUR QUESTION>, on <CHAIN>.
 Use the HyperSync endpoint for that chain from
@@ -152,30 +152,30 @@ variable. Run it on a short window first, print the result, then add a README
 in the same format as the other examples.
 ```
 
-The full Envio docs are available as plain text for agents at [docs.envio.dev/llms.txt](https://docs.envio.dev/llms.txt) and [docs.envio.dev/llms-full.txt](https://docs.envio.dev/llms-full.txt).
+Agents read docs better as plain text, so point yours at [docs.envio.dev/llms.txt](https://docs.envio.dev/llms.txt) or the longer [llms-full.txt](https://docs.envio.dev/llms-full.txt).
 
 ## FAQ
 
 **What is HyperSync?**
-HyperSync is Envio's blockchain data API. It lets you query logs, transactions and blocks across dozens of chains, filtered on the server and returned with only the fields you ask for, so you can read a whole chain's history in minutes. Read the [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview).
+It's Envio's blockchain data API. You ask for logs, transactions or blocks, it filters them on the server and sends back only the fields you want, so reading a chain's full history takes minutes rather than days. The [overview](https://docs.envio.dev/docs/HyperSync/overview) has the details.
 
 **How do I get every ERC-20 transfer for a token?**
-Query the token's `Transfer` logs from block 0 with HyperSync and page through with `next_block`. [usdc-supply-ethereum](stablecoins-and-payments/usdc-supply-ethereum) and [rlusd-ethereum-supply](stablecoins-and-payments/rlusd-ethereum-supply) do this and turn the transfers into supply.
+Ask HyperSync for the token's `Transfer` logs from block 0 and keep going with `next_block` until you're caught up. [usdc-supply-ethereum](stablecoins-and-payments/usdc-supply-ethereum) and [rlusd-ethereum-supply](stablecoins-and-payments/rlusd-ethereum-supply) both do exactly this and turn the transfers into supply.
 
 **Can I use this instead of eth_getLogs?**
-Yes. HyperSync returns logs for wide block ranges in one request. If your code already speaks JSON-RPC, [HyperRPC](https://docs.envio.dev/docs/HyperRPC/overview-hyperrpc) serves `eth_getLogs` and other read methods from the same data.
+Yes. HyperSync hands back logs for huge block ranges in one request. And if your code already talks JSON-RPC, [HyperRPC](https://docs.envio.dev/docs/HyperRPC/overview-hyperrpc) serves `eth_getLogs` and the other read methods from the same data, so you don't have to change anything.
 
 **Does it work on Solana?**
-Yes. The Solana examples use the [HyperSync Solana endpoint](https://docs.envio.dev/docs/HyperSync/solana) to read instructions and token balance changes.
+Yes. The Solana examples read instructions and token balance changes from [HyperSync on Solana](https://docs.envio.dev/docs/HyperSync/solana).
 
 **Which chains are supported?**
-See the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks). Most examples switch chain by changing one URL.
+The full list is [here](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks). Moving most examples to another chain is a one-line change.
 
 **Do I need an SDK?**
-No. The scripts use plain HTTP and the Python standard library. Official [clients](https://docs.envio.dev/docs/HyperSync/hypersync-clients) for Python, Rust and Node.js are there for larger pipelines.
+No, the scripts just make HTTP requests. For bigger pipelines there are [clients](https://docs.envio.dev/docs/HyperSync/hypersync-clients) for Python, Rust and Node.js.
 
 **When should I use HyperIndex instead?**
-Use a script when you need an answer or a backfill. Use [HyperIndex](https://docs.envio.dev/docs/HyperIndex/overview) when you need the data kept up to date and served as a GraphQL API.
+A script is great when you want an answer or a one-off backfill. Reach for [HyperIndex](https://docs.envio.dev/docs/HyperIndex/overview) when you need the data kept up to date and served over GraphQL.
 
 ## Links
 
@@ -188,4 +188,4 @@ Use a script when you need an answer or a backfill. Use [HyperIndex](https://doc
 - [Get an API token](https://envio.dev/app/api-tokens)
 - [Envio Discord](https://discord.gg/envio)
 
-MIT licensed. Contributions and new example ideas are welcome in the [Envio Discord](https://discord.gg/envio).
+MIT licensed. Got an idea for an example, or stuck on one? Come say hi in the [Envio Discord](https://discord.gg/envio).
