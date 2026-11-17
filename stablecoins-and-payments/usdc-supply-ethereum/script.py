@@ -36,9 +36,12 @@ def as_int(v):
 
 
 # Blocks are about 12 seconds, so start a little more than DAYS back and trim by timestamp.
+# Optional second argument: an end date (YYYY-MM-DD, exclusive) to rerun a past window exactly.
+end = datetime.date.fromisoformat(sys.argv[2]) if len(sys.argv) > 2 else None
+cutoff = (end or datetime.datetime.now(datetime.timezone.utc).date()) - datetime.timedelta(days=DAYS)
+days_back = (datetime.datetime.now(datetime.timezone.utc).date() - cutoff).days + 2
 height = post("/height")["height"]
-start = height - (DAYS + 2) * 7200
-cutoff = datetime.datetime.now(datetime.timezone.utc).date() - datetime.timedelta(days=DAYS)
+start = height - days_back * 7200  # about 7,200 Ethereum blocks a day
 
 body = {
     "from_block": start,
@@ -69,10 +72,6 @@ while True:
         break
     body["from_block"] = res["next_block"]
 
-# Optional second argument: an end date (YYYY-MM-DD, exclusive) to rerun a past window exactly.
-end = datetime.date.fromisoformat(sys.argv[2]) if len(sys.argv) > 2 else None
-if end:
-    cutoff = end - datetime.timedelta(days=DAYS)
 days = [d for d in sorted(usdc) if d >= cutoff and (end is None or d < end)]
 print(f"Net USDC minted or burned on Ethereum per UTC day, {days[0]:%d %b} to {days[-1]:%d %b}")
 for day in days:

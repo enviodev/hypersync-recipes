@@ -33,7 +33,6 @@ python3 script.py 30 2026-11-04    # the 30 days before 4 Nov 2026, the window a
 Sample output from the window above.
 
 ```
-python script.py 30 2026-11-04
 Net USDC minted or burned on Ethereum per UTC day, 05 Oct to 03 Nov
 05 Oct      -52.7M USDC
 ...
@@ -47,7 +46,7 @@ Without an end date the window ends today, so the last day is partial and your n
 
 ## Change the window or chain
 
-- **Window.** The first argument is the number of days. The second is an end date (UTC, not included), so you can rerun any past window exactly.
+- **Window.** The first argument is the number of days. The second is an end date (UTC, not included) for rerunning a past window. Any past end date works. The further back it is, the more blocks the script reads, so older windows take a little longer.
 - **Chain.** USDC runs on many chains. Change `URL` to that chain's endpoint from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks) and `USDC` to Circle's address for that chain.
 - **Token.** Swap `USDC` for any other token that mints from and burns to the zero address, and adjust the decimals if they aren't 6.
 
