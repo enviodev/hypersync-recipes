@@ -5,7 +5,7 @@ Arbitrum One started collecting priority fees on 23 Sep 2026, and the first tip 
 - In the week of 9 to 15 Nov, 51% of transactions paid a priority fee, up from 38% in the first full week.
 - The busiest day was 28 Oct, with 1.67M transactions paying a priority fee.
 - The running total passed 35M on 10 Nov, the figure [Arbitrum shared](https://x.com/arbitrum/status/2122052836171071756). Our total to 9 Nov is 34.6M.
-- At each day's ETH price the fees come to about $447K, and about $410K up to 9 Nov. The script reports ETH. The dollar figures used a daily ETH price from an outside price feed.
+- At each day's ETH price the fees came to about $447K, and about $410K up to 9 Nov. Those two dollar figures were priced with a daily ETH price from an outside feed in the original run. The script now prices each day's fees from the Chainlink ETH/USD logs it reads through HyperSync, so a fresh full scan prints its own dollar total.
 
 ## Why it's interesting
 
@@ -20,8 +20,9 @@ The fee isn't an event, so logs won't give it to you. You need each transaction'
 - **Blocks.** `number`, `timestamp` and `base_fee_per_gas`, with `include_all_blocks` on.
 - **Rule.** A transaction paid a priority fee when `effective_gas_price` is above its block's `base_fee_per_gas`. The fee is the difference times `gas_used`.
 - **Window.** Block 507,945,268 (the start of 23 Sep 2026 UTC) to the chain head.
+- **ETH price.** `AnswerUpdated` logs of the Chainlink ETH/USD aggregator on Arbitrum One (`0xd827123d014578c965f6c9d87a641ec05faa5501`, behind the feed proxy `0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612`), from HyperSync. Each UTC day's fees are priced at that day's average answer, and a day with no update uses the last answer before it.
 
-Every count and the ETH total come from HyperSync.
+Every count, the ETH total and the dollar prices come from HyperSync.
 
 ## Run it
 
@@ -33,7 +34,7 @@ FROM_BLOCK=524000000 TO_BLOCK=524000300 python3 script.py   # 300 blocks, a quic
 python3 script.py                                            # 23 Sep 2026 to the chain head
 ```
 
-The full scan splits the range into 50K-block chunks across worker processes (`WORKERS`, default 12) and takes a while. It prints progress to stderr, then one row per UTC day with transactions, transactions with a priority fee, their share, fees in ETH and the running total of tipped transactions. It ends with the two totals and writes the daily numbers to `arbitrum_priority_fees.json` next to the script.
+The full scan splits the range into 50K-block chunks across worker processes (`WORKERS`, default 12) and takes a while. It prints progress to stderr, then one row per UTC day with transactions, transactions with a priority fee, their share, fees in ETH and the running total of tipped transactions. It adds the day's ETH/USD price and the fees in dollars to each row. It ends with the totals, including the dollar total, and writes the daily numbers to `arbitrum_priority_fees.json` next to the script.
 
 ## Change the window or chain
 
@@ -43,6 +44,7 @@ The full scan splits the range into 50K-block chunks across worker processes (`W
 ## Check the numbers
 
 - **Against an RPC, as the comparison.** For blocks 524,000,000 to 524,000,299, call `eth_getBlockByNumber` for `baseFeePerGas` and `eth_getBlockReceipts` for each `effectiveGasPrice` and `gasUsed` on the public Arbitrum RPC. Both the RPC and the script give 1,412 transactions, 797 with a priority fee and 1,838,517,634,556,150 wei in fees. The quick-try command above runs exactly that range.
+- **Against Chainlink over RPC.** A scan that runs to the chain head ends with a labelled check that prints the ETH/USD feed's `latestAnswer` over Arbitrum's public RPC next to the last answer HyperSync read. On 17 Nov 2026 both were $1,807.11. The quick try on the latest 300 blocks printed 925 tipped transactions of 1,963, fees worth $3 at an average $1,818 for the day.
 - **Against Arbitrum's figure.** The running total column passes 35M on 10 Nov, the day Arbitrum shared it.
 - **Before the switch.** Run with `FROM_BLOCK` set to the start of 20 Sep and `TO_BLOCK=507945268`. 20 to 22 Sep show no transactions above the base fee, which is what you'd expect before priority fees were collected.
 
