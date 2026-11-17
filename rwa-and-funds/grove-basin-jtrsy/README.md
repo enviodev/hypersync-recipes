@@ -2,7 +2,7 @@
 
 A Python script that reads every event of Grove's JTRSY Basin on Ethereum with [HyperSync](https://docs.envio.dev/docs/HyperSync/overview). Basin lets holders of JTRSY, the Janus Henderson Anemoy Treasury Fund token issued through Centrifuge, swap it for USDC in a single transaction, then redeems the JTRSY with the issuer in the background.
 
-In a run on 16 Nov 2026, Basin had handled **20 swaps of JTRSY into USDC**, 534.7K JTRSY in for **$597.8K USDC out**, every one settled in the same transaction. The largest was 135K JTRSY for $150.5K USDC. Basin's own redemptions with the issuer took anywhere from 12 minutes to 6.9 days to settle. Read live from the contract over RPC, the Basin held $99.9M of liquidity with a largest single swap of $50M.
+In a run on 17 Nov 2026, up to Ethereum block 26,433,968, Basin had handled **20 swaps of JTRSY into USDC**, 534.7K JTRSY in for **$597.8K USDC out**, every one settled in the same transaction. The largest was 135K JTRSY for $150.5K USDC. Basin's own redemptions with the issuer took anywhere from 12 minutes to 6.9 days to settle. Rebuilt from Transfer logs at the same block, the Basin held **$99.9M of liquidity**, all of it USDS in its pocket, and its largest single swap allowed was $50M.
 
 ## Why it's interesting
 
@@ -14,9 +14,12 @@ It's also a small, complete example of reading one contract's full history with 
 
 - Every `Swap`, `RedeemInitiated` and `RedeemCompleted` event from the JTRSY Basin, [`0xf08943f817e1F902dEbC884c7B19Ea5764594Ac9`](https://etherscan.io/address/0xf08943f817e1F902dEbC884c7B19Ea5764594Ac9) (`JTRSY_GROVE_BASIN` on Grove's [deployed contracts page](https://docs.grove.finance/deployed-contracts)).
 - JTRSY is [`0x8c213ee79581Ff4984583C6a801e5263418C4b86`](https://etherscan.io/token/0x8c213ee79581Ff4984583C6a801e5263418C4b86) and USDC is [`0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48`](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48). Both use 6 decimals.
-- Two `eth_call`s on a public Ethereum RPC for the Basin's `totalAssets()` (liquidity) and `maxSwapSize()` (largest swap allowed). These two figures come from RPC, not from HyperSync.
+- Every `PocketSet` and `MaxSwapSizeSet` event from the Basin, and every `Transfer` of USDS, USDC and JTRSY into and out of the Basin and its pocket. USDS is [`0xdC035D45d973E3EC169d2276DDab16f1e407384F`](https://etherscan.io/token/0xdC035D45d973E3EC169d2276DDab16f1e407384F), the Basin's `swapToken()`.
+- As a cross-check only, two `eth_call`s on a public Ethereum RPC at the same block, for the Basin's `totalAssets()` and `maxSwapSize()`.
 
-The swap and redemption figures all come from HyperSync.
+The swap, redemption, liquidity and swap limit figures all come from HyperSync.
+
+Liquidity is what the Basin's `totalAssets()` counts. That's the USDS held by its pocket (the address the last `PocketSet` named, [`0x2cd296095788a2741e72056d66b3ae1faee23ea2`](https://etherscan.io/address/0x2cd296095788a2741e72056d66b3ae1faee23ea2)) plus any USDC held by the Basin, both at $1, plus JTRSY in the Basin or still with the issuer. The script prints that JTRSY in units and leaves it out of the dollar figure, since the Basin values it at the fund's rate. The swap limit is the $50M set when the Basin was deployed, since no `MaxSwapSizeSet` event has changed it.
 
 A swap is a `Swap` event with JTRSY in and USDC out. Each `RedeemInitiated` is paired with the `RedeemCompleted` that follows it, and the time between their blocks is the settlement time.
 
@@ -29,7 +32,7 @@ export ENVIO_API_TOKEN=your-token
 python3 script.py
 ```
 
-It takes a few seconds. Sample output from a run on 16 Nov 2026.
+It takes a few seconds. Sample output from a run on 17 Nov 2026.
 
 ```
 Grove Basin for JTRSY on Ethereum
@@ -45,20 +48,24 @@ Basin's own redemptions of the JTRSY it took in
   89,171.798383 JTRSY  requested 2026-11-04 20:11 UTC  settled for $100,015.320031 USDC after 23.5 hours (1.0 days)
   111,450.000000 JTRSY  requested 2026-11-06 17:07 UTC  settled for $125,031.321658 USDC after 4.2 hours (0.2 days)
   98,014.000000 JTRSY  requested 2026-11-13 12:19 UTC  settled for $110,005.904579 USDC after 0.2 hours (0.0 days)
-Liquidity in the Basin now: $99,890,007.54
-Largest single swap allowed: $50,000,000
+Liquidity in the Basin at block 26,433,968: $99,890,007.54
+  99,890,007.54 USDS in its pocket 0x2cd296095788a2741e72056d66b3ae1faee23ea2, 0.00 USDC in the Basin, both counted at $1
+  0.000000 JTRSY in the Basin or still settling with the issuer
+Largest single swap allowed: $50,000,000 (the deployment default, never changed by a MaxSwapSizeSet event)
+Check (RPC totalAssets() at block 26,433,968): $99,890,007.54
+Check (RPC maxSwapSize() at block 26,433,968): $50,000,000
 ```
 
 New swaps and redemptions add lines, so your output will grow.
 
 ## Change the window or chain
 
-- **Window.** The script reads from block 0 to the latest block. Set `body["to_block"]` before the loop to stop at a past block, and pass that block in hex instead of `"latest"` in `call()` so the liquidity figures match it.
+- **Window.** The script reads from block 0 to the latest block. Add `"to_block"` to the first `body` to stop at a past block. The liquidity rebuild and the RPC check use the same block.
 - **Another Basin or chain.** Swap `BASIN`, `JTRSY` and `USDC` for another entry on Grove's [deployed contracts page](https://docs.grove.finance/deployed-contracts), and the `eth.hypersync.xyz` URL and `RPC` for that chain's endpoints. HyperSync URLs are on the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks).
 
 ## Check the numbers
 
-Every swap prints its transaction hash, so you can open it on [Etherscan](https://etherscan.io/address/0xf08943f817e1F902dEbC884c7B19Ea5764594Ac9) and compare the amounts. The liquidity and swap limit are read live from the contract, and you can call `totalAssets()` and `maxSwapSize()` yourself on the Etherscan contract page.
+Every swap prints its transaction hash, so you can open it on [Etherscan](https://etherscan.io/address/0xf08943f817e1F902dEbC884c7B19Ea5764594Ac9) and compare the amounts. As a comparison, the script reads `totalAssets()` and `maxSwapSize()` over a public RPC at the same block. In the run above both matched to the cent, $99,890,007.54 and $50,000,000. You can call them yourself on the Etherscan contract page.
 
 ## Build your own with an AI agent
 
@@ -71,9 +78,9 @@ and RedeemCompleted event from Grove's JTRSY Basin on Ethereum
 (0xf08943f817e1F902dEbC884c7B19Ea5764594Ac9), then pairs redemptions to time how long
 each took to settle. My HyperSync token is in the ENVIO_API_TOKEN environment variable.
 
-Add a daily series of the Basin's JTRSY and USDC balances by also reading ERC-20
-Transfer logs of both tokens to and from the Basin address. Keep the standard library
-only. Then check the latest balances against balanceOf on each token at the same block.
+Add a daily series of the Basin's liquidity, the USDS in its pocket at the end of each
+UTC day, from the Transfer logs the script already reads. Keep the standard library
+only. Then check the last day against totalAssets() at the same block.
 ```
 
 ## Links
