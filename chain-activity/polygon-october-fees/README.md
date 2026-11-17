@@ -81,6 +81,7 @@ Run it for 2026-10 and check that the total still comes to 22,316,136 POL.
 
 - [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview)
 - [HyperSync query reference](https://docs.envio.dev/docs/HyperSync/hypersync-query)
+- [Raw HTTP query examples](https://docs.envio.dev/docs/HyperSync/hypersync-curl-examples), the same plain requests this script makes
 - [HyperSync supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks)
 - [Polymarket contract addresses](https://docs.polymarket.com/developers/CTF/deployment-resources)
 - [Envio Discord](https://discord.gg/envio)
