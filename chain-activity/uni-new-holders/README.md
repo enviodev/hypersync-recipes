@@ -1,6 +1,6 @@
 # New UNI holders per day
 
-Since UNI launched in September 2020, **1.69M addresses have sent or received it on Ethereum, and 27 Oct 2026 brought 13.1K new ones, the busiest day since launch week**. Only three days have beaten it, all in UNI's first week.
+From UNI's launch in September 2020 to a run on 3 Nov 2026, **1.69M addresses had sent or received it on Ethereum, and 27 Oct 2026 brought 13.1K new ones, the busiest day since launch week**. Only three days beat it, all in UNI's first week.
 
 | Day (UTC) | New addresses |
 | --- | --- |
@@ -33,7 +33,7 @@ python3 script.py                              # UNI on Ethereum
 python3 script.py 0xTokenAddress 12345678      # any ERC-20 on Ethereum, with an optional start block
 ```
 
-It writes `new_addresses.csv` with one row per day (`day`, `new_addresses`, `transfers`) and prints the busiest days. Sample output.
+It writes `new_addresses.csv` with one row per day (`day`, `new_addresses`, `transfers`) and prints the busiest days. Sample output from a run on 3 Nov 2026.
 
 ```
 1,693,450 addresses in total. Busiest days for new addresses:

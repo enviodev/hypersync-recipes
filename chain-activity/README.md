@@ -12,7 +12,7 @@ Scripts for chain-wide activity. Count transactions, active addresses, fees, Saf
 | [polygon-october-fees](polygon-october-fees) | Polygon | Find which contracts paid the most gas on Polygon PoS |
 | [arbitrum-priority-fees](../arbitrum-priority-fees) | Arbitrum | Count Arbitrum transactions paying a priority fee, day by day |
 | [erc4337-user-operations-ethereum](../erc4337-user-operations-ethereum) | Ethereum | Pull every ERC-4337 user operation on Ethereum |
-| [ethereum-approval-cleanups](ethereum-approval-cleanups) | Ethereum | Find every ERC-20 approval revoked on Ethereum |
+| [ethereum-approval-cleanups](ethereum-approval-cleanups) | Ethereum | Split ERC-20 approval revokes on Ethereum into cleanups and resets |
 | [safe-growth](safe-growth) | 14 chains | Count every Safe created, by month and chain |
 | [safe-shared-signer](safe-shared-signer) | Ethereum | Decode every new Safe's owners and find the most common signer |
 | [safenet-staking](safenet-staking) | Ethereum | Track SAFE staked in Safenet and active stakers week by week |

@@ -65,7 +65,7 @@ cast call 0x115E78f160e1E3eF163B05C84562Fa16fA338509 "totalStakedAmount()(uint25
   --rpc-url https://ethereum-rpc.publicnode.com --block 26427839
 ```
 
-`totalStakerStakes(address)` does the same for any one staker. As an outside comparison, Safe's [Q2 2026 report](https://safefoundation.org/reports/q2-2026) gives 539 active stakers and 54.8M SAFE staked at 30 June, which is where the weekly series sits at that point.
+`totalStakerStakes(address)` does the same for any one staker. As an outside comparison, Safe's [Q2 2026 report](https://safefoundation.org/reports/q2-2026) gives 539 active stakers and 54.8M SAFE staked at 30 June. The weekly series shows 526 stakers and 54.8M SAFE in week 26, which ends 28 June.
 
 ## Build your own with an AI agent
 

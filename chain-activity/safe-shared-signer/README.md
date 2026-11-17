@@ -1,6 +1,6 @@
 # Safes on Ethereum that share one signer
 
-Up to block 26,398,984 (12 Nov 2026), **272K new Safes were created on Ethereum in 2026, 3.8x the 70.9K of all of 2025**. Most of them are 2-of-2 Safes, and one owner address, `0xbe0b407782a7599380fa726db315340126d62229`, is a signer on 146K of them, 53.6% of every Safe created on Ethereum this year.
+Up to block 26,398,984 (12 Nov 2026), **272K new Safes were created on Ethereum in 2026, 3.8x the 70.9K of all of 2025**. Most of them are 2-of-2 Safes, and one owner address, `0xbe0b407782a7599380fa726db315340126d62229`, is a signer on 146K of them, 53.6% of every Safe created on Ethereum in 2026 up to that block.
 
 | 2026 Safes on Ethereum | |
 | --- | --- |
@@ -48,7 +48,7 @@ New Safes are created every block, so your numbers will be a little higher.
 
 ## Change the window or chain
 
-- **Window.** The script reads from `START_BLOCK` to the latest block and splits by calendar year. Move `START_BLOCK` back to include earlier years.
+- **Window.** The script reads from `START_BLOCK` to the latest block and reports 2025 and 2026 by calendar year (UTC). For other years, move `START_BLOCK` and change the year filters in `main()`.
 - **Chain.** Swap `URL` for another chain's endpoint from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks), and set `START_BLOCK` to a block on that chain just before 1 January 2025. Safe's factories sit at the same addresses on most chains.
 
 ## Check the numbers

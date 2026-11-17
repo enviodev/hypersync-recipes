@@ -8,11 +8,11 @@ From 1 Jan 2026 to block 60,840,178 (10 Nov 2026), **Ink handled 151M user trans
 | 2026-09 | 21,667,115 | 124,109 |
 | 2026-10 | 12,378,368 | 100,688 |
 | 2026-11 (to 10 Nov) | 11,362,629 | 39,833 |
-| 2026 to date | 151,129,871 | 924,415 |
+| 1 Jan to 10 Nov 2026 | 151,129,871 | 924,415 |
 
 ## Why it's interesting
 
-Counting a chain's transactions sounds simple until you hit system transactions. Every OP Stack block starts with a deposit transaction, the L1 info transaction, and on Ink's one-second blocks that's about 86,400 a day, or 27M over the year. This script reads every transaction with just two fields, splits those out and counts unique senders, which works for any OP Stack chain.
+Counting a chain's transactions sounds simple until you hit system transactions. Every OP Stack block starts with a deposit transaction, the L1 info transaction, and on Ink's one-second blocks that's about 86,400 a day, or 27M from January to 10 November. This script reads every transaction with just two fields, splits those out and counts unique senders, which works for any OP Stack chain.
 
 ## What it pulls
 
@@ -67,7 +67,7 @@ With `END_BLOCK` set the numbers won't change. Without it, the last month is par
 
 ## Change the window or chain
 
-- **Window.** `END_BLOCK` pins the end (exclusive). `YEAR` sets the year it starts from, and it always counts from 1 January of that year to the month of the end block.
+- **Window.** `END_BLOCK` pins the end (exclusive). `YEAR` at the top of `script.py` sets the year, and the script counts from 1 January of that year to the month of the end block. Keep the end block in the same year.
 - **Chain.** Swap `BASE` for another chain's endpoint from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks). `DEPOSIT_TYPE` only applies to OP Stack chains, so on other chains "user txs" and "all txs" will match.
 
 ## Check the numbers

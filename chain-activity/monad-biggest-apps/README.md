@@ -67,7 +67,7 @@ The window moves with the chain, and the registry gets new entries, so your numb
 ## Change the window or chain
 
 - **Window.** Pass a number of days. The window always ends at the latest block.
-- **Top N.** `TOP` sets how many apps each ranking lists.
+- **Top N.** `TOP` at the top of `script.py` sets how many apps each ranking lists.
 - **Chain.** For another chain, swap `HYPERSYNC` for its endpoint from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks) and `REGISTRY` for a CSV with `name`, `address` and `csubtype` columns for that chain's apps.
 
 ## Build your own with an AI agent

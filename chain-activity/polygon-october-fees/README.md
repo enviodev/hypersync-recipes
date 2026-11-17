@@ -22,7 +22,7 @@ All of it comes from HyperSync.
 
 A transaction's fee is `gas_used x effective_gas_price`, which is what the sender paid in POL. Fees are grouped by the transaction's `to` address, the contract the sender called.
 
-Polymarket is every Polygon address listed in [Polymarket's deployment docs](https://docs.polymarket.com/developers/CTF/deployment-resources), which the script reads when it runs, plus its Relay Hub (`0xd216153c06e857cd7f72665e0af1d7d82172f494`), which [Polygonscan](https://polygonscan.com/address/0xd216153c06e857cd7f72665e0af1d7d82172f494) labels "Polymarket: Relay Hub". Other names are Polygonscan labels. Anything without a public label stays unlabelled, including the second biggest destination, `0x84ba896235059fe27727eaa2695a9f99220d9a7e`.
+Polymarket is five core contracts hardcoded in the script, plus every address listed on [Polymarket's deployment docs](https://docs.polymarket.com/developers/CTF/deployment-resources), which the script reads when it runs. The five include its Relay Hub (`0xd216153c06e857cd7f72665e0af1d7d82172f494`), which [Polygonscan](https://polygonscan.com/address/0xd216153c06e857cd7f72665e0af1d7d82172f494) labels "Polymarket: Relay Hub". Other names are Polygonscan labels. Anything without a public label stays unlabelled, including the second biggest destination, `0x84ba896235059fe27727eaa2695a9f99220d9a7e`.
 
 ## Run it
 
