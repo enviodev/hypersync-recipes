@@ -28,7 +28,7 @@ Volume is the taker side of each match, in USDC. A buy counts the maker amount f
 
 ## Run it
 
-You need Python 3 and a free API token from [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens). There's nothing else to install.
+You need Python 3.9 or later (for `zoneinfo`) and a free API token from [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens). There's nothing else to install.
 
 ```bash
 export ENVIO_API_TOKEN=your-token
