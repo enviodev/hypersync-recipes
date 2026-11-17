@@ -31,7 +31,7 @@ export ENVIO_API_TOKEN=your-token
 python3 script.py
 ```
 
-It reads every swap since July in 48 block ranges, 16 at a time, and takes about seven minutes. Sample output from a run on 11 Nov 2026 at about 17:50 UTC:
+It reads every swap since July in 48 block ranges, 16 at a time, and takes about seven minutes. Sample output from a run on 11 Nov 2026 at about 17:50 UTC.
 
 ```
 PancakeSwap on Robinhood, blocks up to the chain head, first swap 2026-07-01
@@ -51,7 +51,7 @@ When stock token wallets traded (New York time):
 
 ## Change the window or chain
 
-- **Window.** The script reads from PancakeSwap's first block on Robinhood Chain to the head. Raise the start block to look at a recent stretch only, and it'll run faster.
+- **Window.** The script reads every block from 0 to the head. To look at a recent stretch only, change `chunk()` so its block ranges start later instead of at 0, and it'll run faster. Pools still need the full `PoolCreated` and `Initialize` history.
 - **Chain.** PancakeSwap v3 and Infinity run on other chains too. Swap `URL` for that chain's endpoint from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks) and the factory and CLPoolManager for that chain's addresses from PancakeSwap's address pages. Replace the stock token list with whatever set of tokens you want to track there.
 
 ## Check the numbers
@@ -60,7 +60,7 @@ The HyperSync results were checked against Robinhood Chain's public RPC as the c
 
 ## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
 ```text
 Read script.py and README.md in this folder. It uses HyperSync
