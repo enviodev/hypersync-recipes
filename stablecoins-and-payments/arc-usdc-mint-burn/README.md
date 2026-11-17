@@ -79,6 +79,7 @@ at the same block.
 
 - [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview)
 - [HyperSync query reference](https://docs.envio.dev/docs/HyperSync/hypersync-query)
+- [Raw HTTP query examples](https://docs.envio.dev/docs/HyperSync/hypersync-curl-examples), the same plain requests this script makes
 - [HyperSync supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks)
 - [Arc contract addresses](https://docs.arc.io/arc/references/contract-addresses)
 - [Circle Gateway contract addresses](https://developers.circle.com/gateway/references/contract-addresses)
