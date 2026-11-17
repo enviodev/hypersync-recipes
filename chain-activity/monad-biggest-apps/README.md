@@ -1,21 +1,38 @@
 # Monad's biggest apps
 
-Reads every transaction sent to a contract in the Monad Foundation's [protocol registry](https://github.com/monad-crypto/protocols) over the last 30 days with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview), then ranks the apps by unique wallets and by transactions.
+Over the 30 days from 6 Oct to 5 Nov 2026, **Nad.fun had the most wallets of any app on Monad (12.1K), and Fastlane had the most transactions (37.8M)**. Perpl came second by transactions with 29.5M, and Uniswap third by wallets with 5K.
 
-These are the numbers behind Envio's post on Monad's first year of mainnet.
+| By wallets | Wallets | | By transactions | Transactions |
+| --- | --- | --- | --- | --- |
+| Nad.fun | 12,071 | | Fastlane | 37,791,029 |
+| Fastlane | 11,547 | | Perpl | 29,455,270 |
+| Uniswap | 4,962 | | LFJ | 8,559,408 |
+| Monday Trade | 3,676 | | Drake Exchange | 1,285,636 |
+| PancakeSwap | 3,551 | | HelloTrade | 897,493 |
+
+## Why it's interesting
+
+Wallets and transactions give two very different rankings. Some apps have thousands of wallets sending a few transactions each, while others have a handful of addresses sending millions. Showing both side by side gives the full picture. The app labels come from the Monad Foundation's own registry, so nothing is guessed.
+
+## What it pulls
+
+- Every transaction whose `to` address is one of the contracts in the Monad Foundation's registry file [`protocols-mainnet.csv`](https://github.com/monad-crypto/protocols/blob/main/protocols-mainnet.csv), with its `from` address. This comes from HyperSync.
+- Block timestamps from HyperSync, to find the block 30 days back by binary search.
+- The registry file itself, downloaded from GitHub when the script starts. Names are the registry's own.
+
+Oracles (the registry's `Oracle` subtype) and the registry's "Canonical Contracts" entry (the staking precompile, WMON, ERC-4337 EntryPoints, Multicall3, Permit2) are left out, so the ranking is about apps. Reverted transactions count too, as they do on block explorers. Unique wallets are distinct `from` addresses across all of an app's contracts, so a wallet that uses two of Uniswap's routers counts once. Contracts that aren't in the registry aren't counted, even when they're busy.
 
 ## Run it
 
-You need Python 3 and a HyperSync API token from the [Envio Dashboard](https://envio.dev/app/api-tokens). The script has no other dependencies.
+You need Python 3 and a free API token from [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens). There's nothing else to install.
 
 ```bash
 export ENVIO_API_TOKEN=your-token
-python script.py
+python3 script.py      # the last 30 days
+python3 script.py 7    # the last 7 days
 ```
 
-Pass a number of days to change the window, for example `python script.py 7`. The 30-day run reads about 85 million transactions in parallel and takes about 15 minutes.
-
-## What it prints
+The 30-day run reads about 85M transactions in parallel and takes about 15 minutes. Sample output from a run on 5 Nov 2026.
 
 ```
 Monad, blocks 111040311 to 119613818 (last 30 days), 1570 registry contracts
@@ -45,23 +62,35 @@ Top 10 apps by transactions
   10. PancakeSwap           262,039 txs    3,551 wallets
 ```
 
-That run covers 6th October to 5th November 2026. The window moves with the chain, so your numbers will differ.
+The window moves with the chain, and the registry gets new entries, so your numbers will differ.
 
-## How it counts
+## Change the window or chain
 
-- Apps and their contract addresses come from the Monad Foundation's registry file [`protocols-mainnet.csv`](https://github.com/monad-crypto/protocols/blob/main/protocols-mainnet.csv). Names are the registry's own.
-- Oracles (the registry's `Oracle` subtype) and Monad's canonical contracts (the staking precompile, WMON, ERC-4337 EntryPoints, Multicall3, Permit2) are left out, so the ranking is about apps.
-- A transaction counts for an app when its `to` address is one of that app's registry contracts. Reverted transactions count too, as they do on block explorers.
-- Unique wallets are distinct `from` addresses across all of an app's contracts, so a wallet that uses two of Uniswap's routers counts once for Uniswap.
-- Contracts that aren't in the registry are not counted, even when they are busy.
+- **Window.** Pass a number of days. The window always ends at the latest block.
+- **Top N.** `TOP` sets how many apps each ranking lists.
+- **Chain.** For another chain, swap `HYPERSYNC` for its endpoint from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks) and `REGISTRY` for a CSV with `name`, `address` and `csubtype` columns for that chain's apps.
 
-## Ask your coding agent
+## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
+```text
+Read script.py and README.md in this folder. It uses HyperSync
+(https://docs.envio.dev/docs/HyperSync/overview) and the Monad Foundation's
+protocol registry (https://github.com/monad-crypto/protocols) to rank Monad apps
+by unique sending wallets and by transactions. My HyperSync token is in the
+ENVIO_API_TOKEN environment variable.
+
+Add a weekly view for the top 10 apps by wallets, with unique wallets per app
+for each 7-day block of the window, using block timestamps. Keep the standard
+library only. Run it with 7 days first and check that the single week's wallet
+counts match the main ranking.
 ```
-Use Envio HyperSync (https://docs.envio.dev/docs/HyperSync/overview) and the Monad Foundation's
-protocol registry (https://github.com/monad-crypto/protocols) to read every transaction sent to a
-registry contract on Monad in the last 30 days. My API token is in the ENVIO_API_TOKEN environment
-variable. Show me unique wallets per app, week by week, for the top 10 apps.
-```
+
+## Links
+
+- [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview)
+- [HyperSync query reference](https://docs.envio.dev/docs/HyperSync/hypersync-query)
+- [HyperSync supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks)
+- [Monad protocol registry](https://github.com/monad-crypto/protocols)
+- [Envio Discord](https://discord.gg/envio)
