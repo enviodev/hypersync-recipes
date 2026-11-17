@@ -16,7 +16,7 @@ Elysium isn't on HyperSync yet, so these numbers come from HyperIndex syncing ov
 
 Most pools on Elysium come from one launchpad hook, which tells you how tokens are being launched there in the chain's first days. The same indexer works on any EVM chain the day it launches, because HyperIndex can sync over plain RPC before HyperSync support lands.
 
-Here's how Elysium compares with three other chains. These counts are every v4 `Initialize` event on each chain's PoolManager (addresses from Uniswap's [deployments list](https://developers.uniswap.org/deployments.json)) as of 12 Nov 2026, pulled with HyperSync and again with HyperRPC `eth_getLogs`, which returned the same numbers for every chain.
+Here's how Elysium compares with three other chains. The Elysium row is the indexer at block 5,448,796. The other rows count every v4 `Initialize` event on each chain's PoolManager (addresses from Uniswap's [deployments list](https://developers.uniswap.org/deployments.json)) as of 12 Nov 2026. They were pulled with HyperSync and again with HyperRPC `eth_getLogs`, which returned the same numbers. The indexer in this folder doesn't produce them.
 
 | Chain | v4 pools | With a hook |
 | --- | ---: | ---: |
