@@ -37,7 +37,7 @@ python3 script.py
 
 The transfer scan takes a few minutes. With `BASE_RPC_URL` set it makes one `eth_getCode` call per holder, which takes about half an hour on a public RPC.
 
-Sample output from a run on 12 Nov 2026 at about 10:48 UTC, without `BASE_RPC_URL`:
+Sample output from a run on 12 Nov 2026 at about 10:48 UTC, without `BASE_RPC_URL`.
 
 ```
 Coinbase tokenized stocks on Base, 338 listed, up to block 56,450,544
@@ -68,7 +68,7 @@ The rebuilt balances were checked against Base's public RPC at the same block as
 
 ## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
 ```text
 Read script.py and README.md in this folder. It uses HyperSync
