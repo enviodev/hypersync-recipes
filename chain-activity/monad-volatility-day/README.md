@@ -1,21 +1,38 @@
 # Monad on a volatile market day
 
-Reads every block and every transaction on Monad for one UTC day and the 30 days before it with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview), then compares the day hour by hour with that baseline: transactions, block times, gas used, base fee and reverted transactions.
+On 10 Nov 2026, the day a hotter than expected US inflation print landed at 13:30 UTC, **Monad's busiest hour carried 870K transactions, 3.9x its 30-day hourly average, with blocks still coming every 0.310s**. The median base fee held at 100 gwei through the busiest hours, and the busiest minute was 13:30 UTC with 21.8K transactions (364 TPS).
 
-The default day is 10 November 2026, when a hotter than expected US inflation print at 13:30 UTC pushed crypto prices lower. These are the numbers behind Envio's post on how Monad handled it.
+| 10 Nov 2026, 15:00 UTC | Busiest hour | 30-day baseline |
+| --- | --- | --- |
+| Transactions | 869,659 | 225,351 an hour on average |
+| Block time | 0.310s | 0.303s |
+| Median base fee | 100.0 gwei | |
+| Gas used | 48.1% | 9.5% on average |
+
+## Why it's interesting
+
+A busy market day is a real-world load test. Reading every block and transaction for the day and the month before it shows how a chain's throughput, block times and fees behaved under load, hour by hour, against its own normal. The same script works for any day you want to look at.
+
+## What it pulls
+
+All of it comes from HyperSync.
+
+- Every block on Monad for the day and the 30 days before it, with `timestamp`, `gas_used`, `gas_limit` and `base_fee_per_gas`.
+- Every transaction in those blocks, with its block number and receipt `status`.
+
+Hours and minutes are UTC, from each block's timestamp. Every transaction counts, including reverted ones (status 0), as on block explorers. Block time is an hour divided by the number of blocks in it. Gas used is total gas used over total gas limit. The median base fee is across the blocks in each hour, so a short spike shows in the max column and not in the median.
 
 ## Run it
 
-You need Python 3 and a HyperSync API token from the [Envio Dashboard](https://envio.dev/app/api-tokens). The script has no other dependencies.
+You need Python 3 and a free API token from [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens). There's nothing else to install.
 
 ```bash
 export ENVIO_API_TOKEN=your-token
-python script.py
+python3 script.py                  # 10 Nov 2026 against the 30 days before
+python3 script.py 2026-11-05 14    # another day, against the 14 days before
 ```
 
-Pass a day and a baseline length to look at another day, for example `python script.py 2026-11-05 14`. The default run reads about 8.9 million blocks and every transaction in them, in parallel, and takes about 20 minutes.
-
-## What it prints
+The default run reads about 8.9M blocks and every transaction in them, in parallel, and takes about 20 minutes. Sample output, with some hours cut for length. The full run prints all 24.
 
 ```
 Monad, blocks 112319869 to 121171339: 30 days before 2026-11-10 (baseline), then 2026-11-10
@@ -42,24 +59,38 @@ Busiest hour: 10 Nov 15:00 UTC, 869,659 transactions, 3.9x the baseline hourly a
 Busiest minute: 10 Nov 13:30 UTC, 21,813 transactions (364 TPS)
 ```
 
-The baseline covers 11 October to 9 November 2026. The full run prints all 24 hours.
+The baseline covers 11 Oct to 9 Nov 2026. Both are in the past, so these numbers won't change.
 
-## How it counts
+## Change the window or chain
 
-- Hours and minutes are UTC, taken from each block's timestamp. A transaction belongs to the hour of the block it landed in.
-- Every transaction counts, including reverted ones, as on block explorers. Reverted means a receipt status of 0.
-- Block time is an hour divided by the number of blocks in it. Gas used is total gas used over total gas limit.
-- The base fee is the block's `base_fee_per_gas`. The median is across the blocks in each hour, so a short spike shows in the max column and not in the median.
-- Transactions are not users. In the busiest hour on 10 November, 493,159 of the 869,659 transactions were sent to FastLane contracts listed in the Monad Foundation's [protocol registry](https://github.com/monad-crypto/protocols).
-- We checked the 10 November 15:00 hour (869,659 transactions in 11,629 blocks) and the 5 November 15:00 hour (674,624) block by block against Monad's public RPC with `eth_getBlockTransactionCountByNumber`, and both matched.
+- **Day and baseline.** Pass a UTC date and a number of baseline days. The day has to be over on Monad already, or the script stops.
+- **Chain.** Swap `HYPERSYNC` for another chain's endpoint from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks). On a chain with slower blocks, a bigger `CHUNK` keeps the number of parallel ranges sensible.
 
-## Ask your coding agent
+## Check the numbers
 
-Paste this into Claude Code, Cursor or any coding agent:
+As a comparison, we checked the 10 Nov 15:00 hour (869,659 transactions in 11,629 blocks) and the 5 Nov 15:00 hour (674,624) block by block against Monad's public RPC with `eth_getBlockTransactionCountByNumber`, and both matched.
 
+## Build your own with an AI agent
+
+Paste this into Claude Code, Cursor or any coding agent.
+
+```text
+Read script.py and README.md in this folder. It uses HyperSync
+(https://docs.envio.dev/docs/HyperSync/overview) to read every block and
+transaction on Monad for one UTC day and the days before it, then compares the
+day hour by hour with that baseline. My HyperSync token is in the
+ENVIO_API_TOKEN environment variable.
+
+Add a per-minute CSV for the chosen day, with transactions, blocks and the max
+base fee in each minute, and print the 10 busiest minutes. Keep the standard
+library only. Run it for 2026-11-10 with a 1-day baseline first and check that
+the busiest minute still shows 21,813 transactions at 13:30 UTC.
 ```
-Use Envio HyperSync (https://docs.envio.dev/docs/HyperSync/overview) to read every block and transaction
-on Monad (https://monad.hypersync.xyz) for the last 7 days. My API token is in the ENVIO_API_TOKEN
-environment variable. Chart transactions per minute and the median base fee per hour, and mark the
-10 busiest minutes.
-```
+
+## Links
+
+- [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview)
+- [HyperSync query reference](https://docs.envio.dev/docs/HyperSync/hypersync-query)
+- [HyperSync supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks)
+- [Monad docs](https://docs.monad.xyz)
+- [Envio Discord](https://discord.gg/envio)
