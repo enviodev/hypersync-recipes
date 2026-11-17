@@ -1,7 +1,8 @@
 # Where tokenized Circle (CRCL) stock lives onchain, with Envio HyperSync.
 # Finds every issuer's CRCL token from the issuers' own lists, replays every Transfer on the EVM chains HyperSync covers,
 # and splits each token's supply into DEX pools, lending markets, other contracts and wallets.
-# Solana and X Layer supply are read from their public RPCs. Python 3 standard library only. Set ENVIO_API_TOKEN first.
+# Ondo's Solana token is rebuilt from HyperSync on Solana. xStocks on Solana and X Layer are read from public RPCs.
+# Python 3 standard library only. Set ENVIO_API_TOKEN first.
 import collections
 import csv
 import io
@@ -11,6 +12,7 @@ import re
 import sys
 import time
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 
 TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 ZERO = "0x" + "0" * 40
@@ -28,6 +30,10 @@ CHAINS = {  # name: (HyperSync subdomain, public RPC)
 }
 XLAYER_RPC = "https://rpc.xlayer.tech"
 SOLANA_RPC = "https://api.mainnet-beta.solana.com"
+SOLANA_HYPERSYNC = "https://solana.hypersync.xyz"
+# Ondo's CRCLon on Solana has its first balance change at slot 394,805,673, inside HyperSync's Solana history,
+# which starts at slot 391,000,000. xStocks' CRCLx on Solana is older than that, so it stays on RPC.
+SOLANA_FROM = 391_000_000
 # Issuer lists
 ONDO_SHEET = ("https://www.dropbox.com/scl/fi/qjfxyg748mx0dwi6up86d/EXTERNAL-Ondo-GM-Tokens-Ondo-GM-Tokens.csv"
               "?rlkey=n3no1w78wrah3umsl0nr9s77i&dl=1")  # linked from docs.ondo.finance/addresses
@@ -184,7 +190,7 @@ for issuer, chain, address in tokens:
         split[k] += v / 10 ** decimals
     print(f"  read {issuer} {chain}: {total / 10 ** decimals:,.2f} shares, {len(held):,} holders", file=sys.stderr)
 
-# 3. Chains outside HyperSync: X Layer (xStocks) and Solana (xStocks, Ondo)
+# 3. X Layer (outside HyperSync) and Solana: xStocks from RPC, Ondo rebuilt from HyperSync on Solana
 if crclx.get("xLayer"):
     xl = crclx["xLayer"]
     dec = int(call(XLAYER_RPC, xl, "0x313ce567"), 16)
@@ -200,7 +206,38 @@ def solana_supply(mint):
 minter = rpc(SOLANA_RPC, "getTokenAccountsByOwner", [XSTOCKS_SOLANA_MINTER, {"mint": crclx["solana"]}, {"encoding": "jsonParsed"}])
 minter_held = sum(float(a["account"]["data"]["parsed"]["info"]["tokenAmount"]["uiAmountString"]) for a in minter["result"]["value"])
 supply[("xStocks", "Solana")] = solana_supply(crclx["solana"]) - minter_held
-supply[("Ondo", "Solana")] = solana_supply(ondo_solana)
+
+
+def solana_changes(mint, a, b):
+    """Sum of every balance change of one mint in [a, b). Transfers cancel out, leaving mints minus burns."""
+    body = {"from_slot": a, "to_slot": b, "account_activity": [{"mint": [mint]}],
+            "field_selection": {"account_activity": ["mint", "pre_token_balance", "post_token_balance"]}}
+    total = 0
+    while body["from_slot"] < b:
+        res = post(SOLANA_HYPERSYNC + "/query", body, auth=True)
+        for batch in res.get("account_activity") or []:
+            for r in batch:
+                if r.get("mint") == mint:
+                    total += int(r.get("post_token_balance") or 0) - int(r.get("pre_token_balance") or 0)
+        if res["next_slot"] <= body["from_slot"]:
+            time.sleep(2)
+            continue
+        body["from_slot"] = res["next_slot"]
+    return total
+
+
+# Read the RPC check first, then sum HyperSync up to the same slot so both describe the same moment.
+ondo_rpc = rpc(SOLANA_RPC, "getTokenSupply", [ondo_solana, {"commitment": "confirmed"}])["result"]
+sol_slot = ondo_rpc["context"]["slot"]
+step = 1_000_000
+with ThreadPoolExecutor(16) as pool:
+    ondo_raw = sum(pool.map(lambda a: solana_changes(ondo_solana, a, min(a + step, sol_slot + 1)),
+                            range(SOLANA_FROM, sol_slot + 1, step)))
+supply[("Ondo", "Solana")] = ondo_raw / 10 ** ondo_rpc["value"]["decimals"]
+diff = (int(ondo_rpc["value"]["amount"]) - ondo_raw) / 10 ** ondo_rpc["value"]["decimals"]
+checks.append(f"  Ondo on Solana: rebuilt supply {'matches' if diff == 0 else f'is {diff:+,.4f} shares off'} getTokenSupply "
+              f"at slot {sol_slot:,}")
+checks.append("  xStocks on Solana and X Layer: read from public RPCs (getTokenSupply, totalSupply()), not rebuilt")
 
 # 4. Print
 grand = sum(supply.values())

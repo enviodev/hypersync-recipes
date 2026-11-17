@@ -1,13 +1,13 @@
 # Where tokenized Circle stock lives onchain
 
-Five issuers have put tokenized Circle (CRCL) stock onchain. In a run on 5 Nov 2026 the script counted **5.1M shares, about $380M at Coinbase's published CRCLc NAV of $73.99**. Binance bStocks was the largest issuer at $158.6M, all on BNB Chain, followed by xStocks at $124M and Ondo at $87.1M. BNB Chain held 60.7% of it.
+Five issuers have put tokenized Circle (CRCL) stock onchain. In a run on 17 Nov 2026 the script counted **5.4M shares, about $312M at Coinbase's published CRCLc NAV of $57.445**. Binance bStocks was the largest issuer at $127.4M, all on BNB Chain, followed by xStocks at $107.2M and Ondo at $68.1M. BNB Chain held 58.9% of it. HyperSync rebuilt $206.9M of the total. The other $105.3M is xStocks on X Layer and Solana, read from public RPCs.
 
 | Issuer | Value | Share | Chains |
 | --- | --- | --- | --- |
-| Binance bStocks | $158.6M | 41.7% | BNB Chain |
-| xStocks | $124.0M | 32.6% | X Layer, Solana, Ethereum, Ink, Mantle |
-| Ondo | $87.1M | 22.9% | BNB Chain, Ethereum, Solana |
-| Robinhood | $10.6M | 2.8% | Robinhood Chain |
+| Binance bStocks | $127.4M | 40.8% | BNB Chain |
+| xStocks | $107.2M | 34.3% | X Layer, Solana, Ethereum, Ink, Mantle |
+| Ondo | $68.1M | 21.8% | BNB Chain, Ethereum, Solana |
+| Robinhood | $9.3M | 3.0% | Robinhood Chain |
 | Coinbase | $0.1M | 0.0% | Base |
 
 ## Why it's interesting
@@ -18,7 +18,8 @@ The same stock comes in several wrappers from several issuers on eight chains. I
 
 - Token addresses from each issuer's own list. Ondo's token sheet linked at [docs.ondo.finance/addresses](https://docs.ondo.finance/addresses), the [xStocks product list](https://xstocks.fi/us/products), Robinhood's [stock token API](https://docs.robinhood.com/chain/stock-tokens), Coinbase's [tokenized stocks API](https://docs.base.org/sdks/tokenized-stocks), and Binance's CRCLB entry in the Trust Wallet token registry, which links to [bstocks.finance](https://www.bstocks.finance/).
 - Every ERC-20 `Transfer` of each token on the EVM chains in `CHAINS`, from [HyperSync](https://docs.envio.dev/docs/HyperSync/overview). Supply on BNB Chain, Ethereum, Robinhood Chain, Ink, Mantle and Base is every mint minus every burn from HyperSync.
-- X Layer and Solana supply from public RPCs (`totalSupply()` and `balanceOf` on X Layer, `getTokenSupply` and `getTokenAccountsByOwner` on Solana). Those two chains, $121M of the total, don't come from HyperSync.
+- Every balance change of Ondo's CRCL token on Solana, as `account_activity` rows from [HyperSync on Solana](https://docs.envio.dev/docs/HyperSync/solana). Transfers cancel out, so the sum is every mint minus every burn. Its first balance change is at slot 394,805,673, after HyperSync's Solana history starts at slot 391,000,000, so HyperSync has all of it.
+- xStocks on X Layer and Solana from public RPCs (`totalSupply()` and `balanceOf` on X Layer, `getTokenSupply` and `getTokenAccountsByOwner` on Solana). HyperSync doesn't cover X Layer, and xStocks' Solana token is older than HyperSync's Solana history, so its supply can't be summed from its first mint. Those two, $105.3M of the total, don't come from HyperSync.
 - `eth_getCode` and `eth_call` on each chain's public RPC to sort large holders into wallets, DEX pools and lending markets, and `totalSupply()` to check each replayed supply.
 - One price for every token, Coinbase's published NAV for CRCLc.
 
@@ -35,37 +36,39 @@ export ENVIO_API_TOKEN=your-token
 python3 script.py
 ```
 
-The Robinhood Chain token alone has over a million transfers, so a run takes about 20 minutes. Sample output from the 5 Nov 2026 run.
+The Robinhood Chain token alone has over a million transfers, so a run takes about 30 minutes. Sample output from the 17 Nov 2026 run.
 
 ```
-Tokenized Circle (CRCL) stock onchain: 5,141,770 shares, $380.4M at $73.99 (Coinbase CRCLc NAV)
-  Binance bStocks $  158.6M  41.7%
-      BNB Chain $  158.6M
-  xStocks         $  124.0M  32.6%
-      X Layer   $   64.5M
-      Solana    $   56.9M
-      Ethereum  $    1.6M
-      Ink       $    0.5M
-      Mantle    $    0.5M
-  Ondo            $   87.1M  22.9%
-      BNB Chain $   72.3M
-      Ethereum  $   12.2M
-      Solana    $    2.5M
-  Robinhood       $   10.6M   2.8%
-      Robinhood $   10.6M
+Tokenized Circle (CRCL) stock onchain: 5,435,080 shares, $312.2M at $57.445 (Coinbase CRCLc NAV)
+  Binance bStocks $  127.4M  40.8%
+      BNB Chain $  127.4M
+  xStocks         $  107.2M  34.3%
+      X Layer   $   57.8M
+      Solana    $   47.5M
+      Ethereum  $    1.0M
+      Ink       $    0.4M
+      Mantle    $    0.4M
+  Ondo            $   68.1M  21.8%
+      BNB Chain $   56.3M
+      Ethereum  $    9.8M
+      Solana    $    2.0M
+  Robinhood       $    9.3M   3.0%
+      Robinhood $    9.3M
   Coinbase        $    0.1M   0.0%
       Base      $    0.1M
-By chain: BNB Chain 60.7%, X Layer 17.0%, Solana 15.6%, Ethereum 3.6%, Robinhood 2.8%, Ink 0.1%, Mantle 0.1%, Base 0.0%
-On the EVM chains ($256.5M), by holder type
-  wallet         $  191.7M  74.7%
-  other contract $   58.5M  22.8%
-  dex            $    4.5M   1.8%
-  lending        $    1.7M   0.7%
-...
+By chain: BNB Chain 58.9%, X Layer 18.5%, Solana 15.9%, Ethereum 3.5%, Robinhood 3.0%, Ink 0.1%, Mantle 0.1%, Base 0.0%
+On the EVM chains ($204.9M), by holder type
+  wallet         $  153.2M  74.8%
+  other contract $   46.2M  22.5%
+  dex            $    3.9M   1.9%
+  lending        $    1.6M   0.8%
+Binance Hot Wallet 20 holds 79.3% of Binance's CRCLB
 Checks
-  Ondo on Ethereum: replayed supply matches totalSupply() at block 26,348,909
+  Ondo on Ethereum: replayed supply matches totalSupply() at block 26,435,241
   ...
-  Binance bStocks on BNB Chain: replayed supply matches totalSupply() at block 131,827,309
+  Binance bStocks on BNB Chain: replayed supply matches totalSupply() at block 134,135,684
+  Ondo on Solana: rebuilt supply matches getTokenSupply at slot 470,567,723
+  xStocks on Solana and X Layer: read from public RPCs (getTokenSupply, totalSupply()), not rebuilt
 ```
 
 Tokens are minted, redeemed and traded all the time, so your numbers will differ.
@@ -78,7 +81,7 @@ Tokens are minted, redeemed and traded all the time, so your numbers will differ
 
 ## Check the numbers
 
-The script checks itself. For each EVM token it compares the supply replayed from HyperSync transfers with `totalSupply()` read over RPC at the same block, and prints a line per token. You can also compare each issuer's figure with the supply its own product page shows.
+The script checks itself. For each EVM token it compares the supply replayed from HyperSync transfers with `totalSupply()` read over RPC at the same block, and prints a line per token. For Ondo on Solana it reads `getTokenSupply` first, then sums HyperSync up to the slot that call answered from. In the 17 Nov run every token matched. You can also compare each issuer's figure with the supply its own product page shows.
 
 ## Build your own with an AI agent
 
