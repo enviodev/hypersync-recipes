@@ -13,7 +13,7 @@ In the 30 days to 9 Nov 2026, **$13.9B traded between two dollar stablecoins on 
 
 ## Why it's interesting
 
-Stable-to-stable swaps are the plumbing of onchain dollars. They're how a wallet turns USDT into USDC, or how a payment app settles in the coin it needs. Seeing where that volume lands, and how much of it now runs through v4, tells you where dollar liquidity is deepest on each chain. It's also a neat pattern for any cross-chain question, finding the right pools first and then pulling only their swaps.
+Stable-to-stable swaps are the plumbing of onchain dollars. They're how a wallet turns USDT into USDC, or how a payment app settles in the coin it needs. Seeing where that volume lands, and how much of it runs through v4, tells you where dollar liquidity is deepest on each chain. It's also a useful pattern for any cross-chain question. Find the right pools first, then pull only their swaps.
 
 ## What it pulls
 
@@ -31,12 +31,14 @@ You need Python 3 and a free API token from [envio.dev/app/api-tokens](https://e
 ```bash
 export ENVIO_API_TOKEN=your-token
 python3 script.py                     # the 30 days to 9 Nov 2026, the window above
+python3 script.py 1794614400          # the 30 days to any unix timestamp
 CHAINS=1,137 python3 script.py        # Ethereum and Polygon only
 ```
 
-The full run reads pool creation events from the start of each chain, so it takes a while on chains with long histories such as Arbitrum and BNB Chain. Sample output from the window above.
+The full run reads pool creation events from the start of each chain, so it takes a while on chains with long histories such as Arbitrum and BNB Chain. Sample output from the window above, trimmed.
 
 ```
+...
 Stable-to-stable volume on Uniswap v3 and v4: $13.88B (92% on v4)
 
 Ethereum        $11.89B  85.6%   v4    $11.00B  v3   $886.4M     473,613 swaps
