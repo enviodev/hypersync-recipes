@@ -18,7 +18,7 @@ Coinbase's stock tokens trade around the clock on Base, and Aero is where a lot 
 - `PoolCreated` events from five pool factories on Base, from [HyperSync](https://docs.envio.dev/docs/HyperSync/overview). That's the Aerodrome classic factory `0x420dd381b31aef6683db6b902084cb0ffece40da` ([contracts](https://github.com/aerodrome-finance/contracts)), three Slipstream deployments ([Slipstream](https://github.com/aerodrome-finance/slipstream)) and the Aero CL factory ([deployment addresses](https://github.com/dromos-labs/metadex-slipstream-public/blob/main/deployment-addresses/cl-base.json)).
 - Every `Swap` in the pools that hold a stock token over the window, with block timestamps, from HyperSync. Every number here comes from HyperSync.
 
-Volume is the USDC side of each swap in a stock/USDC pool, using [USDC on Base](https://basescan.org/token/0x833589fcd6edb6e08f4c7c32d4f71b54bda02913). Swaps against other tokens aren't priced, so they're not in the totals. US markets count as open 9:30 to 16:00 New York time on weekdays.
+Volume is the USDC side of each swap in a stock/USDC pool, using [USDC on Base](https://basescan.org/token/0x833589fcd6edb6e08f4c7c32d4f71b54bda02913). Swaps against other tokens aren't priced, so they're not in the totals. US markets count as open 9:30 to 16:00 New York time on weekdays. The script switches from EDT to EST on 1 Nov 2026 and doesn't know any other clock change, so windows after the March 2027 switch need that offset updated.
 
 ## Run it
 
@@ -30,7 +30,7 @@ python3 script.py 7                         # the last 7 days
 python3 script.py 7 2026-11-04T09:40:09     # the window above
 ```
 
-Sample output for the window above:
+Sample output for the window above.
 
 ```
 Coinbase tokenized stocks on Aero (Base), 28 Oct 09:40 UTC to 04 Nov 09:40 UTC
@@ -45,14 +45,14 @@ Saturday and Sunday (ET): $192.3M
 
 ## Change the window or chain
 
-- **Window.** The first argument is the number of days. Add an end time in UTC, like `2026-11-04T09:40:09`, to rerun a past window exactly.
+- **Window.** The first argument is the number of days. Add an end time in UTC, like `2026-11-04T09:40:09`, to rerun a past window exactly. The block search only reaches back about seven times the window length from the latest block (50 days for a 7-day window), so an older end time needs a lower starting point in `first_block_after`.
 - **Quote token.** Volume is priced from the USDC side. To include stock/ETH pools, add a WETH price from the same swaps and value the ETH side with it.
 - **Token list.** Swap the Coinbase API call for any list of Base tokens to get the same in-hours and after-hours split for them.
 - **Chain.** Aero's factories in this script are on Base. For another chain, swap `URL` for that chain's endpoint from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks) and `FACTORIES` and `USDC` for that chain's addresses.
 
 ## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
 ```text
 Read script.py and README.md in this folder. It uses HyperSync
