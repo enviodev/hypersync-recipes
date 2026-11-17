@@ -93,6 +93,7 @@ getAddedAssets(assetId) on the Hub at the same block and explain any gap.
 
 - [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview)
 - [HyperSync query reference](https://docs.envio.dev/docs/HyperSync/hypersync-query)
+- [Raw HTTP query examples](https://docs.envio.dev/docs/HyperSync/hypersync-curl-examples), the same plain requests this script makes
 - [HyperSync supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks)
 - [Aave v4 docs](https://aave.com/docs/aave-v4)
 - [Aave address book for Avalanche](https://github.com/bgd-labs/aave-address-book/blob/main/src/AaveV4Avalanche.sol)
