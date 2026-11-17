@@ -1,17 +1,17 @@
-# HyperSync recipes: example scripts for onchain data
+# HyperSync examples
 
-Curated, ready-to-run example scripts that pull real onchain data with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview), Envio's blockchain data API. Each recipe answers one concrete question, such as how much USDC was minted on Ethereum this week, who holds a tokenized stock, or how much is supplied to an Aave market, and prints the answer in your terminal.
+Curated, ready-to-run HyperSync example scripts for onchain data. Each one uses [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview), Envio's blockchain data API, to answer one specific question, such as how much USDC was minted on Ethereum this week or who holds a tokenized stock, and prints the answer in your terminal.
 
-Use them as working starting points. Copy a recipe, change the contract, chain or time window, and you have your own analytics, backfill or data pipeline. Every recipe comes with a prompt you can paste into Claude Code, Cursor or any coding agent to adapt it for you.
+Use them as starting points for your own analytics, backfills and data pipelines. Copy an example and change the contract, chain or time window. Every example comes with a prompt you can paste into Claude Code, Cursor or any coding agent to adapt it for you.
 
-- **74 recipes** across Ethereum, Base, Arbitrum, Optimism, Polygon, BNB Chain, Avalanche, Monad, Gnosis, Ink, Arc, Robinhood Chain, HyperEVM, Tempo and Solana.
+- **74 examples** across Ethereum, Base, Arbitrum, Optimism, Polygon, BNB Chain, Avalanche, Monad, Gnosis, Ink, Arc, Robinhood Chain, HyperEVM, Tempo and Solana.
 - **Python standard library only** for the HyperSync scripts. No SDK to install, no node to run.
-- **HyperIndex indexers** for the recipes that need a live GraphQL API.
+- **HyperIndex indexers** for the examples that need a live GraphQL API.
 
 ## Quick start
 
 1. Get a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens).
-2. Clone the repo and run a recipe.
+2. Clone the repo and run an example.
 
 ```bash
 git clone https://github.com/enviodev/hypersync-recipes.git
@@ -20,13 +20,13 @@ export ENVIO_API_TOKEN=your-token
 python3 script.py
 ```
 
-Each folder's README explains the finding, what the script pulls, how to change the window or chain, how to check the numbers and the agent prompt for that recipe.
+Each folder's README explains the finding, what the script pulls, how to change the window or chain, how to check the numbers and the agent prompt for that example.
 
-## Recipes
+## Examples
 
 ### Stablecoins and payments
 
-| Recipe | Chain | How to |
+| Example | Chain | How to |
 | --- | --- | --- |
 | [usdc-supply-ethereum](usdc-supply-ethereum) | Ethereum | Pull every USDC mint and burn on Ethereum and track supply day by day |
 | [rlusd-ethereum-supply](rlusd-ethereum-supply) | Ethereum | Rebuild Ripple USD (RLUSD) supply from every mint and burn |
@@ -43,7 +43,7 @@ Each folder's README explains the finding, what the script pulls, how to change 
 
 ### Tokenized stocks
 
-| Recipe | Chain | How to |
+| Example | Chain | How to |
 | --- | --- | --- |
 | [tokenized-stocks-ethereum](tokenized-stocks-ethereum) | Ethereum | Track every Ondo Global Markets and xStocks token transfer on Ethereum |
 | [tokenized-circle-stock](tokenized-circle-stock) | EVM chains | Find tokenized Circle (CRCL) stock on every chain, by issuer |
@@ -59,7 +59,7 @@ Each folder's README explains the finding, what the script pulls, how to change 
 
 ### Tokenized funds and real-world assets
 
-| Recipe | Chain | How to |
+| Example | Chain | How to |
 | --- | --- | --- |
 | [blackrock-buidl-by-chain](blackrock-buidl-by-chain) | EVM chains | Track BlackRock BUIDL supply on each chain from every mint and burn |
 | [tokenized-treasuries-solana](tokenized-treasuries-solana) | Solana | Track the supply of tokenized Treasury funds on Solana, day by day |
@@ -72,7 +72,7 @@ Each folder's README explains the finding, what the script pulls, how to change 
 
 ### Lending and vaults
 
-| Recipe | Chain | How to |
+| Example | Chain | How to |
 | --- | --- | --- |
 | [aave-monad-tvl](aave-monad-tvl) | Monad | Get Aave v3 TVL on Monad by asset from every transfer |
 | [aave-usdc-ethereum-weekly](aave-usdc-ethereum-weekly) | Ethereum | Track weekly USDC deposits and borrows on Aave V3 Ethereum |
@@ -87,7 +87,7 @@ Each folder's README explains the finding, what the script pulls, how to change 
 
 ### DEXs, perps and prediction markets
 
-| Recipe | Chain | How to |
+| Example | Chain | How to |
 | --- | --- | --- |
 | [uniswap-robinhood-chain](uniswap-robinhood-chain) | Robinhood Chain | Pull every Uniswap v2, v3 and v4 swap on Robinhood Chain |
 | [uniswap-volatilepair-robinhood](uniswap-volatilepair-robinhood) | Robinhood Chain | Get swaps, volume and LP fees for one Uniswap pool |
@@ -105,7 +105,7 @@ Each folder's README explains the finding, what the script pulls, how to change 
 
 ### Chain activity, wallets and accounts
 
-| Recipe | Chain | How to |
+| Example | Chain | How to |
 | --- | --- | --- |
 | [active-addresses-without-dusting](active-addresses-without-dusting) | EVM chains | Count daily active addresses with dusting filtered out |
 | [monad-biggest-apps](monad-biggest-apps) | Monad | Rank Monad apps by transactions over 30 days |
@@ -135,21 +135,21 @@ These run as live indexers with a GraphQL API. You can deploy them on [Envio Clo
 | [elysium-uniswap-v4-pools](elysium-uniswap-v4-pools) | Elysium | Index every Uniswap v4 pool on Elysium over RPC |
 | [elysium-hype-deposits](elysium-hype-deposits) | HyperEVM | Index every HYPE deposit into Elysium through its bridge |
 
-## Use these recipes with an AI agent
+## Use these examples with an AI agent
 
-Every recipe README ends with a "Build your own with an AI agent" prompt written for that recipe. For anything new, paste this into Claude Code, Cursor or another coding agent from the repo root:
+Every example README ends with a "Build your own with an AI agent" prompt written for that example. For anything new, paste this into Claude Code, Cursor or another coding agent from the repo root:
 
 ```text
-Read README.md and two recipes in this repo that are close to what I want, for
+Read README.md and two examples in this repo that are close to what I want, for
 example usdc-supply-ethereum and aave-v4-avalanche. Then read the Envio HyperSync
 docs at https://docs.envio.dev/llms.txt.
 
-Write a new recipe in its own folder that answers: <YOUR QUESTION>, on <CHAIN>.
+Write a new example in its own folder that answers: <YOUR QUESTION>, on <CHAIN>.
 Use the HyperSync endpoint for that chain from
 https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks, the Python
 standard library only, and read my token from the ENVIO_API_TOKEN environment
 variable. Run it on a short window first, print the result, then add a README
-in the same format as the other recipes.
+in the same format as the other examples.
 ```
 
 The full Envio docs are available as plain text for agents at [docs.envio.dev/llms.txt](https://docs.envio.dev/llms.txt) and [docs.envio.dev/llms-full.txt](https://docs.envio.dev/llms-full.txt).
@@ -166,10 +166,10 @@ Query the token's `Transfer` logs from block 0 with HyperSync and page through w
 Yes. HyperSync returns logs for wide block ranges in one request. If your code already speaks JSON-RPC, [HyperRPC](https://docs.envio.dev/docs/HyperRPC/overview-hyperrpc) serves `eth_getLogs` and other read methods from the same data.
 
 **Does it work on Solana?**
-Yes. The Solana recipes use the [HyperSync Solana endpoint](https://docs.envio.dev/docs/HyperSync/solana) to read instructions and token balance changes.
+Yes. The Solana examples use the [HyperSync Solana endpoint](https://docs.envio.dev/docs/HyperSync/solana) to read instructions and token balance changes.
 
 **Which chains are supported?**
-See the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks). Most recipes switch chain by changing one URL.
+See the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks). Most examples switch chain by changing one URL.
 
 **Do I need an SDK?**
 No. The scripts use plain HTTP and the Python standard library. Official [clients](https://docs.envio.dev/docs/HyperSync/hypersync-clients) for Python, Rust and Node.js are there for larger pipelines.
@@ -188,4 +188,4 @@ Use a script when you need an answer or a backfill. Use [HyperIndex](https://doc
 - [Get an API token](https://envio.dev/app/api-tokens)
 - [Envio Discord](https://discord.gg/envio)
 
-MIT licensed. Contributions and new recipe ideas are welcome in the [Envio Discord](https://discord.gg/envio).
+MIT licensed. Contributions and new example ideas are welcome in the [Envio Discord](https://discord.gg/envio).
