@@ -19,11 +19,12 @@ A new DEX on a chain is a good test of how quickly liquidity and flow show up. T
 
 - `PoolCreated` logs from Aero's three factories on Arbitrum, from Aero's [deployment addresses](https://github.com/dromos-labs/metadex-slipstream-public/tree/main/deployment-addresses) (`cl-arbitrum.json` and `pools-arbitrum.json`). They are the CL pool factory `0x88a60ee77392577c355c0acb2a8d476d5a4ec03a`, the volatile pool factory `0x8e6a9fcd1d638cc760ffba397605fe3355de76d2` and the stable pool factory `0x78589e876edcebdce72ee3436ab3c9ad3a7cef2d`.
 - Every `Swap` log from those pools, with the block timestamp and the transaction's sender.
-- Each token's `decimals()` and `symbol()`, and each pool's token balances with `balanceOf` at the end block, through Arbitrum's public RPC.
+- Every `Transfer` of each pool's two tokens into and out of the pool since the factories were deployed, which gives each pool's token balances at the end block.
+- Each token's `decimals()` and `symbol()` through Arbitrum's public RPC, and as a cross-check only, each pool's token balances with `balanceOf` at the end block.
 
 Volume is each swap valued on one side. A dollar stablecoin side (USDC, USDC.e, USDT0, USDG, DAI, GHO, USDe, USDai) counts at $1. Otherwise WETH or WBTC is used, priced from Aero's own stablecoin pools at the time of the swap, and then any other token priced from its Aero pool. A handful of gold token swaps have no dollar route and are left unpriced. Wallets are the distinct senders of transactions that contain a swap, so routers and bots count too.
 
-The swap volume, swap counts and wallets come from HyperSync. The liquidity figures come from `balanceOf` calls on Arbitrum's public RPC, valued at the latest prices from the same swaps. For CL pools that balance includes fees not yet collected.
+The swap volume, swap counts, wallets and liquidity all come from HyperSync. Liquidity is each pool's balances rebuilt from transfers in minus transfers out, valued at the latest prices from the same swaps. For CL pools that balance includes fees not yet collected.
 
 ## Run it
 
@@ -35,7 +36,7 @@ python3 script.py             # up to the latest block
 python3 script.py 521465669   # up to the block used above
 ```
 
-Sample output with block 521465669.
+Sample output from a run on 17 Nov 2026 with block 521465669.
 
 ```
 Aero on Arbitrum: 65 pools, 43 with swaps, over 14.9 days
@@ -74,7 +75,7 @@ USDG pools: 24 of 65, 55.5% of volume, 54.6% of liquidity
 Prices used for liquidity: WETH $2,420.16, WBTC $80,204.09
 ```
 
-"The other 58 pools" means every pool outside the top seven by volume. Run it without a block number and the numbers will be higher, since the pools keep trading.
+"The other 58 pools" means every pool outside the top seven by volume. The script ends with an RPC check line, left out above. Arbitrum's public RPC only keeps recent state, so the check needs a run without a block number or an archive RPC. Run it without a block number and the numbers will be higher, since the pools keep trading.
 
 ## Change the window or chain
 
@@ -83,7 +84,7 @@ Prices used for liquidity: WETH $2,420.16, WBTC $80,204.09
 
 ## Check the numbers
 
-As a comparison, call `allPoolsLength()` on each factory through any Arbitrum RPC. When we checked, it returned 63 CL pools, 2 volatile pools and 0 stable pools, the same 65 pools the script found. For one pool's liquidity, check the token balances of `0x09328be718d89228a985471bb470988a34d0b162` on Arbiscan against the script's `balanceOf` reads.
+The script compares each rebuilt pool balance with `balanceOf` over Arbitrum's public RPC at the same block. In a run on 17 Nov 2026 at block 525,000,956, all 158 token balances of the 79 pools matched. As a further comparison, call `allPoolsLength()` on each factory through any Arbitrum RPC. When we checked, it returned 63 CL pools, 2 volatile pools and 0 stable pools, the same 65 pools the script found.
 
 ## Build your own with an AI agent
 

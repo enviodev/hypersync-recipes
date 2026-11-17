@@ -1,8 +1,9 @@
 """The biggest Aero pools on Arbitrum, read straight from the chain with Envio HyperSync.
 
 Finds every pool created by Aero's CL and volatile pool factories on Arbitrum, reads
-every swap in them since launch, prices each swap in dollars, and reads what each pool
-holds right now. Prints the pools ranked by swap volume and by liquidity.
+every swap in them since launch, prices each swap in dollars, and rebuilds what each pool
+holds from every token Transfer in and out of it. Prints the pools ranked by swap volume and
+by liquidity, with the pool balances read over RPC as a cross-check.
 
 Run:
     export ENVIO_API_TOKEN=...   # free token: https://envio.dev/app/api-tokens
@@ -31,6 +32,7 @@ CL_POOL_CREATED = "0xab0d57f0df537bb25e80245ef7748fa62353808c54d6e528a9dd20887ae
 V2_POOL_CREATED = "0xebbbe9dc3a19d2f959ac76ac0372b4983cdfb945f5d6aef4873c36fabb2ba8aa"
 CL_SWAP = "0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67"
 V2_SWAP = "0xb3e2773606abfd36b5bd91394b3a54d1398336c65005baf7bf7a05efeffaf75b"
+TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 
 # Dollar stablecoins on Arbitrum, valued at $1
 STABLES = {
@@ -169,14 +171,30 @@ def main():
                     unpriced += 1
                 swaps[pool] += 1
 
-    # 3. What each pool holds now, at the same block for every pool
-    head = hex(END_BLOCK) if END_BLOCK else rpc("eth_blockNumber", [])
+    # 3. What each pool holds at the end block, rebuilt from every Transfer of its two tokens in and out of it.
+    #    The pools are new, so every balance starts at zero.
+    words = ["0x" + "0" * 24 + pl[2:] for pl in pools]
+    held = defaultdict(int)
+    for res in stream({"from_block": FIRST_BLOCK,
+                       "logs": [{"address": list(tokens), "topics": [[TRANSFER], words]},
+                                {"address": list(tokens), "topics": [[TRANSFER], [], words]}],
+                       "field_selection": {"log": ["address", "topic0", "topic1", "topic2", "data"],
+                                           "block": ["number"]}}):
+        for page in res["data"]:
+            for log in page.get("logs", []):
+                if log["topic0"] != TRANSFER or log["data"] in ("0x", ""):
+                    continue
+                t, v = log["address"].lower(), int(log["data"][:66], 16)
+                src, dst = "0x" + log["topic1"][-40:], "0x" + log["topic2"][-40:]
+                if dst in pools:
+                    held[(t, dst)] += v
+                if src in pools:
+                    held[(t, src)] -= v
+        last_block = res["next_block"] - 1
+    head = END_BLOCK or last_block
     tvl = {}
     for pool, p in pools.items():
-        tvl[pool] = 0.0
-        for t in (p["t0"], p["t1"]):
-            bal = int(call(t, "0x70a08231" + pool[2:].rjust(64, "0"), head), 16) / 10 ** dec[t]
-            tvl[pool] += bal * price.get(t, 0)
+        tvl[pool] = sum(held[(t, pool)] / 10 ** dec[t] * price.get(t, 0) for t in (p["t0"], p["t1"]))
 
     name = {pool: f"{sym[p['t0']]}/{sym[p['t1']]}{'' if p['cl'] else ' (volatile)'}"
             for pool, p in pools.items()}
@@ -186,7 +204,7 @@ def main():
           f"over {days:.1f} days")
     print(f"Swap volume ${total_vol / 1e6:,.1f}M across {sum(swaps.values()):,} swaps "
           f"from {len(traders):,} wallets ({unpriced} swaps unpriced)")
-    print(f"Liquidity ${total_tvl / 1e6:,.2f}M at block {int(head, 16)}\n")
+    print(f"Liquidity ${total_tvl / 1e6:,.2f}M at block {head}\n")
     print("Top pools by swap volume")
     for pool in sorted(vol, key=vol.get, reverse=True)[:10]:
         print(f"  {name[pool]:<22} ${vol[pool] / 1e6:8,.1f}M  {vol[pool] / total_vol:6.1%}  "
@@ -207,6 +225,17 @@ def main():
           f"{sum(tvl[pl] for pl in usdg) / total_tvl:.1%} of liquidity")
     print("\nPrices used for liquidity: " + ", ".join(
         f"{sym[t]} ${price[t]:,.2f}" for t in (WETH, WBTC) if t in price))
+
+    # 4. Cross-check: balanceOf over Arbitrum's public RPC at the same block. Not used for any number above.
+    match = unread = 0
+    for pool, p in pools.items():
+        for t in (p["t0"], p["t1"]):
+            try:
+                match += int(call(t, "0x70a08231" + pool[2:].rjust(64, "0"), hex(head)), 16) == held[(t, pool)]
+            except SystemExit:  # an RPC without historical state can't answer for past blocks
+                unread += 1
+    print(f"Check (RPC balanceOf at block {head}): {match} of {2 * len(pools)} pool token balances match "
+          f"the rebuilt ones, {unread} could not be read")
 
 
 if __name__ == "__main__":
