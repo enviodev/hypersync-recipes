@@ -1,6 +1,6 @@
 # Ondo stocks on Robinhood Chain, the first week
 
-In their launch week, 27 Oct to 3 Nov 2026, Ondo's tokenized stocks on Robinhood Chain traded in **29 Uniswap v4 pools, with 226 swaps from 110 wallets**. 88% of those swaps paired an Ondo token with Robinhood's own token for the same company, like GOOGLon against GOOGL. GOOGLon was the most traded with 87 swaps from 50 wallets.
+In their launch week, the 7 days from 27 Oct 2026, Ondo's tokenized stocks on Robinhood Chain had **226 Uniswap v4 swaps from 110 wallets**, across the 29 pools that held an Ondo token when the script ran on 3 Nov. 88% of those swaps paired an Ondo token with Robinhood's own token for the same company, like GOOGLon against GOOGL. GOOGLon was the most traded with 87 swaps from 50 wallets.
 
 | Token | Swaps | Wallets |
 | --- | --- | --- |
@@ -14,8 +14,8 @@ When a second issuer brings the same stocks to a chain, the first trades tell yo
 
 ## What it pulls
 
-- Ondo's 15 Robinhood Chain token addresses from the token sheet linked at [docs.ondo.finance/addresses](https://docs.ondo.finance/addresses).
-- Every `Initialize` on the Uniswap v4 PoolManager [`0x8366a39cc670b4001a1121b8f6a443a643e40951`](https://developers.uniswap.org/docs/protocols/v4/deployments) where either side is an Ondo token, then every `Swap` in those pools during the week with the transaction that sent it, from [HyperSync](https://docs.envio.dev/docs/HyperSync/overview). Pool, swap and wallet counts all come from HyperSync.
+- Ondo's 15 Robinhood Chain token addresses, copied into `ONDO` in the script from the token sheet linked at [docs.ondo.finance/addresses](https://docs.ondo.finance/addresses).
+- Every `Initialize` on the Uniswap v4 PoolManager [`0x8366a39cc670b4001a1121b8f6a443a643e40951`](https://developers.uniswap.org/docs/protocols/v4/deployments) where either side is an Ondo token, from the first block to the latest, then every `Swap` in those pools during the week with the transaction that sent it, from [HyperSync](https://docs.envio.dev/docs/HyperSync/overview). Pool, swap and wallet counts all come from HyperSync.
 - Token symbols for the other side of each pool, read with `eth_call` on Robinhood Chain's public RPC. They're only used as labels.
 
 Wallets are the addresses that sent the swap transactions. A swap pairs with the same company's Robinhood Stock Token when the other token's symbol is the Ondo symbol without the "on" suffix.
@@ -26,11 +26,11 @@ You need Python 3 (standard library only) and a free HyperSync API token from [e
 
 ```bash
 export ENVIO_API_TOKEN=your-token
-python3 script.py               # launch week, 27 Oct to 3 Nov 2026 UTC
+python3 script.py               # launch week, the 7 days from 27 Oct 2026 UTC
 python3 script.py 2026-11-03    # the 7 days from another start date
 ```
 
-Sample output for the launch week:
+Sample output for the launch week, run on 3 Nov 2026. The pool count covers every pool up to the latest block, so it grows on later runs.
 
 ```
 Ondo stocks on Robinhood Chain, 2026-10-27 to 7 days later (UTC)
@@ -47,11 +47,11 @@ Swaps against the same company's Robinhood Stock Token  198 (88%)
 ## Change the window or chain
 
 - **Week.** Pass any start date as `YYYY-MM-DD` and the script counts the 7 days from there. Run it week after week to see how trading builds.
-- **Chain.** Ondo's sheet lists its tokens on other chains too. Swap `URL` for that chain's endpoint from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks), the PoolManager for that chain's address from the [v4 deployments page](https://developers.uniswap.org/docs/protocols/v4/deployments), and the token list for that chain's column in the sheet.
+- **Chain.** Ondo's sheet lists its tokens on other chains too. Swap `URL` for that chain's endpoint from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks), the PoolManager for that chain's address from the [v4 deployments page](https://developers.uniswap.org/docs/protocols/v4/deployments), and `ONDO` for that chain's column in the sheet.
 
 ## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
 ```text
 Read script.py and README.md in this folder. It uses HyperSync
