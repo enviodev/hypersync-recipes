@@ -1,25 +1,41 @@
 # The biggest Aero pools on Arbitrum
 
-Finds every pool created by Aero's factories on Arbitrum, reads every swap in them since launch with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview), and reads what each pool holds onchain. It ranks the pools by swap volume and by liquidity.
+In its first 14.9 days on Arbitrum, up to block 521,465,669, **Aero's 65 pools did $252.1M in swap volume across 255K swaps from 5.8K wallets**. USDG/USDC was the biggest pool at $74.2M, then USDG/USD₮0 at $43.7M and WETH/USDC at $31.4M. USDG pools made up 55.5% of the volume.
 
-These are the numbers behind Envio's post on Aero's biggest pools on Arbitrum.
+| Pool | Volume | Swaps |
+| --- | --- | --- |
+| USDG/USDC | $74.2M | 29,007 |
+| USDG/USD₮0 | $43.7M | 7,141 |
+| WETH/USDC | $31.4M | 48,405 |
+| WBTC/WETH | $20.6M | 29,489 |
+| USDC/USD₮0 | $18.4M | 5,111 |
+| All 65 pools | $252.1M | 255,074 |
+
+## Why it's interesting
+
+A new DEX on a chain is a good test of how quickly liquidity and flow show up. This script finds every pool from the factories, reads every swap since launch and prices each one in dollars from the DEX's own trades, with no price feed. It works for any Uniswap v2 or v3 style DEX if you swap in its factories.
+
+## What it pulls
+
+- `PoolCreated` logs from Aero's three factories on Arbitrum, from Aero's [deployment addresses](https://github.com/dromos-labs/metadex-slipstream-public/tree/main/deployment-addresses) (`cl-arbitrum.json` and `pools-arbitrum.json`). They are the CL pool factory `0x88a60ee77392577c355c0acb2a8d476d5a4ec03a`, the volatile pool factory `0x8e6a9fcd1d638cc760ffba397605fe3355de76d2` and the stable pool factory `0x78589e876edcebdce72ee3436ab3c9ad3a7cef2d`.
+- Every `Swap` log from those pools, with the block timestamp and the transaction's sender.
+- Each token's `decimals()` and `symbol()`, and each pool's token balances with `balanceOf` at the end block, through Arbitrum's public RPC.
+
+Volume is each swap valued on one side. A dollar stablecoin side (USDC, USDC.e, USDT0, USDG, DAI, GHO, USDe, USDai) counts at $1. Otherwise WETH or WBTC is used, priced from Aero's own stablecoin pools at the time of the swap, and then any other token priced from its Aero pool. A handful of gold token swaps have no dollar route and are left unpriced. Wallets are the distinct senders of transactions that contain a swap, so routers and bots count too.
+
+The swap volume, swap counts and wallets come from HyperSync. The liquidity figures come from `balanceOf` calls on Arbitrum's public RPC, valued at the latest prices from the same swaps. For CL pools that balance includes fees not yet collected.
 
 ## Run it
 
-You need Python 3 and a HyperSync API token from the [Envio Dashboard](https://envio.dev/app/api-tokens). The script has no other dependencies.
+You need Python 3 and a free API token from [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens). There's nothing else to install.
 
 ```bash
 export ENVIO_API_TOKEN=your-token
-python script.py
+python3 script.py             # up to the latest block
+python3 script.py 521465669   # up to the block used above
 ```
 
-That reads up to the latest block. Pass a block number to stop there instead. The post used block 521465669:
-
-```bash
-python script.py 521465669
-```
-
-## What it prints
+Sample output with block 521465669.
 
 ```
 Aero on Arbitrum: 65 pools, 43 with swaps, over 14.9 days
@@ -58,24 +74,38 @@ USDG pools: 24 of 65, 55.5% of volume, 54.6% of liquidity
 Prices used for liquidity: WETH $2,420.16, WBTC $80,204.09
 ```
 
-Run it without a block number and the numbers will be higher, since the pools keep trading.
+"The other 58 pools" means every pool outside the top seven by volume. Run it without a block number and the numbers will be higher, since the pools keep trading.
 
-## How it counts
+## Change the window or chain
 
-- Factories come from Aero's [deployment addresses](https://github.com/dromos-labs/metadex-slipstream-public/tree/main/deployment-addresses) (`cl-arbitrum.json` and `pools-arbitrum.json`): the CL pool factory, the volatile pool factory and the stable pool factory. Their `allPoolsLength()` onchain matches the pools found here (63 CL, 2 volatile, 0 stable).
-- Volume is each swap valued on one side. A dollar stablecoin side (USDC, USDC.e, USDT0, USDG, DAI, GHO, USDe, USDai) counts at $1. Otherwise WETH or WBTC are used, priced from Aero's own stablecoin pools at the time of the swap, and then any other token priced from its Aero pool. A handful of gold token swaps with no dollar route are left unpriced.
-- Liquidity is each pool's token balances (`balanceOf`) at the end block, valued at the latest prices from the same swaps. For CL pools this includes fees not yet collected.
-- Wallets are the distinct senders of transactions that contain a swap, so routers and bots count too.
-- Daily volume from this script matches DefiLlama's Aero Slipstream volume on Arbitrum to within 0.3% each day.
+- **Window.** Pass an end block as the first argument. The start is `FIRST_BLOCK`, just before the factories were deployed.
+- **Chain.** Aero's deployment addresses folder has a file per chain. Swap `URL` for that chain's HyperSync endpoint from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks), `RPC` for a public RPC on that chain, the three factory addresses and `FIRST_BLOCK`, and update `STABLES`, `WETH` and `WBTC` to that chain's token addresses.
 
-## Ask your coding agent
+## Check the numbers
 
-Paste this into Claude Code, Cursor or any coding agent:
+As a comparison, call `allPoolsLength()` on each factory through any Arbitrum RPC. When we checked, it returned 63 CL pools, 2 volatile pools and 0 stable pools, the same 65 pools the script found. For one pool's liquidity, check the token balances of `0x09328be718d89228a985471bb470988a34d0b162` on Arbiscan against the script's `balanceOf` reads.
 
+## Build your own with an AI agent
+
+Paste this into Claude Code, Cursor or any coding agent.
+
+```text
+Read script.py and README.md in this folder. It uses HyperSync
+(https://docs.envio.dev/docs/HyperSync/overview) to find every pool from Aero's
+factories on Arbitrum, read every swap since launch and price it in dollars from
+Aero's own pools. My HyperSync token is in the ENVIO_API_TOKEN environment
+variable.
+
+Add a daily volume table per pool for the top 5 pools by volume, using each
+swap's block timestamp, and write it to daily_volume.csv. Keep the standard
+library only. Run it with end block 521465669 and check that the daily totals
+for each pool add up to the volume the script already prints for it.
 ```
-Use Envio HyperSync (https://docs.envio.dev/docs/HyperSync/overview) to read every swap in
-Aero's pools on Arbitrum. The pool factories are listed in
-https://github.com/dromos-labs/metadex-slipstream-public/tree/main/deployment-addresses
-(cl-arbitrum.json and pools-arbitrum.json). My API token is in the ENVIO_API_TOKEN
-environment variable. Chart daily swap volume per pool since launch as a stacked area chart.
-```
+
+## Links
+
+- [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview)
+- [HyperSync query reference](https://docs.envio.dev/docs/HyperSync/hypersync-query)
+- [HyperSync supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks)
+- [Aero deployment addresses](https://github.com/dromos-labs/metadex-slipstream-public/tree/main/deployment-addresses)
+- [Envio Discord](https://discord.gg/envio)
