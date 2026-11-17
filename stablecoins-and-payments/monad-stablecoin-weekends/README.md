@@ -39,14 +39,14 @@ Stablecoin transfers on Monad, 2026-10-11 to 2026-11-09 UTC (blocks 112,319,869 
 11,506,430 transfers, $17.49B moved, 84,599 sending addresses
 
 By token:  USDC $13.07B  AUSD $1.10B  USDT0 $988.2M  mUSD $1.26B  USD1 $0.7M  GHO $382.8M  USDe $689.8M
-
+...
 Weekend days: 9, $2.77B total, $307.8M a day, 318,571 transfers a day
 Weekdays:     21, $14.72B total, $701.0M a day, 411,395 transfers a day
 Weekend share of volume: 15.8%
 Busiest day: 2026-10-13 (Tuesday), $1.33B
 ```
 
-After that it prints the daily table and the top senders and receivers.
+The `...` stands for the net mint per token and the daily table. After the summary it prints the top senders and receivers.
 
 ## Change the window or chain
 
