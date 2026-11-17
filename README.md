@@ -87,6 +87,7 @@ Every folder has its own README with what we found, what the script pulls, how t
 | [uniswap-volatilepair-robinhood](dexs-and-trading/uniswap-volatilepair-robinhood) | Robinhood Chain | Get swaps, volume and LP fees for one Uniswap pool |
 | [uniswap-v4-hooks-ethereum](dexs-and-trading/uniswap-v4-hooks-ethereum) | Ethereum | Find every Uniswap v4 pool with a hook on Ethereum |
 | [uniswap-v4-hooks-robinhood](dexs-and-trading/uniswap-v4-hooks-robinhood) | Robinhood Chain | Find every Uniswap v4 pool and swap by hook |
+| [1inch-aqua-strategies](dexs-and-trading/1inch-aqua-strategies) | 15 EVM chains | Pull every strategy shipped on 1inch Aqua |
 | [aero-pools-arbitrum](dexs-and-trading/aero-pools-arbitrum) | Arbitrum | Rank every Aero pool on Arbitrum by volume and liquidity |
 | [aero-robinhood-ethereum](aero-robinhood-ethereum) | Robinhood Chain, Ethereum | Track Aero DEX volume day by day on two chains |
 | [yieldbasis-weth-propamm](dexs-and-trading/yieldbasis-weth-propamm) | Ethereum | Compare Yield Basis pool volume and fees before and after oracle pricing |
