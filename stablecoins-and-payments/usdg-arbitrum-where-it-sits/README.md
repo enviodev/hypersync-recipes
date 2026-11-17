@@ -1,17 +1,17 @@
 # Where USDG sits on Arbitrum
 
-Reads every transfer of Paxos Global Dollar (USDG) on Arbitrum One with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview), rebuilds every holder's balance, and shows where the supply sits: GMX markets, Morpho, other contracts and plain wallets.
+Reads every transfer of Paxos Global Dollar (USDG) on Arbitrum One with [HyperSync](https://docs.envio.dev/docs/HyperSync/overview), rebuilds every holder's balance, and shows where the supply sits. It splits it into GMX markets, Morpho, other contracts and plain wallets.
 
 ## What we found
 
-At block 524,987,577 (17 Nov 2026, 08:46 UTC), from 329,225 transfers:
+At block 524,987,577 (17 Nov 2026, 08:46 UTC), from 329,225 transfers.
 
 - $65,078,215 of USDG is on Arbitrum One
 - $26,175,523 of it (40.2%) sits in eight GMX markets, where it backs perp trading on BTC, ETH, ZEC, NEAR, XRP, HYPE and SOL, plus a USDC/USDG swap pool. The BTC/USD market alone holds $10.84M
 - $15,928,898 (24.5%) sits in Morpho
 - $13,705,168 (21.1%) sits in other contracts and $9,268,524 (14.2%) in plain wallets
 
-So about two thirds of the USDG on Arbitrum is inside two protocols, six weeks after [Paxos launched it there](https://docs.paxos.com/guides/stablecoin/usdg/mainnet).
+So about two thirds of the USDG on Arbitrum is already in use in GMX and Morpho, six weeks after [Paxos launched it there](https://docs.paxos.com/guides/stablecoin/usdg/mainnet).
 
 ## Why it's interesting
 
@@ -22,7 +22,7 @@ A supply chart tells you a stablecoin is growing. It doesn't tell you what the m
 | | |
 |---|---|
 | Chain | Arbitrum One, `https://arbitrum.hypersync.xyz` |
-| Product | Envio HyperSync produces the supply and every balance |
+| Product | HyperSync produces the supply and every balance. A public RPC's `eth_getCode` only sorts holders into contracts and wallets |
 | Logs | Every `Transfer` of USDG (`0x004b506865409877c9fa29bfb1eba929984b9bbc`), with `topic1`, `topic2`, `data`, `block_number` and `log_index` |
 | Blocks | `number`, `timestamp`, for the daily series |
 | Groups | The eight GMX market addresses that hold USDG, the Morpho contract, then contracts and wallets split by `eth_getCode` |
@@ -36,7 +36,7 @@ You need Python 3 and a HyperSync API token from the [Envio Dashboard](https://e
 
 ```bash
 export ENVIO_API_TOKEN=your-token
-python script.py
+python3 script.py
 ```
 
 It prints the breakdown and writes `usdg_arbitrum.json`, which also holds the supply, GMX and Morpho totals for every day since the first mint.
@@ -53,10 +53,10 @@ The GMX market addresses come from [GMX's markets API](https://arbitrum-api.gmxi
 
 ## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
 ```
-Use Envio HyperSync (https://docs.envio.dev/docs/HyperSync/overview, endpoint https://arbitrum.hypersync.xyz/query)
+Use HyperSync (https://docs.envio.dev/docs/HyperSync/overview, endpoint https://arbitrum.hypersync.xyz/query)
 to read every Transfer log of USDG on Arbitrum One (0x004b506865409877c9fa29bfb1eba929984b9bbc) from block 0
 to the head. Use the default join mode and keep only logs whose address and topic0 match. Page with next_block.
 My API token is in ENVIO_API_TOKEN. Rebuild every holder's balance with integer maths, then show how the
