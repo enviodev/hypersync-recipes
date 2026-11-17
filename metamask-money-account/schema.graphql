@@ -23,3 +23,17 @@ type DailyStat {
   sharesMinted: BigInt!
   sharesBurned: BigInt!
 }
+
+type SharePrice {
+  id: ID! # "monad"
+  rate: BigInt! # mUSD per vault share (6 decimals), from the accountant's latest ExchangeRateUpdated
+  block: Int!
+}
+
+type AavePosition {
+  id: ID! # "monad"
+  vaultScaled: BigInt! # the vault's scaled aMonmUSD balance (6 decimals)
+  totalScaled: BigInt! # scaled aMonmUSD supply across every holder
+  liquidityIndex: BigInt! # the reserve's liquidity index (27 decimals) from the latest aToken event
+  block: Int!
+}
