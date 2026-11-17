@@ -1,8 +1,8 @@
 # Open USD (OUSD) supply by chain
 
-In the run below, **Open USD (OUSD) supply was $910.4M across four chains**. Tempo held $623.1M of it, then Ethereum at $113.2M, Base at $93.0M and Solana at $80.9M. Tempo also has the most holders, at 1.6K.
+In a run on 5 Nov 2026 (Ethereum block 26,348,668), **Open USD (OUSD) supply was $910.4M across four chains**. Tempo held $623.1M of it, then Ethereum at $113.2M, Base at $93.0M and Solana at $80.9M. Tempo also has the most holders, at 1.6K.
 
-| Chain | Supply | Share | Holders |
+| 5 Nov 2026 | Supply | Share | Holders |
 | --- | --- | --- | --- |
 | Tempo | $623,134,876 | 68.4% | 1,577 |
 | Ethereum | $113,235,535 | 12.4% | 170 |
@@ -33,7 +33,7 @@ export ENVIO_API_TOKEN=your-token
 python3 script.py
 ```
 
-Sample output, trimmed to the total and the checks.
+Sample output from the 5 Nov 2026 run, trimmed to the total and the checks.
 
 ```
 Open USD (OUSD) supply: $910,351,142
