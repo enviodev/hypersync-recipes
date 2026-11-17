@@ -1,6 +1,6 @@
 # Tokenized Treasury funds on Solana, day by day
 
-**J.P. Morgan's JLTXX fund reached 740.8M tokens on Solana, about $741M at $1 a token, in under two weeks**. It went from 17M at the end of the week of 18 Oct 2026 to 450.3M a week later and 740.8M by 1 Nov. The script tracks it alongside four other Treasury funds on Solana from BlackRock, Ondo, State Street and Galaxy.
+**J.P. Morgan's JLTXX fund went from 17M tokens on Solana at the end of 18 Oct 2026 to 740.8M at the end of 1 Nov, about $741M at $1 a token**. It passed 450.3M a week in, on 25 Oct. The script tracks it alongside four other Treasury funds on Solana from BlackRock, Ondo, State Street and Galaxy.
 
 | Fund | Manager | Mint |
 | --- | --- | --- |
@@ -48,7 +48,7 @@ USDY (Ondo)                      156.5M    156.5M    156.5M    156.5M    156.5M 
 ## Change the window or chain
 
 - **Window.** Pass a number of days. Longer windows take longer, since the script reads every balance change in them.
-- **Another token.** Add any SPL mint to the `MINTS` dict, a stablecoin, a stock token or another fund, and you'll get its daily supply in the same table.
+- **Another token.** Add any SPL mint to the `FUNDS` dict, a stablecoin, a stock token or another fund, and you'll get its daily supply in the same table.
 - **Slot range.** The [HyperSync Solana docs](https://docs.envio.dev/docs/HyperSync/solana) cover the slot range and the query fields if you want to go further back or pull other columns.
 
 ## Check the numbers
@@ -57,7 +57,7 @@ JLTXX, SHVon and SWEEP launched inside HyperSync's Solana range. Summing their c
 
 ## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent from this folder.
 
 ```text
 Read script.py and README.md in this folder. It uses HyperSync on Solana
