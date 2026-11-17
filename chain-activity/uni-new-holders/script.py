@@ -4,8 +4,8 @@ from the token's whole history, using Envio HyperSync.
 
 Usage:
     export ENVIO_API_TOKEN=...          # free token: https://docs.envio.dev/docs/HyperSync/api-tokens
-    python3 new_addresses.py                                   # UNI on Ethereum
-    python3 new_addresses.py 0xTokenAddress 12345678           # any ERC-20, optional start block
+    python3 script.py                                          # UNI on Ethereum
+    python3 script.py 0xTokenAddress 12345678                  # any ERC-20, optional start block
 
 An address counts on the UTC day it first sends or receives the token.
 Writes new_addresses.csv (day, new_addresses, transfers) and prints the busiest days.
