@@ -1,38 +1,44 @@
 # Every ERC-4337 user operation on Ethereum
 
-Reads every `UserOperationEvent` from the three ERC-4337 EntryPoint contracts on Ethereum with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview) and prints user operations per day, the accounts behind them, how many had their gas paid by a paymaster and how many of those went through Pimlico's paymasters.
+From 26 Oct to 15 Nov 2026 (21 full UTC days), **smart accounts on Ethereum sent 661K user operations, about 31.5K a day, from 209K accounts**.
 
-These are the numbers behind Envio's post on smart accounts on Ethereum.
+- 468K of them (70.9%) had their gas paid by a paymaster, so the account didn't need ETH to send.
+- 321K (48.6%) had their gas paid through [Pimlico's](https://docs.pimlico.io) paymasters.
+- In the first 21 days of a wider pull (15 Jul to 4 Aug 2026) the average was 21K a day, so daily user operations are up 50%.
+- By EntryPoint version, 475K went through v0.7, 112K through v0.8 and 73K through v0.6.
 
-## The finding
+## Why it's interesting
 
-From 26 Oct to 15 Nov 2026 (21 full UTC days), smart accounts on Ethereum sent 660,754 user operations, about 31,464 a day, from 209,311 accounts.
+A user operation is how a smart account sends a transaction, and the paymaster field says who paid the gas. If you're building a wallet or an app with gasless transactions, this one event tells you how many accounts are active, how many of their transactions were sponsored or paid in a token, and which paymaster did it. Point it at your own paymaster or bundler and you've got your own numbers.
 
-- 468,339 of them (70.9%) had their gas paid by a paymaster, so the account didn't need ETH to send.
-- 321,048 (48.6%) had their gas paid through [Pimlico's](https://docs.pimlico.io) paymasters.
-- In the first 21 days of the wider pull (15 Jul to 4 Aug 2026) the average was 20,972 a day, so daily user operations are up 50%.
-- By EntryPoint: 475,375 on v0.7, 112,077 on v0.8 and 73,302 on v0.6.
+## What it pulls
 
-## Why it matters
+`UserOperationEvent` logs from the three ERC-4337 [EntryPoint contracts](https://github.com/eth-infinitism/account-abstraction) on Ethereum, joined to each block's timestamp. The event is the same on every version.
 
-A user operation is how a smart account sends a transaction. The paymaster field says who paid the gas. If you're building a wallet or an app with gasless transactions, this one event tells you how many accounts are active, how many of their transactions were sponsored or paid in a token, and which paymaster did it. You can run the same pull for your own paymaster or bundler address.
+| EntryPoint | Address |
+| --- | --- |
+| v0.6 | [`0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789`](https://etherscan.io/address/0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789) |
+| v0.7 | [`0x0000000071727De22E5E9d8BAf0edAc6f37da032`](https://etherscan.io/address/0x0000000071727De22E5E9d8BAf0edAc6f37da032) |
+| v0.8 | [`0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108`](https://etherscan.io/address/0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108) |
+
+- One event is one user operation. Failed user operations still emit it and are counted. In this window 98.96% succeeded.
+- An account is the event's `sender`, counted once across the whole window.
+- "Gas paid by a paymaster" means the `paymaster` field isn't the zero address. That covers sponsored transactions and ones where the account pays the paymaster back in a token such as USDC.
+- Pimlico's paymasters are the three addresses on Pimlico's [contract addresses](https://docs.pimlico.io/references/paymaster/erc20-paymaster/contract-addresses) page, one per EntryPoint version.
+
+Every number comes from HyperSync.
 
 ## Run it
 
-You need Python 3 and a HyperSync API token from the [Envio Dashboard](https://envio.dev/app/api-tokens). The script has no other dependencies.
+You need Python 3 and a free API token from [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens). There's nothing else to install.
 
 ```bash
 export ENVIO_API_TOKEN=your-token
-python3 script.py
+python3 script.py                          # the last 21 full UTC days
+python3 script.py 2026-10-26 2026-11-15    # the window used above, both dates included
 ```
 
-That covers the last 21 full UTC days. Pass a start and end date to pick the window. The post used:
-
-```bash
-python3 script.py 2026-10-26 2026-11-15
-```
-
-## What it prints
+Sample output for 26 Oct to 15 Nov 2026.
 
 ```
 ERC-4337 on Ethereum, 26 Oct to 15 Nov 2026 UTC (21 days)
@@ -50,17 +56,14 @@ day         user ops  accounts  paymaster  pimlico
 ...
 ```
 
-## How it counts
+## Change the window or chain
 
-- One `UserOperationEvent` is one user operation. The event is the same on EntryPoint v0.6 (`0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789`), v0.7 (`0x0000000071727De22E5E9d8BAf0edAc6f37da032`) and v0.8 (`0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108`).
-- An account is the event's `sender`. Accounts are counted once across the whole window.
-- "Gas paid by a paymaster" means the event's `paymaster` field isn't the zero address. That covers both sponsored transactions and ones where the account pays the paymaster back in a token such as USDC.
-- Pimlico's paymasters are the three addresses on Pimlico's [contract addresses](https://docs.pimlico.io/references/paymaster/erc20-paymaster/contract-addresses) page, one per EntryPoint version.
-- Failed user operations still emit the event and are counted. In this window 98.96% succeeded.
+- **Window.** Pass a start and an end date. The script works out a start block from the chain head at 7,200 blocks a day, adds a little slack, and then keeps only events whose block timestamp falls in the window.
+- **Chain.** The EntryPoint addresses are the same on most EVM chains. Swap `HS` for the chain's HyperSync URL from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks), for example `https://base.hypersync.xyz`, and change `BLOCKS_PER_DAY` to match its block time (43,200 on Base). Check that chain's Pimlico addresses on their page too.
 
-## Check the numbers yourself
+## Check the numbers
 
-Ask any Ethereum RPC for the same logs over a small block range and compare. For blocks 26420000 to 26420999 both HyperSync and `eth_getLogs` return 3,088 events on v0.7, 805 on v0.8 and 363 on v0.6, and 2,039 of the v0.7 events name Pimlico's v0.7 paymaster.
+Ask any Ethereum RPC for the same logs over a small block range as the comparison. For blocks 26,420,000 to 26,420,999 both HyperSync and `eth_getLogs` return 3,088 events on v0.7, 805 on v0.8 and 363 on v0.6, and 2,039 of the v0.7 events name Pimlico's v0.7 paymaster. This counts the v0.7 events over that range.
 
 ```bash
 curl -s https://ethereum-rpc.publicnode.com -H 'content-type: application/json' -d '{
@@ -72,23 +75,28 @@ curl -s https://ethereum-rpc.publicnode.com -H 'content-type: application/json' 
 
 ## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
+```text
+Read script.py and README.md in this folder. It uses HyperSync
+(https://docs.envio.dev/docs/HyperSync/overview) to read every
+UserOperationEvent from the ERC-4337 EntryPoint contracts v0.6, v0.7 and v0.8
+on Ethereum, and counts user operations, accounts and paymaster-paid ones per
+day. My HyperSync token is in the ENVIO_API_TOKEN environment variable.
+
+Run the same thing on Base. Take the Base HyperSync URL from
+https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks, set
+BLOCKS_PER_DAY to 43,200 and keep the standard library only. Add a table of
+the 10 paymasters that paid for the most user operations. Run it for the last
+2 days first, then check one hour's count for v0.7 against eth_getLogs on a
+public Base RPC before you trust the totals.
 ```
-Use Envio HyperSync (https://docs.envio.dev/docs/HyperSync/overview) to read every
-UserOperationEvent from the ERC-4337 EntryPoint contracts on Ethereum (v0.6
-0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789, v0.7 0x0000000071727De22E5E9d8BAf0edAc6f37da032,
-v0.8 0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108). My API token is in the ENVIO_API_TOKEN
-environment variable. Start from script.py in
-https://github.com/enviodev/hypersync-recipes/tree/main/erc4337-user-operations-ethereum.
-For the last 30 days, chart user operations per day split by paymaster address, and list
-the 20 accounts that sent the most. Then do the same on Base (https://base.hypersync.xyz).
-Check one day's count against eth_getLogs on a public RPC before you trust the totals.
-```
 
-## Sources
+## Links
 
-- [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview) and [supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks)
+- [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview)
+- [HyperSync query reference](https://docs.envio.dev/docs/HyperSync/hypersync-query)
+- [HyperSync supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks)
 - [ERC-4337 docs](https://docs.erc4337.io) and the [EntryPoint contracts](https://github.com/eth-infinitism/account-abstraction)
 - [Pimlico paymaster addresses](https://docs.pimlico.io/references/paymaster/erc20-paymaster/contract-addresses)
 - [Envio Discord](https://discord.gg/envio)
