@@ -1,10 +1,11 @@
 """Morpho vaults on Arc, pulled with Envio HyperSync.
 
-Reads every vault created by Morpho's VaultV2Factory on Arc, every deposit and
-withdrawal in those vaults, and every borrow and repay on Morpho Blue on Arc.
-Prints vault deposits, depositors, the biggest vaults, and what is borrowed
-against cirBTC, then checks the vault totals against each vault's
-totalAssets() over RPC.
+Reads every vault created by Morpho's VaultV2Factory on Arc, every deposit,
+withdrawal, interest accrual and adapter in those vaults, and every supply,
+withdraw, borrow, repay, interest and liquidation event in the USDC/cirBTC
+markets on Morpho Blue on Arc. Prints vault deposits, depositors, the biggest
+vaults, and what is borrowed against cirBTC, all rebuilt from those events,
+then checks them against totalAssets(), market() and position() over RPC.
 
     export ENVIO_API_TOKEN=your-token
     python script.py            # up to the latest block
@@ -30,6 +31,11 @@ CREATE_MARKET = "0xac4b2400f169220b0c0afdde7a0b32e775ba727ea1cb30b35f935cdaab868
 BORROW = "0x570954540bed6b1304a87dfe815a5eda4a648f7097a16240dcd85c9b5fd42a43"        # Borrow(id, caller, onBehalf, receiver, assets, shares)
 REPAY = "0x52acb05cebbd3cd39715469f22afbf5a17496295ef3bc9bb5944056c63ccaa09"         # Repay(id, caller, onBehalf, assets, shares)
 SUPPLY = "0xedf8870433c83823eb071d3df1caa8d008f12f6440918c20d75a3602cda30fe0"        # Supply(id, caller, onBehalf, assets, shares)
+MARKET_WITHDRAW = "0xa56fc0ad5702ec05ce63666221f796fb62437c32db1aa1aa075fc6484cf58fbf"  # Withdraw(id, caller, onBehalf, receiver, assets, shares)
+MARKET_ACCRUE = "0x9d9bd501d0657d7dfe415f779a620a62b78bc508ddc0891fbbd8b7ac0f8fce87"    # AccrueInterest(id, prevBorrowRate, interest, feeShares)
+LIQUIDATE = "0xa4946ede45d0c6f06a0f5ce92c9ad3b4751452d2fe0e25010783bcab57a67e41"        # Liquidate(id, caller, borrower, repaid, repaidShares, seized, badDebt, badDebtShares)
+VAULT_ACCRUE = "0x4dec04e750ca11537cabcd8a9eab06494de08da3735bc8871cd41250e190bc04"     # VaultV2 AccrueInterest(previousTotalAssets, newTotalAssets, perfFeeShares, mgmtFeeShares)
+ADD_ADAPTER = "0x8f125a24838c4c23e893904b255b5c672d43d4cb8af7e3d15841eaeabc1e68aa"      # VaultV2 AddAdapter(account)
 
 
 def post(url, body, headers):
@@ -108,7 +114,12 @@ def main():
     print(f"Morpho vaults on Arc, up to block {height:,}")
     print(f"  {len(vault_asset)} vaults created through VaultV2Factory, {len(usdc_vaults)} of them USDC vaults")
 
-    flows, _ = logs(list(vault_asset), [DEPOSIT, WITHDRAW], height)
+    flows, _ = logs(list(vault_asset), [DEPOSIT, WITHDRAW, VAULT_ACCRUE, ADD_ADAPTER], height)
+    flows.sort(key=lambda l: (l["block_number"], int(l["log_index"], 16) if isinstance(l["log_index"], str) else l["log_index"]))
+    # Each vault's stored totalAssets, rebuilt the way VaultV2 keeps it: set by AccrueInterest, then plus deposits
+    # and minus withdrawals. Adapters are the contracts a vault lends through, from AddAdapter.
+    total_assets = collections.Counter()
+    adapter_vault = {}
     net = collections.Counter()
     depositors = set()
     per_vault_depositors = collections.defaultdict(set)
@@ -118,7 +129,14 @@ def main():
         v = l["address"].lower()
         if vault_asset[v] != USDC:
             continue
+        if l["topic0"] == ADD_ADAPTER:
+            adapter_vault[addr(l["topic1"])] = v
+            continue
+        if l["topic0"] == VAULT_ACCRUE:
+            total_assets[v] = word(l["data"], 1) / 1e6
+            continue
         amount = word(l["data"], 0) / 1e6
+        total_assets[v] += amount if l["topic0"] == DEPOSIT else -amount
         if l["topic0"] == DEPOSIT:
             owner = addr(l["topic2"])
             depositors.add(owner)
@@ -132,14 +150,16 @@ def main():
     print(f"  {deposit_count:,} USDC deposits from {len(depositors):,} wallets into {len(per_vault_depositors)} vaults")
     print(f"  USDC deposited, net of withdrawals: ${sum(net.values()):,.0f}")
 
-    # second method: each vault's totalAssets() over RPC (includes interest earned)
-    total_assets = {}
+    print(f"  USDC in the vaults now, with interest (rebuilt totalAssets): ${sum(total_assets.values()):,.0f}")
+
+    # cross-check: each vault's totalAssets() over RPC, which also adds interest accrued since the vault's last event
+    rpc_assets = 0
     for v in usdc_vaults:
         raw = eth_call(v, "0x01e1d114", height)
-        total_assets[v] = int(raw, 16) / 1e6 if raw not in ("0x", "") else 0
-    print(f"  USDC in the vaults now, from totalAssets() over RPC: ${sum(total_assets.values()):,.0f}")
+        rpc_assets += int(raw, 16) / 1e6 if raw not in ("0x", "") else 0
+    print(f"  Check (RPC totalAssets()): ${rpc_assets:,.0f}, gap ${sum(total_assets.values()) - rpc_assets:,.0f}")
 
-    print("  biggest USDC vaults (RPC totalAssets, depositor wallets)")
+    print("  biggest USDC vaults (rebuilt totalAssets, depositor wallets)")
     for v in sorted(usdc_vaults, key=lambda v: -total_assets[v])[:6]:
         name = text(eth_call(v, "0x06fdde03", height))
         print(f"    {name:<28} ${total_assets[v]:>14,.0f}  {len(per_vault_depositors[v]):>5} wallets  {v}")
@@ -151,49 +171,77 @@ def main():
         if abs(daily[d]) >= 1_000_000:
             print(f"    {d}  {daily[d]:>+15,.0f}  ->  ${running:>14,.0f}")
 
-    # what the vault USDC is lent against: Morpho Blue USDC/cirBTC markets
-    events, _ = logs([MORPHO], [CREATE_MARKET, SUPPLY, BORROW, REPAY], height)
+    # what the vault USDC is lent against: Morpho Blue USDC/cirBTC markets, rebuilt from their events the way
+    # Morpho keeps them (totalSupplyAssets, totalSupplyShares, totalBorrowAssets, and supply shares per address)
+    events, _ = logs([MORPHO], [CREATE_MARKET, SUPPLY, MARKET_WITHDRAW, BORROW, REPAY, MARKET_ACCRUE, LIQUIDATE], height)
+    events.sort(key=lambda l: (l["block_number"], int(l["log_index"], 16) if isinstance(l["log_index"], str) else l["log_index"]))
     markets = {l["topic1"] for l in events if l["topic0"] == CREATE_MARKET
                and addr(l["data"][2:66]) == USDC and addr(l["data"][66:130]) == CIRBTC}
+    state = {m: collections.Counter() for m in markets}   # supply_assets, supply_shares, borrow_assets
+    shares = collections.Counter()                        # (supplier, market) -> supply shares
     principal = collections.Counter()
     borrowers = set()
     for l in events:
-        if l["topic1"] not in markets:
+        m = l["topic1"]
+        if m not in markets or l["topic0"] == CREATE_MARKET:
             continue
-        if l["topic0"] == BORROW:
+        st, w = state[m], [word(l["data"], i) for i in range((len(l["data"]) - 2) // 64)]
+        if l["topic0"] == SUPPLY:
+            st["supply_assets"] += w[0]
+            st["supply_shares"] += w[1]
+            shares[addr(l["topic3"]), m] += w[1]
+        elif l["topic0"] == MARKET_WITHDRAW:
+            st["supply_assets"] -= w[1]
+            st["supply_shares"] -= w[2]
+            shares[addr(l["topic2"]), m] -= w[2]
+        elif l["topic0"] == BORROW:
+            st["borrow_assets"] += w[1]
             who = addr(l["topic2"])
             borrowers.add(who)
-            principal[who] += word(l["data"], 1) / 1e6
+            principal[who] += w[1] / 1e6
         elif l["topic0"] == REPAY:
-            principal[addr(l["topic3"])] -= word(l["data"], 0) / 1e6
-    owed = 0
-    supplied = 0
-    market_state = {}
-    for m in markets:
-        raw = eth_call(MORPHO, "0x5c60e39a" + m[2:], height)
-        market_state[m] = (word(raw, 0), word(raw, 1))  # totalSupplyAssets, totalSupplyShares
-        supplied += word(raw, 0) / 1e6
-        owed += word(raw, 2) / 1e6
+            st["borrow_assets"] -= w[0]
+            principal[addr(l["topic3"])] -= w[0] / 1e6
+        elif l["topic0"] == MARKET_ACCRUE:
+            st["supply_assets"] += w[1]
+            st["borrow_assets"] += w[1]
+            st["supply_shares"] += w[2]   # fee shares, minted to the fee recipient
+        elif l["topic0"] == LIQUIDATE:
+            st["borrow_assets"] -= w[0] + w[3]
+            st["supply_assets"] -= w[3]
+    supplied = sum(st["supply_assets"] for st in state.values()) / 1e6
+    owed = sum(st["borrow_assets"] for st in state.values()) / 1e6
 
-    # how much of the vault USDC sits in the cirBTC markets: vaults supply to Morpho
-    # through adapter contracts, and each adapter reports its vault with parentVault()
-    suppliers = {(addr(l["topic3"]), l["topic1"]) for l in events if l["topic0"] == SUPPLY and l["topic1"] in markets}
+    # how much of the vault USDC sits in the cirBTC markets: vaults supply to Morpho through adapters
     in_cirbtc = collections.Counter()
-    for who, m in suppliers:
-        parent = eth_call(who, "0x0fe36536", height)
-        if len(parent) < 66 or addr(parent[:66]) not in total_assets:
-            continue
-        pos = eth_call(MORPHO, "0x93c52062" + m[2:] + who[2:].rjust(64, "0"), height)
-        assets, shares = market_state[m]
-        if shares:
-            in_cirbtc[addr(parent[:66])] += word(pos, 0) * assets / shares / 1e6
+    for (who, m), n in shares.items():
+        if who in adapter_vault and state[m]["supply_shares"]:
+            in_cirbtc[adapter_vault[who]] += n * state[m]["supply_assets"] / state[m]["supply_shares"] / 1e6
     vault_total = sum(total_assets.values())
     print("\nUSDC lent against cirBTC on Morpho on Arc")
     print(f"  {len(markets)} USDC/cirBTC markets, {len(borrowers):,} wallets have borrowed")
     print(f"  principal outstanding from events: ${sum(x for x in principal.values() if x > 0):,.0f}")
-    print(f"  owed now, totalBorrowAssets over RPC: ${owed:,.0f} of ${supplied:,.0f} supplied ({owed / supplied:.0%} lent out)")
+    print(f"  owed now with interest: ${owed:,.0f} of ${supplied:,.0f} supplied ({owed / supplied:.0%} lent out)")
     print(f"  vault USDC supplied to the USDC/cirBTC markets: ${sum(in_cirbtc.values()):,.0f} "
           f"({sum(in_cirbtc.values()) / vault_total:.0%} of the ${vault_total:,.0f} in the vaults)")
+
+    # cross-check against Morpho over RPC at the same block: market() for owed, and position() for every
+    # supplier whose parentVault() is a USDC vault
+    rpc_owed, rpc_in, market_state = 0, 0, {}
+    for m in markets:
+        raw = eth_call(MORPHO, "0x5c60e39a" + m[2:], height)
+        market_state[m] = (word(raw, 0), word(raw, 1))
+        rpc_owed += word(raw, 2) / 1e6
+    for (who, m) in {k for k in shares}:
+        parent = eth_call(who, "0x0fe36536", height)
+        if len(parent) < 66 or addr(parent[:66]) not in total_assets:
+            continue
+        pos = eth_call(MORPHO, "0x93c52062" + m[2:] + who[2:].rjust(64, "0"), height)
+        assets, total_shares = market_state[m]
+        if total_shares:
+            rpc_in += word(pos, 0) * assets / total_shares / 1e6
+    print(f"  Check (RPC market() totalBorrowAssets): ${rpc_owed:,.0f}, gap ${owed - rpc_owed:,.2f}")
+    print(f"  Check (RPC position() with parentVault()): ${rpc_in:,.0f}, gap ${sum(in_cirbtc.values()) - rpc_in:,.2f}")
 
 
 if __name__ == "__main__":

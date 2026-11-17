@@ -1,6 +1,6 @@
 # Morpho vaults on Arc
 
-Up to Arc block 30,839,502 (12 Nov 2026), **1.7K wallets had put $173.6M of USDC, net of withdrawals, into Morpho vaults on Arc**, across 7.9K deposits into 39 vaults. Most of it is lent against cirBTC, Circle's wrapped bitcoin. 329 wallets have borrowed in the two USDC/cirBTC markets, with $155.6M of principal outstanding, and 84% of the USDC in the vaults sits in those two markets.
+Up to Arc block 30,839,502 (12 Nov 2026), **1.7K wallets had put $173.6M of USDC, net of withdrawals, into Morpho vaults on Arc**, across 7.9K deposits into 39 vaults. Most of it is lent against cirBTC, Circle's wrapped bitcoin. 329 wallets have borrowed in the two USDC/cirBTC markets, with $155.6M of principal outstanding, and 84% of the USDC in the vaults, $146.5M, sits in those two markets.
 
 | | Up to block 30,839,502 |
 | --- | --- |
@@ -16,13 +16,13 @@ Arc is Circle's own chain, and Morpho vaults are one of the first places its USD
 
 ## What it pulls
 
-- `CreateVaultV2` logs from Morpho's VaultV2Factory on Arc, `0x3b0eefaBfa22ec7CF2c73877ac16e78D76749f12`, then `Deposit` and `Withdraw` logs from every vault it created.
-- `CreateMarket`, `Supply`, `Borrow` and `Repay` logs on Morpho on Arc, `0x34CD04070dD72b14E241112F6d83812Df5Af7fCD`, for the USDC/cirBTC markets. Both addresses are from the [Morpho docs](https://docs.morpho.org/get-started/resources/addresses).
+- `CreateVaultV2` logs from Morpho's VaultV2Factory on Arc, `0x3b0eefaBfa22ec7CF2c73877ac16e78D76749f12`, then `Deposit`, `Withdraw`, `AccrueInterest` and `AddAdapter` logs from every vault it created.
+- `CreateMarket`, `Supply`, `Withdraw`, `Borrow`, `Repay`, `AccrueInterest` and `Liquidate` logs on Morpho on Arc, `0x34CD04070dD72b14E241112F6d83812Df5Af7fCD`, for the USDC/cirBTC markets. Both addresses are from the [Morpho docs](https://docs.morpho.org/get-started/resources/addresses).
 - USDC on Arc is `0x3600000000000000000000000000000000000000` (6 decimals through its ERC-20 interface) and cirBTC is `0x171A4217b86A807A64eB94757Db6849fb4bDbAA0` (8 decimals), from the [Arc contract addresses page](https://docs.arc.io/arc/references/contract-addresses).
 
 A depositor is any `onBehalf` address in a vault `Deposit` event. Vault totals are deposits minus withdrawals, and only USDC vaults are summed. Arc also has smaller vaults in EURC, MXNB, GBPA and wARS.
 
-Wallets, deposits, net deposits, borrowers and principal outstanding come from HyperSync. The 84% share, the vault names and the per-vault sizes in the output are read over Arc's public RPC. To get the share, the script finds every address that supplied to the USDC/cirBTC markets, keeps the ones whose `parentVault()` is a USDC vault, and reads each one's `position()` on Morpho, then divides by the vaults' `totalAssets()`.
+Every number comes from HyperSync, including the 84% share. Each vault's USDC is rebuilt the way VaultV2 stores it, set by every `AccrueInterest` and then moved by deposits and withdrawals. Each market's supplied assets, supply shares and USDC owed are rebuilt the way Morpho stores them, from supplies, withdrawals, borrows, repays, interest and liquidations. A vault lends through adapter contracts, which its `AddAdapter` events name, so the share is the adapters' supply shares in the USDC/cirBTC markets, turned into USDC, divided by the USDC in the vaults. Only the vault names are read over Arc's public RPC, along with the checks below.
 
 ## Run it
 
@@ -41,11 +41,12 @@ Morpho vaults on Arc, up to block 30,839,502
   75 vaults created through VaultV2Factory, 52 of them USDC vaults
   7,882 USDC deposits from 1,658 wallets into 39 vaults
   USDC deposited, net of withdrawals: $173,560,644
-  USDC in the vaults now, from totalAssets() over RPC: $174,083,432
-  biggest USDC vaults (RPC totalAssets, depositor wallets)
-    Galaxy USDC                  $    92,633,842    807 wallets  0x8e357432cc12ff425c36432f312968aeb16112af
-    Keyrock Prime USDC           $    75,231,468    298 wallets  0x5befab92a5a3d60f578cb51eeb4e4fd50a1e3123
-    Steakhouse Prime USDC        $     5,287,038    205 wallets  0xbeef0016cb2fd5c352ea7ca08a9f54739dfa7298
+  USDC in the vaults now, with interest (rebuilt totalAssets): $174,083,061
+  Check (RPC totalAssets()): $174,083,432, gap $-371
+  biggest USDC vaults (rebuilt totalAssets, depositor wallets)
+    Galaxy USDC                  $    92,633,800    807 wallets  0x8e357432cc12ff425c36432f312968aeb16112af
+    Keyrock Prime USDC           $    75,231,222    298 wallets  0x5befab92a5a3d60f578cb51eeb4e4fd50a1e3123
+    Steakhouse Prime USDC        $     5,286,997    205 wallets  0xbeef0016cb2fd5c352ea7ca08a9f54739dfa7298
     ...
   USDC in the vaults at the end of each day (deposits minus withdrawals)
     2026-09-15      +74,500,025  ->  $    74,500,095
@@ -55,8 +56,10 @@ Morpho vaults on Arc, up to block 30,839,502
 USDC lent against cirBTC on Morpho on Arc
   2 USDC/cirBTC markets, 329 wallets have borrowed
   principal outstanding from events: $155,622,772
-  owed now, totalBorrowAssets over RPC: $156,165,257 of $171,610,260 supplied (91% lent out)
-  vault USDC supplied to the USDC/cirBTC markets: $146,525,227 (84% of the $174,083,432 in the vaults)
+  owed now with interest: $156,165,257 of $171,610,260 supplied (91% lent out)
+  vault USDC supplied to the USDC/cirBTC markets: $146,525,227 (84% of the $174,083,061 in the vaults)
+  Check (RPC market() totalBorrowAssets): $156,165,257, gap $0.00
+  Check (RPC position() with parentVault()): $146,525,227, gap $0.00
 ```
 
 Without a block number your numbers will differ a little.
@@ -69,7 +72,7 @@ Without a block number your numbers will differ a little.
 
 ## Check the numbers
 
-The script checks itself against Arc's public RPC as the comparison. Net deposits from events ($173.6M) sit just below the vaults' own `totalAssets()` ($174.1M), and principal from events ($155.6M) sits just below `totalBorrowAssets` ($156.2M). In both cases the gap is interest.
+The script checks itself against Arc's public RPC at the same block. At block 30,839,502 the USDC/cirBTC debt rebuilt from events matched `totalBorrowAssets` from `market()` to the cent, and the vault USDC in those markets ($146.5M) matched the sum of `position()` for every supplier whose `parentVault()` is a USDC vault, also to the cent. The vaults' USDC rebuilt from events sat $371 below their `totalAssets()`, because `totalAssets()` also adds interest earned since each vault's last event. Net deposits ($173.6M) and principal outstanding ($155.6M) leave interest out, so they sit a little lower.
 
 ## Build your own with an AI agent
 
