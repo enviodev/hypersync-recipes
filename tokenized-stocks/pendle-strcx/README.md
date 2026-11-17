@@ -33,7 +33,7 @@ python3 script.py 26387500     # balances at the block above
 python3 script.py --cached     # reuse the events saved in logs.json
 ```
 
-Balance reads go to `https://eth.drpc.org` by default. Set `ETH_RPC_URL` to use your own, and note the daily series needs an RPC that serves historical state. A full run takes about two minutes. Sample output at block 26,387,500:
+Balance reads go to `https://eth.drpc.org` by default. Set `ETH_RPC_URL` to use your own, and note the daily series needs an RPC that serves historical state. A full run takes about two minutes. Sample output at block 26,387,500.
 
 ```
 STRCx 0x1aad217b8f78dba5e6693460e8470f8b1a3977f3 on Ethereum, balances at block 26,387,500
@@ -76,7 +76,7 @@ The script runs two checks over RPC at the same block. The balances of every add
 
 ## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
 ```text
 Read script.py and README.md in this folder. It uses HyperSync
