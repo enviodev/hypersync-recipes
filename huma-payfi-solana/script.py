@@ -11,7 +11,9 @@ import collections, json, os, sys, time, urllib.request
 PROGRAM = "EVQ4s1b6N1vmWFDv8PRNc77kufBP8HcrSNWXQAhRsJq9"  # Huma Institutional (docs.huma.finance)
 DISC = {"c828a26f9cde07f3": "drawdown", "28494b8a2d608742": "make_principal_payment"}
 URL = "https://solana.hypersync.xyz/query"
-TOKEN = os.environ.get("ENVIO_API_TOKEN") or open(os.path.expanduser("~/.envio-pro-token")).read().strip()
+TOKEN = os.environ.get("ENVIO_API_TOKEN")
+if not TOKEN:
+    sys.exit("Set ENVIO_API_TOKEN (get one at https://envio.dev/app/api-tokens)")
 
 def post(body):
     for i in range(8):
