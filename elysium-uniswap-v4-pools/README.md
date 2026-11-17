@@ -10,11 +10,11 @@ From the PoolManager's deployment on 3 Nov 2026 to Elysium block 5,448,796 (12 N
 | `0xe0def4221b9840a610d4e7d55812a79a6431a8ec` | 4,613 |
 | `0x3ab88ddc3cf2a012af88b60828edb4553697e5dc` | 3,405 |
 
-Elysium isn't on HyperSync yet, so these numbers come from HyperIndex syncing over Elysium's public RPC.
+This indexer syncs over Elysium's public RPC, which was how it was built in the chain's first days. Elysium is now on HyperSync as well (`https://99901.hypersync.xyz`).
 
 ## Why it's interesting
 
-Most pools on Elysium come from one launchpad hook, which tells you how tokens are being launched there in the chain's first days. The same indexer works on any EVM chain the day it launches, because HyperIndex can sync over plain RPC before HyperSync support lands.
+Most pools on Elysium come from one launchpad hook, which tells you how tokens are being launched there in the chain's first days. The same indexer works on any EVM chain the day it launches, because HyperIndex can sync over plain RPC.
 
 Here's how Elysium compares with three other chains. The Elysium row is the indexer at block 5,448,796. The other rows count every v4 `Initialize` event on each chain's PoolManager (addresses from Uniswap's [deployments list](https://developers.uniswap.org/deployments.json)) as of 12 Nov 2026. They were pulled with HyperSync and again with HyperRPC `eth_getLogs`, which returned the same numbers. The indexer in this folder doesn't produce them.
 
@@ -78,7 +78,7 @@ The public Elysium RPC is rate limited, and an RPC backfill reads one block per 
 
 ### Make it live
 
-There's no `end_block` in `config.yaml`, so `pnpm dev` backfills and then keeps following Elysium's head. Your totals will be higher than the ones above. When Elysium is added to the [HyperSync supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks), you can drop the `rpc` block and HyperIndex will use HyperSync instead.
+There's no `end_block` in `config.yaml`, so `pnpm dev` backfills and then keeps following Elysium's head. Your totals will be higher than the ones above. Elysium is now on HyperSync, so you can drop the `rpc` block and HyperIndex will sync from HyperSync instead, which is much faster.
 
 ### Deploy it
 
