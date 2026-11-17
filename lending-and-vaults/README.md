@@ -13,7 +13,6 @@ Scripts for lending markets and vaults. Pull every supply, borrow, repay and wit
 | [morpho-vaults-arc](morpho-vaults-arc) | Arc | Find every Morpho vault on Arc and the markets it lends to |
 | [usdg-on-morpho](usdg-on-morpho) | Robinhood Chain, Arbitrum, Ethereum | Find every Morpho market lending Paxos USDG |
 | [robinhood-earn-usdg-vault](robinhood-earn-usdg-vault) | Robinhood Chain | Count depositors in the USDG vault behind Robinhood Earn |
-| [safenet-staking](safenet-staking) | Ethereum | Track SAFE staked in Safenet and active stakers week by week |
 
 ### Also on Solana
 

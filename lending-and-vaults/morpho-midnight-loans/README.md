@@ -1,27 +1,49 @@
 # Every fixed-rate loan on Morpho Midnight
 
-Reads every market, trade, repayment, withdrawal, liquidation and collateral deposit on [Morpho Midnight](https://docs.morpho.org/learn/concepts/midnight), Morpho's fixed-rate lending protocol, on all five chains it runs on, with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview). It replays every position to find the trades that opened new debt, prices each loan in dollars, and splits the total by chain, by the collateral the borrower posted and by loan term.
+Up to 11 Nov 2026, **$102.3M had been borrowed on Morpho Midnight across 10K loans**, from 2.6K borrowing wallets and 495 lenders on five chains. Ethereum carried $87.4M of it and Base $14.9M. Borrowers mostly posted bitcoin ($57.6M) or ETH ($35.8M) as collateral, and the dollar-weighted average term was 51 days.
 
-These are the numbers behind Envio's post on Morpho Midnight passing $100M in loans.
+| By collateral | Borrowed | Share |
+| --- | --- | --- |
+| Bitcoin | $57,578,783 | 56.3% |
+| ETH | $35,804,604 | 35.0% |
+| Other | $7,100,249 | 6.9% |
+| Not posted by the borrower | $1,838,734 | 1.8% |
+
+| By term | Borrowed | Share |
+| --- | --- | --- |
+| Up to a week | $1,892,321 | 1.8% |
+| 1 week to 1 month | $16,809,436 | 16.4% |
+| 1 to 3 months | $81,183,740 | 79.3% |
+| Over 3 months | $2,436,873 | 2.4% |
+
+## Why it's interesting
+
+[Morpho Midnight](https://docs.morpho.org/learn/concepts/midnight) is Morpho's fixed-rate lending protocol, where lenders and borrowers trade units that settle at a set maturity. There's no single "loan opened" event. A `Take` can close old debt, move credit between lenders or open new debt, so you have to replay every position to know which trades were real loans. This script does that replay on all five chains, which makes it a good template for any protocol where the meaning of an event depends on state.
+
+## What it pulls
+
+- Every `MarketCreated`, `Take`, `UpdatePosition`, `Withdraw`, `Repay`, `Liquidate` and `SupplyCollateral` log from the Midnight contract on each chain, with addresses from Morpho's [addresses page](https://docs.morpho.org/developers/contracts/addresses) and event layouts from [`EventsLib.sol`](https://github.com/morpho-org/midnight/blob/main/src/libraries/EventsLib.sol).
+  - Ethereum [`0x471686c42792F93528B000beF54bC10E3aa2045f`](https://etherscan.io/address/0x471686c42792F93528B000beF54bC10E3aa2045f)
+  - Base [`0xAdedD8ab6dE832766Fedf0FaC4992E5C4D3EA18A`](https://basescan.org/address/0xAdedD8ab6dE832766Fedf0FaC4992E5C4D3EA18A)
+  - Arc, Robinhood Chain and Tempo, in `MIDNIGHT`
+- `AnswerUpdated` logs from Chainlink's ETH/USD aggregator on Ethereum (`0x7d4E742018fb52E48b08BE73d041C18B21de6Fb5`), to price WETH loans at the time they were taken.
+- Token symbols and decimals, read once per token over each chain's public RPC.
+
+In a `Take`, the buyer lends and the seller borrows. Units first close the buyer's debt and the seller's credit, the same way [`Midnight.sol`](https://github.com/morpho-org/midnight/blob/main/src/Midnight.sol) does, and whatever is left becomes new debt for the seller. Each piece of new debt is one loan, valued at the cash the borrower received. Dollar stablecoins (USDC, PYUSD, USDS, USDG, OUSD) count at $1. Bitcoin is cbBTC and WBTC, and ETH is WETH, weETH, wstETH, cbETH, rETH and wrapped staked ETH. Test tokens and a handful of tiny loans in other tokens are left out and listed at the end of the output.
+
+Every event, and the ETH price, comes from HyperSync. The ETH price is Chainlink's onchain feed, read as logs.
 
 ## Run it
 
-You need Python 3 and a HyperSync API token from the [Envio Dashboard](https://envio.dev/app/api-tokens). The script has no other dependencies.
+You need Python 3 and a free API token from [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens). There's nothing else to install.
 
 ```bash
 export ENVIO_API_TOKEN=your-token
-python script.py
+python3 script.py               # every loan so far
+python3 script.py 1794355200    # loans before 11 Nov 2026 00:00 UTC, the window above
 ```
 
-Add a unix timestamp to count only loans taken before it. The post used 11th November 2026, 00:00 UTC:
-
-```bash
-python script.py 1794355200
-```
-
-Base has the most events, so a full run takes a few minutes.
-
-## What it prints
+Base has the most events, so a full run takes a few minutes. Sample output from the window above.
 
 ```
 Ethereum: 3,096 Midnight events up to block 26,391,184, 1,615 markets
@@ -36,21 +58,7 @@ Borrowed on Morpho Midnight: $102,322,370 across 10,005 loans (first 2026-07-08,
 By chain
   Ethereum                     $    87,411,910   85.4%
   Base                         $    14,910,421   14.6%
-  Robinhood                    $            35    0.0%
-  Arc                          $             3    0.0%
-  Tempo                        $             0    0.0%
-
-By collateral the borrower posted
-  Bitcoin                      $    57,578,783   56.3%
-  ETH                          $    35,804,604   35.0%
-  Other                        $     7,100,249    6.9%
-  Not posted by the borrower   $     1,838,734    1.8%
-
-By time from loan to maturity
-  1 to 3 months                $    81,183,740   79.3%
-  1 week to 1 month            $    16,809,436   16.4%
-  over 3 months                $     2,436,873    2.4%
-  up to a week                 $     1,892,321    1.8%
+  ...
 
 By month
   2026-10                      $    71,586,858   70.0%
@@ -65,24 +73,41 @@ By month
 RPC check on Ethereum: replayed debt matches position() for 74 of 74 open borrows
 ```
 
-Morpho reported $102.7M in loans originated at 15:04 UTC on 10th November. Up to that minute, this replay counts $102.8M at the face value borrowers owe at maturity, or $102.2M in cash lent, so the two line up.
+Without a timestamp your numbers will be higher, as new loans come in.
 
-## How it counts
+## Change the window or chain
 
-- Midnight contract addresses come from Morpho's [addresses page](https://docs.morpho.org/developers/contracts/addresses) and event layouts from [`EventsLib.sol`](https://github.com/morpho-org/midnight/blob/main/src/libraries/EventsLib.sol).
-- In a `Take`, the buyer lends and the seller borrows. Units first close the buyer's debt and the seller's credit, the same way [`Midnight.sol`](https://github.com/morpho-org/midnight/blob/main/src/Midnight.sol) does, and whatever is left becomes new debt for the seller. Each piece of new debt is one loan, valued at the cash the borrower received for it. Lenders selling their credit to other lenders and borrowers closing debt early are not loans.
-- The replay is checked against the `totalUnitsDelta` every `Take` emits, and the final debt of every open Ethereum borrow is checked against Midnight's own `position()` over RPC.
-- Dollar stablecoins (USDC, PYUSD, USDS, USDG, OUSD) count at $1. WETH loans are priced with Chainlink's ETH/USD feed at the time of the loan. Test tokens, Dummy USD Coin and a handful of tiny loans in other tokens are left out and listed at the end.
-- Collateral is what the borrower deposited in that market. Bitcoin is cbBTC and WBTC. ETH is WETH, weETH, wstETH, cbETH, rETH and wrapped staked ETH. Loans where the borrower's own address posted no collateral (for example, when a helper contract posted it) are counted separately.
-- Loan term is the time from the loan to the market's maturity.
+- **Window.** Pass a unix timestamp to count only loans taken before it.
+- **Chains.** Each chain is one entry in `MIDNIGHT`, with its HyperSync slug, the Midnight address and a public RPC. Add a chain from Morpho's [addresses page](https://docs.morpho.org/developers/contracts/addresses) if it's on the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks).
+- **Groups.** Edit `USD_STABLES`, `BTC` and `ETH` to change how tokens are valued and grouped.
 
-## Ask your coding agent
+## Check the numbers
 
-Paste this into Claude Code, Cursor or any coding agent:
+- **Replay.** Every `Take` emits a `totalUnitsDelta`, and the replay matches it on every trade.
+- **Positions.** As the RPC comparison, the final debt of every open Ethereum borrow matches Midnight's own `position()`, 74 of 74.
+- **Morpho's own figure.** As an outside comparison, Morpho reported $102.7M in loans originated at 15:04 UTC on 10 Nov. Up to that minute, the replay counts $102.8M at the face value borrowers owe at maturity, or $102.2M in cash lent.
 
+## Build your own with an AI agent
+
+Paste this into Claude Code, Cursor or any coding agent.
+
+```text
+Read script.py and README.md in this folder. It uses HyperSync
+(https://docs.envio.dev/docs/HyperSync/overview) to read every Morpho Midnight
+event on five chains, replay each position and find the trades that opened new
+debt. My HyperSync token is in the ENVIO_API_TOKEN environment variable.
+
+Add a weekly table of dollars borrowed, split by the market's maturity date, and
+a list of the 20 markets with the most borrowed. Keep the standard library only.
+Then pick three open borrows on Base and check the replayed debt against
+position() on Midnight at the latest block.
 ```
-Use Envio HyperSync (https://docs.envio.dev/docs/HyperSync/overview) to read every Take event from
-Morpho Midnight (https://github.com/morpho-org/midnight) on Ethereum and Base. My API token is in the
-ENVIO_API_TOKEN environment variable. Replay each position to find the trades that opened new debt,
-then show me the dollars borrowed each week, split by the loan's maturity date.
-```
+
+## Links
+
+- [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview)
+- [HyperSync query reference](https://docs.envio.dev/docs/HyperSync/hypersync-query)
+- [HyperSync supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks)
+- [Morpho Midnight docs](https://docs.morpho.org/learn/concepts/midnight)
+- [Midnight source](https://github.com/morpho-org/midnight)
+- [Envio Discord](https://discord.gg/envio)

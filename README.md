@@ -78,7 +78,6 @@ Every folder has its own README with what we found, what the script pulls, how t
 | [morpho-vaults-arc](lending-and-vaults/morpho-vaults-arc) | Arc | Find every Morpho vault on Arc and the markets it lends to |
 | [usdg-on-morpho](lending-and-vaults/usdg-on-morpho) | Robinhood Chain, Arbitrum, Ethereum | Find every Morpho market lending Paxos USDG |
 | [robinhood-earn-usdg-vault](lending-and-vaults/robinhood-earn-usdg-vault) | Robinhood Chain | Count depositors in the USDG vault behind Robinhood Earn |
-| [safenet-staking](lending-and-vaults/safenet-staking) | Ethereum | Track SAFE staked in Safenet and active stakers week by week |
 
 ### DEXs, perps and prediction markets
 
@@ -111,6 +110,7 @@ Every folder has its own README with what we found, what the script pulls, how t
 | [ethereum-approval-cleanups](chain-activity/ethereum-approval-cleanups) | Ethereum | Find every ERC-20 approval revoked on Ethereum |
 | [safe-growth](chain-activity/safe-growth) | 14 chains | Count every Safe created, by month and chain |
 | [safe-shared-signer](chain-activity/safe-shared-signer) | Ethereum | Decode every new Safe's owners and find the most common signer |
+| [safenet-staking](chain-activity/safenet-staking) | Ethereum | Track SAFE staked in Safenet and active stakers week by week |
 | [circles-trust-gnosis](chain-activity/circles-trust-gnosis) | Gnosis | Count Circles v2 humans and trust links on Gnosis Chain |
 | [uni-new-holders](chain-activity/uni-new-holders) | Ethereum | Count new UNI holders per day since 2020 |
 

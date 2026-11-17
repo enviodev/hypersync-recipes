@@ -20,6 +20,9 @@ CIRCLE = {
     "77777777dcc4d5a8b6e418fd04d8997ef11000ee": "Circle Gateway",
     "fd78ee919681417d192449715b2594ab58f5d002": "CCTP",
 }
+# USDC is Arc's native asset. totalSupply() is 10,000 USDC above mints minus burns from block 1,000 on:
+# a genesis balance with no Transfer log (see ../arc-stablecoins-30d).
+GENESIS = 10_000 * 10**6
 TOKEN = os.environ.get("ENVIO_API_TOKEN")
 if not TOKEN:
     sys.exit("Set ENVIO_API_TOKEN (get one at https://envio.dev/app/api-tokens)")
@@ -68,7 +71,8 @@ while True:
 
 end = END or max(r[0] for r in rows)
 start = end - DAYS * 86400
-supply = supply_then = minted = burned = 0
+supply = supply_then = GENESIS
+minted = burned = 0
 burned_by = {}
 for t, frm, to, value in rows:
     if t > end:

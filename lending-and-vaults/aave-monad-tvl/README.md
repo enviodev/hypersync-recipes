@@ -1,8 +1,6 @@
 # What sits in Aave on Monad
 
-A Python script that reads every token transfer into and out of Aave v3's pools on Monad with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview), then prices what each pool holds with Aave's own oracle.
-
-Up to Monad block 119,308,836, Aave v3 on Monad held **$281.4M**, and **$276.9M of it (98.4%) was dollar tokens**. USDe was the biggest pool at $119.2M, followed by syrupUSDC at $85.8M and a Pendle PT on AUSD at $43.4M.
+Up to Monad block 119,308,836, **Aave v3 on Monad held $281.4M, and $276.9M of it (98.4%) was dollar tokens**. USDe was the biggest pool at $119.2M, then syrupUSDC at $85.8M and a Pendle PT on AUSD at $43.4M.
 
 | Asset | Held | Share |
 | --- | --- | --- |
@@ -15,9 +13,9 @@ Up to Monad block 119,308,836, Aave v3 on Monad held **$281.4M**, and **$276.9M 
 
 ## Why it's interesting
 
-Aave's pools on Monad are almost entirely dollars, and a large part of that is yield-bearing dollars (USDe, syrupUSDC, Pendle PTs) rather than plain USDC. If you're building a vault, a looping strategy or a dashboard on Monad, this tells you where the liquidity actually sits.
+Aave's pools on Monad are almost all dollars, and a big part of that is yield-bearing dollars (USDe, syrupUSDC, Pendle PTs) rather than plain USDC. If you're building a vault, a looping strategy or a dashboard on Monad, this shows where the liquidity actually sits.
 
-It also shows a simple way to get TVL without a subgraph or a node. Every aToken balance is the sum of transfers in minus transfers out, and HyperSync returns every one of those transfers since genesis in about two minutes.
+It's also a simple way to get TVL with no node. Every aToken's balance is the sum of transfers in minus transfers out, and HyperSync returns every one of those transfers since genesis in about two minutes.
 
 ## What it pulls
 
@@ -26,9 +24,11 @@ It also shows a simple way to get TVL without a subgraph or a node. Every aToken
 
 What a pool holds is supplied minus borrowed. Dollar tokens are the stablecoins, the yield-bearing dollars (syrupUSDC, sUSDe) and the Pendle PTs on AUSD. ETH and BTC tokens are counted separately.
 
+The token balances come from HyperSync. The dollar values use Aave's oracle prices, read over Monad's public RPC.
+
 ## Run it
 
-You need Python 3 (standard library only) and a free HyperSync API token from [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens).
+You need Python 3 and a free API token from [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens). There's nothing else to install.
 
 ```bash
 export ENVIO_API_TOKEN=your-token
@@ -36,7 +36,7 @@ python3 script.py             # up to the latest block
 python3 script.py 119308836   # up to the block used above
 ```
 
-It takes about two minutes. Sample output from a run on 16 Nov 2026:
+It takes about two minutes. Sample output from a run on 16 Nov 2026.
 
 ```
 Held in Aave v3 on Monad up to block 122,749,347
@@ -59,14 +59,14 @@ Pool balances change every block, so your numbers will differ.
 
 ## Check the numbers
 
-Each total should match `balanceOf(aToken)` on the reserve token at the same block. Run the script with a block number, then call `balanceOf` for any aToken on [Monadscan](https://monadscan.com) or with `cast call` at that block. Aave's own [app](https://app.aave.com) also shows each Monad market's size.
+Each token total should match `balanceOf(aToken)` on the reserve token at the same block. Run the script with a block number, then call `balanceOf` for any aToken on [Monadscan](https://monadscan.com) or with `cast call` at that block as the comparison. Aave's own [app](https://app.aave.com) also shows each Monad market's size.
 
 ## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
 ```text
-Read script.py and README.md in this folder. It uses Envio HyperSync
+Read script.py and README.md in this folder. It uses HyperSync
 (https://docs.envio.dev/docs/HyperSync/overview) to sum every ERC-20 Transfer
 into and out of each Aave v3 aToken on Monad, then prices the balances with the
 Aave oracle. My HyperSync token is in the ENVIO_API_TOKEN environment variable.

@@ -1,19 +1,35 @@
-# USDG on Morpho
+# Paxos USDG on Morpho
 
-Finds every Morpho market that lends Paxos USDG with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview), then reads how much USDG each market holds right now. It prints the total per chain and the biggest markets by collateral.
+**HyperSync finds 382 Morpho markets that lend Paxos USDG** across Robinhood Chain, Arbitrum and Ethereum. Read live in the run below, they held $659.9M of USDG, and $593.2M of it (90%) was borrowed. Robinhood Chain had 371 of the markets and $516.7M, and Arbitrum had 8 markets and $143.2M.
 
-These are the numbers behind Envio's post on USDG in DeFi.
+| Chain | USDG markets | Supplied |
+| --- | --- | --- |
+| Robinhood Chain | 371 | $516.7M |
+| Arbitrum | 8 | $143.2M |
+| Ethereum | 3 | $0.0M |
+| Total | 382 | $659.9M |
+
+## Why it's interesting
+
+Morpho lets anyone create a lending market, so a stablecoin can end up in hundreds of them without a list anywhere. Reading every `CreateMarket` event is the reliable way to find them all. Most of the USDG here is lent against yield-bearing dollars like USDe and syrupUSDG, which tells you what borrowers are using it for.
+
+## What it pulls
+
+- Every `CreateMarket` log on Morpho on each chain, keeping the markets whose loan token is USDG. Morpho addresses come from the [Morpho docs](https://docs.morpho.org/get-started/resources/addresses) and USDG addresses from the [Paxos docs](https://docs.paxos.com/guides/stablecoin/usdg/mainnet).
+- For each of those markets, `market(id)` on Morpho for `totalSupplyAssets` and `totalBorrowAssets`, and `symbol()` on the collateral token, read from each chain's public RPC. USDG counts at $1.
+
+The list of markets comes from HyperSync. The supplied and borrowed amounts are the markets' live state, read over public RPC.
 
 ## Run it
 
-You need Python 3 and a HyperSync API token from the [Envio Dashboard](https://envio.dev/app/api-tokens). The script has no other dependencies.
+You need Python 3 and a free API token from [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens). There's nothing else to install.
 
 ```bash
 export ENVIO_API_TOKEN=your-token
-python script.py
+python3 script.py
 ```
 
-## What it prints
+Sample output.
 
 ```
 Robinhood Chain   371 USDG markets  $516.7M supplied
@@ -27,22 +43,36 @@ USDG supplied on Morpho: $659.9M, of which $593.2M is borrowed (90%)
   ...
 ```
 
-The numbers move as people supply, borrow and repay, so yours will differ a little.
+People supply, borrow and repay all the time, so your numbers will differ a little.
 
-## How it counts
+## Change the window or chain
 
-- Morpho contract addresses come from the [Morpho docs](https://docs.morpho.org/get-started/resources/addresses), and USDG addresses from the [Paxos docs](https://docs.paxos.com/guides/stablecoin/usdg/mainnet).
-- HyperSync reads every `CreateMarket` event on each chain's Morpho contract, and keeps the markets whose loan token is USDG.
-- Each market's `totalSupplyAssets` is read live from the chain's public RPC. USDG is counted at $1.
+- **Chains.** Each chain is one entry in `CHAINS`, with its HyperSync endpoint, a public RPC, the Morpho address and the USDG address. Add a chain where both are live and that's on the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks).
+- **Token.** Swap the USDG address in each entry for any other loan token to find its Morpho markets.
+- **History.** To see how each market grew, add `Supply`, `Withdraw`, `Borrow` and `Repay` logs for the market IDs the script finds.
 
-## Ask your coding agent
+## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
+```text
+Read script.py and README.md in this folder. It uses HyperSync
+(https://docs.envio.dev/docs/HyperSync/overview) to find every Morpho market that
+lends USDG, then reads each market's live state over RPC. My HyperSync token is
+in the ENVIO_API_TOKEN environment variable.
+
+Replace the RPC reads with HyperSync. Pull every Supply, Withdraw, Borrow and
+Repay log for the USDG market IDs on Robinhood Chain and rebuild supplied and
+borrowed per market, then print USDG supplied per day since the first market
+opened. Keep the standard library only. Then check the rebuilt totals for the
+three biggest markets against market(id) on Morpho, and explain the gap (interest).
 ```
-Use Envio HyperSync (https://docs.envio.dev/docs/HyperSync/overview) to read every
-Supply and Withdraw event on Morpho markets that lend USDG on Robinhood Chain
-(Morpho 0x9D53d5E3bd5E8d4Cbfa6DB1ca238AEA02E651010, USDG 0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168).
-My API token is in the ENVIO_API_TOKEN environment variable.
-Chart how much USDG was supplied each day, and show the biggest suppliers.
-```
+
+## Links
+
+- [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview)
+- [HyperSync query reference](https://docs.envio.dev/docs/HyperSync/hypersync-query)
+- [HyperSync supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks)
+- [Morpho addresses](https://docs.morpho.org/get-started/resources/addresses)
+- [Paxos USDG addresses](https://docs.paxos.com/guides/stablecoin/usdg/mainnet)
+- [Envio Discord](https://discord.gg/envio)

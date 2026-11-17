@@ -15,6 +15,7 @@ Scripts for chain-wide activity. Count transactions, active addresses, fees, Saf
 | [ethereum-approval-cleanups](ethereum-approval-cleanups) | Ethereum | Find every ERC-20 approval revoked on Ethereum |
 | [safe-growth](safe-growth) | 14 chains | Count every Safe created, by month and chain |
 | [safe-shared-signer](safe-shared-signer) | Ethereum | Decode every new Safe's owners and find the most common signer |
+| [safenet-staking](safenet-staking) | Ethereum | Track SAFE staked in Safenet and active stakers week by week |
 | [circles-trust-gnosis](circles-trust-gnosis) | Gnosis | Count Circles v2 humans and trust links on Gnosis Chain |
 | [uni-new-holders](uni-new-holders) | Ethereum | Count new UNI holders per day since 2020 |
 
