@@ -136,7 +136,7 @@ These HyperIndex indexers keep Solana data live behind a GraphQL API.
 | --- | --- | --- |
 | [solana-dex-swaps-by-program](solana/solana-dex-swaps-by-program) | Solana | Index every swap on Solana's main DEX programs, direct and routed |
 | [solana-subscriptions](solana/solana-subscriptions) | Solana | Index every plan, subscription and pull on Solana's Subscriptions program |
-| [privacy-rings-solana](solana/privacy-rings-solana) | Solana | Index Privacy Rings deposits, withdrawals and private transfers on Solana |
+| [privacy-rings-solana](solana/privacy-rings-solana) | Solana | Index every deposit, withdrawal and private transfer on a Solana privacy program |
 
 ### EVM indexers
 

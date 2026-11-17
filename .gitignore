@@ -1,3 +1,7 @@
 __pycache__/
 *.pyc
 .env
+*.log
+**/kamino_rwa.json
+**/arbitrum_priority_fees.json
+**/summary-*.json

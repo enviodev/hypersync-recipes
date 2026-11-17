@@ -23,6 +23,6 @@ These HyperIndex indexers keep Solana data live behind a GraphQL API.
 | --- | --- | --- |
 | [solana-dex-swaps-by-program](solana-dex-swaps-by-program) | Solana | Index every swap on Solana's main DEX programs, direct and routed |
 | [solana-subscriptions](solana-subscriptions) | Solana | Index every plan, subscription and pull on Solana's Subscriptions program |
-| [privacy-rings-solana](privacy-rings-solana) | Solana | Index Privacy Rings deposits, withdrawals and private transfers on Solana |
+| [privacy-rings-solana](privacy-rings-solana) | Solana | Index every deposit, withdrawal and private transfer on a Solana privacy program |
 
 To run one, grab a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow that example's README. The [main README](../README.md) has every topic.
