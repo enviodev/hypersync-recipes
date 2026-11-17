@@ -79,7 +79,7 @@ Launch accounts whose onchain total matches: 25 of 25
 
 - **Onchain totals.** Every raise has a `Launch` account that stores its total committed amount. The script reads them all with Solana RPC `getMultipleAccounts` as the comparison and looks for the HyperSync sum in the account data. All 25 matched to the last unit.
 - **MetaDAO's own site.** [metadao.fi](https://metadao.fi) listed Mori Finance as raising $250K from 248 owners. The script gives the same goal and the same 248 wallets.
-- **Single transactions.** Look any raise's slot up on a Solana explorer and compare the USDC moved.
+- **Single transactions.** Look up any raise's `Launch` account on a Solana explorer and compare its `fund` transactions with the USDC moved.
 
 ## Build your own with an AI agent
 
