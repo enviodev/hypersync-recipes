@@ -20,7 +20,7 @@ Robinhood Earn puts a familiar savings product on top of an onchain vault, so yo
 
 Robinhood's [Earn support page](https://robinhood.com/us/en/support/articles/crypto-earn/) says Earn lends USDG through a Morpho vault curated by Steakhouse Financial, and Steakhouse names this vault as the one behind Robinhood Earn in its [stock token collateral post](https://kitchen.steakhouse.financial/p/steakhouse-onboards-robinhood-stock). Other apps can deposit into the same vault, so the wallet count is everyone who has deposited, mostly through Earn.
 
-As a sanity check, the script flags wallets with 20 or more deposits and 20 or more withdrawals on the same UTC day. Nine wallets were flagged, about 2% of deposited dollars, and they change none of the headline numbers. Every number here comes from HyperSync.
+As a sanity check, the script flags wallets with 20 or more deposits and 20 or more withdrawals on the same UTC day. Nine wallets were flagged, about 2% of deposited dollars, and they change none of the headline numbers. Every number in the finding comes from HyperSync. Only the `totalAssets()` check is read over RPC.
 
 ## Run it
 
