@@ -10,7 +10,7 @@ From 11 Oct to 9 Nov 2026, **60.6% of Robinhood Stock Token volume on Uniswap v4
 
 ## Why it's interesting
 
-Stock tokens trade around the clock, so the obvious question is whether anyone actually trades them when Wall Street is shut. They do, and a lot. The market is open for 32.5 of the week's 168 hours, about 19%, and still takes 39% of the volume, so the regular session is the busiest stretch per hour. The half hour from 9:30 to 10:00 New York time, summed over the window, is busier than any full hour of the day.
+Stock tokens trade around the clock, so the obvious question is whether anyone actually trades them when Wall Street is shut. They do. The market is open for 32.5 of the week's 168 hours, about 19%, and still takes 39% of the volume, so the regular session is the busiest stretch per hour. The half hour from 9:30 to 10:00 New York time, summed over the window, is busier than any full hour of the day.
 
 The script also shows a full Uniswap v4 pattern you can reuse. Find pools from `Initialize`, read every `Swap` with the sender's wallet, and price each swap from onchain trades alone.
 
@@ -35,7 +35,7 @@ python3 script.py                          # the 30 days up to the start of toda
 python3 script.py 2026-10-11 2026-11-10    # the window above, end date exclusive
 ```
 
-It takes about 30 minutes for 30 days of swaps and writes an hour-by-weekday grid in New York time to `heatmap.json`. Sample output for the window above:
+It takes about 30 minutes for 30 days of swaps and writes an hour-by-weekday grid in New York time to `heatmap.json` (`heatmap-spy.json` with `--spy`). Sample output for the window above.
 
 ```
 Robinhood Stock Tokens: 203
@@ -63,7 +63,7 @@ Busiest stock tokens while the market is closed (volume in pools holding the tok
 
 - **Window.** Pass two UTC dates, start inclusive and end exclusive. A shorter window runs faster.
 - **SPY pools.** Add `--spy` to count only the pools that pair a stock token with SPY.
-- **Market hours.** The open and close times and the holiday list are constants near the top. Change them to test a different session, like the hour before the open.
+- **Market hours.** The holiday and early-close lists are constants near the top, and the 9:30 open and 16:00 close are in `market_open()`. Change them to test a different session, like the hour before the open.
 - **Chain.** Uniswap v4 runs on many chains. Swap `URL` for that chain's endpoint from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks), the PoolManager for that chain's address from the [v4 deployments page](https://developers.uniswap.org/docs/protocols/v4/deployments), and the token list for the stock tokens on that chain.
 
 ## Check the numbers
@@ -89,7 +89,7 @@ That's $892M across 131K wallets with repeated same-wallet swaps left out, and $
 
 ## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
 ```text
 Read script.py and README.md in this folder. It uses HyperSync
