@@ -29,7 +29,7 @@ export ENVIO_API_TOKEN=your-token
 python3 script.py
 ```
 
-It takes a few seconds. Sample output from a run on 16 Nov 2026:
+It takes a few seconds. Sample output from a run on 16 Nov 2026.
 
 ```
 Grove Basin for JTRSY on Ethereum
@@ -62,7 +62,7 @@ Every swap prints its transaction hash, so you can open it on [Etherscan](https:
 
 ## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
 ```text
 Read script.py and README.md in this folder. It uses HyperSync
