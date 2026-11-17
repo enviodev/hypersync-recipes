@@ -10,7 +10,7 @@ Usage:
 An address counts on the UTC day it first sends or receives the token.
 Writes new_addresses.csv (day, new_addresses, transfers) and prints the busiest days.
 """
-import csv, datetime, json, os, sys, time, urllib.error, urllib.request
+import csv, datetime, http.client, json, os, sys, time, urllib.error, urllib.request
 from collections import Counter
 
 HYPERSYNC = "https://eth.hypersync.xyz/query"   # Ethereum mainnet
@@ -33,6 +33,8 @@ def query(body):
             if e.code not in (429, 500, 502, 503, 504):
                 raise
             time.sleep(5 * (attempt + 1))  # rate limited or busy, wait and retry
+        except (OSError, ValueError, http.client.HTTPException):
+            time.sleep(5 * (attempt + 1))  # connection dropped mid-response, retry
     raise RuntimeError("HyperSync kept refusing the request")
 
 
