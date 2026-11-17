@@ -1,4 +1,4 @@
-# HyperSync examples
+# HyperSync use cases
 
 Curated, ready-to-run scripts that pull onchain data with [HyperSync](https://docs.envio.dev/docs/HyperSync/overview). Each one answers a real question, like how much USDC was minted on Ethereum this week or who holds a tokenized stock, and prints the answer in your terminal.
 
@@ -8,14 +8,16 @@ Pick the one closest to what you need, swap in your contract, chain or dates, an
 - **Plain Python.** Standard library only, so there's nothing to install and no node to run.
 - **A few HyperIndex indexers** for when you want the data live behind a GraphQL API.
 
+New to HyperSync? The [hypersync-examples](https://github.com/enviodev/hypersync-examples) repo walks through the basics of the API first.
+
 ## Quick start
 
 1. Get a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens).
 2. Clone the repo and run one.
 
 ```bash
-git clone https://github.com/enviodev/hypersync-recipes.git
-cd hypersync-recipes/stablecoins-and-payments/usdc-supply-ethereum
+git clone https://github.com/enviodev/hypersync-use-cases.git
+cd hypersync-use-cases/stablecoins-and-payments/usdc-supply-ethereum
 export ENVIO_API_TOKEN=your-token
 python3 script.py
 ```
