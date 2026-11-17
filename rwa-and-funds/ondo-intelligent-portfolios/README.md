@@ -1,6 +1,6 @@
 # Ondo Intelligent Portfolios on Ethereum and BNB Chain
 
-**Ondo's Intelligent Portfolio tokens held $54.7M on Ethereum and BNB Chain, across 1.8K holding addresses**, valued at the prices on Ondo's app on 4 Nov 2026. $47M of it, 86%, arrived after 12 Oct 2026. BLKGRWon and MAG7Xon were the two largest, at $15.7M and $15.4M.
+In a run on 4 Nov 2026, **Ondo's Intelligent Portfolio tokens held $54.7M on Ethereum and BNB Chain, across 1.8K holding addresses**, valued at the prices on Ondo's app on 4 Nov 2026. $47M of it, 86%, arrived after 12 Oct 2026. BLKGRWon and MAG7Xon were the two largest, at $15.7M and $15.4M.
 
 ## Why it's interesting
 
@@ -24,7 +24,7 @@ python3 script.py               # arrived since 12 Oct 2026
 python3 script.py 2026-10-01    # arrived since another UTC date
 ```
 
-Sample output:
+Sample output from the 4 Nov 2026 run.
 
 ```
 Ondo Intelligent Portfolios on Ethereum and BNB Chain: $54.7M
@@ -47,7 +47,7 @@ The rebuilt supply for each token matches `totalSupply()` onchain. You can check
 
 ## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
 ```text
 Read script.py and README.md in this folder. It uses HyperSync
