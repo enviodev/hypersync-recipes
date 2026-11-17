@@ -1,27 +1,45 @@
-# Uniswap v4 hooks on Robinhood
+# Uniswap v4 hooks on Robinhood Chain
 
-Reads every pool created on Uniswap v4 on Robinhood with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview), notes which hook each pool uses, and counts every swap. It prints how many pools use a hook, how many different hook contracts there are, the most used hooks by pools and by swaps, and pools and swaps per month. The same script counts pools and hooks on Ethereum, so you can compare the two.
+Up to block 110,095,000, **1.14M Uniswap v4 pools were created on Robinhood Chain and 397K of them (34.9%) use a hook**. Those pools run on 31.8K different hook contracts. Of the 217M v4 swaps, 109M (50.2%) went through a pool with a hook.
 
-These are the numbers behind Envio's post on Uniswap v4 hooks on Robinhood.
+| Robinhood Chain | |
+| --- | --- |
+| Pools created | 1,137,941 |
+| With a hook | 397,135 (34.9%) |
+| Different hooks | 31,823 |
+| Hooks used by 10+ pools | 771 |
+| Swaps | 216,981,683 |
+| Swaps in pools with a hook | 108,945,756 (50.2%) |
+
+The same script on Ethereum, up to block 26,378,070, finds 193K pools, 47.7K of them (24.7%) with a hook, across 11.3K different hooks.
+
+## Why it's interesting
+
+A v4 hook is a contract that runs custom logic around a pool's swaps and liquidity changes. Every pool records its hook address once, in its `Initialize` event, and every swap points back to its pool by ID. Join the two and you can rank hooks by pools and by real swap activity, which is the number that tells you which hooks people actually trade through.
+
+## What it pulls
+
+All of it comes from HyperSync.
+
+- Every `Initialize` log on the v4 PoolManager, `0x8366a39cc670b4001a1121b8f6a443a643e40951` on Robinhood Chain or `0x000000000004444c5dc75cB358380D2e3dE08A90` on Ethereum, both from [Uniswap's v4 deployments page](https://developers.uniswap.org/docs/protocols/v4/deployments). The pool ID is the first topic and the hook is the third data word. A pool has a hook when that address isn't the zero address.
+- Every `Swap` log on the PoolManager. Its first topic is the pool ID, which links it back to the pool and its hook.
+- Block timestamps, to put pools and swaps in UTC months.
+
+The hook with the most pools on Robinhood Chain, `0x4e3468951d49f2eea976ed0d6e75ffcb44a9a544`, is `DopplerHookInitializer`, listed in [Doppler's Robinhood Chain deployments](https://github.com/whetstoneresearch/doppler/blob/main/deployments/4663.md). You can look up other hooks on the [Robinhood Chain explorer](https://robinhoodchain.blockscout.com).
 
 ## Run it
 
-You need Python 3 and a HyperSync API token from the [Envio Dashboard](https://envio.dev/app/api-tokens). The script has no other dependencies.
+You need Python 3 and a free API token from [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens). There's nothing else to install.
 
 ```bash
 export ENVIO_API_TOKEN=your-token
-python script.py
+python3 script.py 110095000                # pools, hooks and every swap up to that block
+python3 script.py 110095000 --pools-only   # pools and hooks only, a few minutes
+python3 script.py --ethereum 26378070      # pool and hook counts for v4 on Ethereum
+python3 script.py                          # up to the latest block
 ```
 
-Pass a block number to stop at a fixed block and get the exact numbers from the post:
-
-```bash
-python script.py 110095000              # pools, hooks and every swap (about 217M swaps, so it takes a while)
-python script.py 110095000 --pools-only # pools and hooks only, a few minutes
-python script.py --ethereum 26378070    # the same pool and hook counts on Ethereum
-```
-
-## What it prints
+The swap count reads about 217M logs, so a full run takes a while. Add `--json` to also write `hooks.json` with pools per day and every hook's pool and swap counts. Sample output from block 110,095,000.
 
 ```
 Uniswap v4 on Robinhood (chain 4663), blocks 0 to 110,095,000
@@ -47,7 +65,7 @@ Per month (UTC):          pools   with hook        swaps   in hooked pools
   ...
 ```
 
-And for Ethereum, up to block 26,378,070:
+And with `--ethereum 26378070`.
 
 ```
 Pools created              193,399
@@ -57,32 +75,41 @@ Different hooks             11,311
   used by 10+ pools            272
 ```
 
-## How it counts
+With a fixed block the numbers won't change. On Ethereum the script stops after the pool counts and doesn't read swaps.
 
-- Both PoolManagers come from Uniswap's [v4 deployments page](https://developers.uniswap.org/docs/protocols/v4/deployments): `0x8366a39cc670b4001a1121b8f6a443a643e40951` on Robinhood (chain 4663) and `0x000000000004444c5dc75cB358380D2e3dE08A90` on Ethereum.
-- Every pool starts with an `Initialize` event on the PoolManager. A pool uses a hook when the `hooks` address in that event isn't the zero address. A hook contract counts once, however many pools use it.
-- Every `Swap` event on the PoolManager is one swap. It belongs to the pool whose id is in its first topic, and counts as a swap through a hook when that pool has one.
-- Months are UTC. The first Robinhood v4 pool was created in May 2026 and the first Ethereum one in January 2025.
-- The most used hook by pools, `0x4e34...a544`, is `DopplerHookInitializer`, listed in [Doppler's Robinhood deployments](https://github.com/whetstoneresearch/doppler/blob/main/deployments/4663.md). Contract names for other hooks can be read on the [Robinhood block explorer](https://robinhoodchain.blockscout.com).
+## Change the window or chain
 
-## Ask your coding agent
+- **Window.** Pass an end block. The start is always block 0, and months are UTC.
+- **Chain.** `--ethereum` switches to Ethereum. For another chain, add its HyperSync endpoint from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks) and its PoolManager from the [v4 deployments page](https://developers.uniswap.org/docs/protocols/v4/deployments) next to the two at the top of the script.
 
-Paste this into Claude Code, Cursor or any coding agent:
+## Check the numbers
 
+The per-month pool column adds up to the pools created total, and the swap columns add up to the swap totals. To check one hook by hand, open a pool's `Initialize` transaction on the [Robinhood Chain explorer](https://robinhoodchain.blockscout.com/address/0x8366a39cc670b4001a1121b8f6a443a643e40951) and compare the `hooks` field with what the script decodes.
+
+## Build your own with an AI agent
+
+Paste this into Claude Code, Cursor or any coding agent.
+
+```text
+Read script.py and README.md in this folder. It uses HyperSync
+(https://docs.envio.dev/docs/HyperSync/overview) to read every Initialize and
+Swap event on the Uniswap v4 PoolManager on Robinhood Chain, then counts pools
+and swaps per hook. My HyperSync token is in the ENVIO_API_TOKEN environment
+variable.
+
+Add a --hook <address> option that prints, for that one hook, its pools with
+their two token addresses and swap counts, sorted by swaps. Keep the standard
+library only. Run it with end block 110095000 --hook
+0x4e3468951d49f2eea976ed0d6e75ffcb44a9a544 and check that the pool count
+matches the 234,684 in the main output.
 ```
-Use Envio HyperSync (https://docs.envio.dev/docs/HyperSync/overview) to read every
-Initialize and Swap event on the Uniswap v4 PoolManager on Robinhood (chain 4663,
-0x8366a39cc670b4001a1121b8f6a443a643e40951, endpoint https://robinhood.hypersync.xyz).
-My API token is in the ENVIO_API_TOKEN environment variable. Count pools with and
-without a hook, the number of different hook contracts, and the 10 hooks with the
-most pools and the most swaps.
-```
 
-## Learn more
+## Links
 
-- [Robinhood on Envio](https://envio.dev/chains/robinhood): HyperSync and HyperIndex support for Robinhood
-- [Index Robinhood data with HyperIndex](https://docs.envio.dev/blog/index-robinhood-chain-data): a step-by-step tutorial
-- [Live apps on Robinhood, verified onchain](https://docs.envio.dev/blog/robinhood-chain-ecosystem): the apps building there, with an open source indexer ([repo](https://github.com/enviodev/robinhood-ecosystem-indexer))
-- [Uniswap v4 multichain indexer example](https://docs.envio.dev/docs/HyperIndex/example-uniswap-v4-multi-chain-indexer): index v4 pools and swaps across chains ([repo](https://github.com/enviodev/uniswap-v4-indexer))
-- [Uniswap v4 hooks on Ethereum](https://github.com/enviodev/hypersync-recipes/tree/main/dexs-and-trading/uniswap-v4-hooks-ethereum): the Ethereum recipe this one builds on
-- [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview): how the queries in this script work
+- [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview)
+- [HyperSync query reference](https://docs.envio.dev/docs/HyperSync/hypersync-query)
+- [HyperSync supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks)
+- [Uniswap v4 deployments](https://developers.uniswap.org/docs/protocols/v4/deployments)
+- [Uniswap v4 multichain indexer with HyperIndex](https://docs.envio.dev/docs/HyperIndex/example-uniswap-v4-multi-chain-indexer)
+- [Uniswap v4 hooks on Ethereum](../uniswap-v4-hooks-ethereum), the Ethereum example this one builds on
+- [Envio Discord](https://discord.gg/envio)
