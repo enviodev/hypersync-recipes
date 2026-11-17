@@ -2,7 +2,7 @@
 
 In the 30 days to 9 Nov 2026, **USDC supply on Arc grew by $790.6M, from $496.9M to $1.29B**. $5.45B was minted and $4.66B burned in that time, and the biggest single day was 22 Oct, when supply rose by $114.9M. EURC on Arc grew by €1.3M to €8.9M.
 
-| | Now | 7 days ago | 30 days ago | Minted (30d) | Burned (30d) |
+| | 9 Nov 2026 | 7 days before | 30 days before | Minted (30d) | Burned (30d) |
 | --- | --- | --- | --- | --- | --- |
 | USDC | 1.287B | 1.083B | 496.9M | 5.451B | 4.660B |
 | EURC | 8.9M | 7.1M | 7.6M | 90.5M | 89.2M |
@@ -50,7 +50,7 @@ Without an end time the window ends at the latest block, so your numbers will di
 
 ## Change the window or chain
 
-- **Window.** Pass an end time in UTC to rerun a past window. The 7 and 30 day lookbacks are the `(0, 7, 30)` tuple near the end of the script, so change them there for a longer view.
+- **Window.** Pass an end time in UTC to rerun a past window. The 7 and 30 day lookbacks are set near the end of the script, in the `(0, 7, 30)` tuple, the `30 * 86400` used for minted and burned, and the print labels. Change all three for a longer view.
 - **Tokens.** Add any Arc token to `TOKENS` with its decimals. The [Arc contract addresses page](https://docs.arc.io/arc/references/contract-addresses) lists the rest.
 - **Chain.** Change `URL` to another chain's endpoint from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks), swap the token addresses, and drop `GENESIS`, which only applies to Arc.
 
