@@ -1,31 +1,51 @@
 # Active addresses without dusting
 
-A sudden jump in daily active addresses is often not new users. Dusting contracts send one tiny transfer to each of thousands of addresses in a single transaction, and every one of those addresses shows up as active that day.
+On one EVM chain over 30 Oct to 8 Nov 2026, **the busiest day had 2.77M addresses receive a token, but only 395K once dusting was dropped**. A handful of contracts sending one tiny transfer to each of thousands of addresses made daily active addresses look about 7x bigger than they were.
 
-This script counts unique token recipients per day on any chain [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview) supports, then counts them again with the dusting transfers dropped. These are the numbers behind Envio's post on filtering out dusting before counting active addresses.
+| Day (UTC) | Recipients | Without dusting | Dusters dropped |
+| --- | --- | --- | --- |
+| 2026-11-05 | 304,885 | 180,590 | 1 |
+| 2026-11-06 | 644,781 | 292,094 | 5 |
+| 2026-11-07 | 2,002,972 | 195,420 | 4 |
+| 2026-11-08 | 2,767,882 | 395,487 | 3 |
+
+## Why it's interesting
+
+A sudden jump in daily active addresses is often not new users. Dusting contracts send one tiny transfer to each of thousands of addresses in a single transaction, and every one of those addresses shows up as active that day. If you report active addresses for any chain or token, this is the filter to run first.
+
+The rule is about behaviour, not about any token, so it works on any chain HyperSync supports with no list of known spammers.
+
+## What it pulls
+
+All of it comes from HyperSync.
+
+- Every log with the `Transfer` topic (`0xddf252ad...`), which covers ERC-20 and ERC-721 transfers, between the first and last block of each UTC day. The recipient is `topic2`. Transfers to the zero address, which are burns, are left out.
+- For each log, the contract, the block and the transaction index, so transfers can be grouped per contract and per transaction.
+- Block timestamps, to find the first block of each UTC day by binary search.
+
+A recipient counts once per day, however many tokens it received. A contract counts as a duster on a given day when all three are true.
+
+- It sent tokens to at least 10,000 addresses that day (`MIN_RECIPIENTS`).
+- It averaged at least 20 transfers per transaction (`MIN_PER_TX`).
+- At least 99% of its transfers went to a different address (`MIN_UNIQUE_SHARE`).
+
+"Without dusting" counts recipients from every other contract, so an address that got dust and a real transfer on the same day still counts. The rule also catches genuine batch airdrops, which you may want to count separately.
 
 ## Run it
 
-You need Python 3 and a HyperSync API token from the [Envio Dashboard](https://envio.dev/app/api-tokens). The script has no other dependencies.
+You need Python 3 and a free API token from [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens). There's nothing else to install.
 
-Set `CHAIN` to the network name HyperSync uses, the subdomain in `https://<chain>.hypersync.xyz`. The [supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks) page lists them all.
+`CHAIN` is the network name HyperSync uses, the subdomain in `https://<chain>.hypersync.xyz`, for example `base` or `arbitrum`.
 
 ```bash
 export ENVIO_API_TOKEN=your-token
-CHAIN=<chain> python script.py
+CHAIN=base python3 script.py                                    # the last 14 full UTC days
+CHAIN=base START=2026-10-30 END=2026-11-08 python3 script.py    # your own window, both days included
 ```
 
-By default it covers the last 14 full UTC days. Pick your own window with `START` and `END` (both inclusive):
+Busy chains carry millions of `Transfer` logs a day, so a long window takes a while. `WORKERS` sets how many days run in parallel (default 2), `OUT=daily.json` saves the results, and `TOP=3` also lists the biggest contracts it kept, so you can check the rule.
 
-```bash
-CHAIN=<chain> START=2026-10-30 END=2026-11-08 python script.py
-```
-
-Busy chains carry millions of Transfer logs a day, so a long window takes a while. `WORKERS` sets how many days run in parallel (default 2), and `OUT=daily.json` saves the results.
-
-## What it prints
-
-One row per day with every Transfer log, the unique recipients, and the unique recipients once dusting is dropped. Under each row it lists the contracts it dropped that day, with recipients, transfers, transactions and the average batch size. Add `TOP=3` to also list the biggest contracts it kept, so you can check the rule.
+Sample output, the daily table from a 10-day run. Under each day the script also lists every contract it dropped, with its recipients, transfers, transactions and average batch size.
 
 ```
 day            transfers   recipients  without dusting  dusters
@@ -41,37 +61,37 @@ day            transfers   recipients  without dusting  dusters
 2026-11-08     5,979,105    2,767,882          395,487        3
 ```
 
-That run covered 10 days on one chain. On the busiest day, 2.8 million addresses received a token and about 400,000 did once dusting was dropped.
+## Change the window or chain
 
-## How it counts
+- **Chain.** Set `CHAIN` to any EVM network on the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks).
+- **Window.** `START` and `END` take UTC dates, both included. With neither, it covers the 14 full days before today.
+- **Rule.** `MIN_RECIPIENTS`, `MIN_PER_TX` and `MIN_UNIQUE_SHARE` are environment variables too. A quieter chain may need a lower `MIN_RECIPIENTS`. Check the dropped list before you publish a number.
 
-- It reads every log with the ERC-20 and ERC-721 `Transfer` topic (`0xddf252ad...`) between the first and last block of each UTC day. The recipient is `topic2`. Mints to and burns from the zero address are left out.
-- A recipient counts once per day, however many tokens it received.
-- A contract is treated as a duster on a given day when all three are true:
-  - it sent tokens to at least 10,000 addresses that day (`MIN_RECIPIENTS`)
-  - it averaged at least 20 transfers per transaction (`MIN_PER_TX`)
-  - at least 99% of its transfers went to a different address (`MIN_UNIQUE_SHARE`)
-- "Without dusting" counts recipients from every other contract. An address that got dust and also a real transfer that day still counts.
-- The rule is a filter on behaviour, not a judgement on any token. It also catches genuine batch airdrops, which you may want to count separately. Tune the three thresholds for your chain and check the dropped list before you publish a number.
+## Check the numbers
 
-## Learn more
+Run with `TOP=3` and look at the biggest contracts the rule kept next to the ones it dropped. Then paste a dropped contract into that chain's block explorer and open one of its transactions. A duster's transaction should show one small transfer to each of hundreds of different addresses.
 
-- [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview): how the queries in this script work
-- [HyperSync query reference](https://docs.envio.dev/docs/HyperSync/hypersync-query): log selection, field selection and paging
-- [HyperSync supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks): every value `CHAIN` can take
-- [Analyzing all transactions to and from an address](https://docs.envio.dev/docs/HyperSync/tutorial-address-transactions): more HyperSync scripts for wallets and tokens
-- [Wildcard indexing](https://docs.envio.dev/docs/HyperIndex/wildcard-indexing): index every ERC-20 transfer on a chain with HyperIndex and keep this filter live
-- [How to index ERC-20 token transfers](https://docs.envio.dev/docs/HyperIndex/tutorial-erc20-token-transfers): a step-by-step HyperIndex tutorial
-- [Chains on Envio](https://envio.dev/chains): every chain HyperSync and HyperIndex support
+## Build your own with an AI agent
 
-## Ask your coding agent
+Paste this into Claude Code, Cursor or any coding agent.
 
-Paste this into Claude Code, Cursor or any coding agent:
+```text
+Read script.py and README.md in this folder. It uses HyperSync
+(https://docs.envio.dev/docs/HyperSync/overview) to read every Transfer log on
+a chain one UTC day at a time, counts unique recipients, then counts them again
+after dropping contracts that look like dusters. My HyperSync token is in the
+ENVIO_API_TOKEN environment variable.
 
+Add a second count of unique senders per day (topic1), with and without the
+dusting contracts, and include it in the OUT file. Keep the standard library
+only. Run it with CHAIN=base for the last 3 days and check that the recipient
+columns match a run without your change.
 ```
-Use Envio HyperSync (https://docs.envio.dev/docs/HyperSync/overview) to read every ERC-20
-Transfer log on <chain> for the last 14 days. My API token is in the ENVIO_API_TOKEN
-environment variable. For each day, count unique recipients, then count them again after
-dropping contracts that sent one transfer per recipient in batches of 20 or more per
-transaction to at least 10,000 addresses. Chart both lines.
-```
+
+## Links
+
+- [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview)
+- [HyperSync query reference](https://docs.envio.dev/docs/HyperSync/hypersync-query)
+- [HyperSync supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks)
+- [Wildcard indexing with HyperIndex](https://docs.envio.dev/docs/HyperIndex/wildcard-indexing), to keep this filter running live on every transfer
+- [Envio Discord](https://discord.gg/envio)
