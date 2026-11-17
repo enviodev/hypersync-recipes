@@ -63,8 +63,8 @@ The numbers move as people deposit, borrow and repay, so a run without a block n
 - [Arc on Envio](https://envio.dev/chains/arc): HyperSync and HyperRPC support for Arc
 - [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview): how the queries in this script work
 - [HyperIndex overview](https://docs.envio.dev/docs/HyperIndex/overview): turn these events into a live indexer with a GraphQL API
-- [Coinbase borrowing on Morpho, Base](https://github.com/enviodev/hypersync-recipes/tree/main/coinbase-borrow-morpho-base): the same approach for Morpho markets on Base
-- [USDC mints and burns on Arc](https://github.com/enviodev/hypersync-recipes/tree/main/arc-usdc-mint-burn): USDC supply on Arc
+- [Coinbase borrowing on Morpho, Base](https://github.com/enviodev/hypersync-recipes/tree/main/lending-and-vaults/coinbase-borrow-morpho-base): the same approach for Morpho markets on Base
+- [USDC mints and burns on Arc](https://github.com/enviodev/hypersync-recipes/tree/main/stablecoins-and-payments/arc-usdc-mint-burn): USDC supply on Arc
 
 ## Ask your coding agent
 

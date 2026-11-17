@@ -70,6 +70,6 @@ the most-moved tickers, and LayerZero OFTSent bridge hops between the chains.
 
 ## Learn more
 
-- [Ondo stocks on Robinhood](https://github.com/enviodev/hypersync-recipes/tree/main/ondo-stocks-robinhood): the first week of Ondo's tokenized stocks on Robinhood
-- [Tokenized stocks on Ethereum](https://github.com/enviodev/hypersync-recipes/tree/main/tokenized-stocks-ethereum)
+- [Ondo stocks on Robinhood](https://github.com/enviodev/hypersync-recipes/tree/main/tokenized-stocks/ondo-stocks-robinhood): the first week of Ondo's tokenized stocks on Robinhood
+- [Tokenized stocks on Ethereum](https://github.com/enviodev/hypersync-recipes/tree/main/tokenized-stocks/tokenized-stocks-ethereum)
 - [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview): how the queries in this script work

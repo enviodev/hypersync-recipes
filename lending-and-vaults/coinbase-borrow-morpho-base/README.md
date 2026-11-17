@@ -56,8 +56,8 @@ The numbers move as people borrow and repay, so a run without a block number wil
 - [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview): how the queries in this script work
 - [HyperIndex overview](https://docs.envio.dev/docs/HyperIndex/overview): turn these events into a live indexer with a GraphQL API
 - [Liqo](https://docs.envio.dev/showcase/liqo): a lending liquidation tracker built on HyperIndex that covers Morpho
-- [PAXG on Morpho, Base](https://github.com/enviodev/hypersync-recipes/tree/main/paxg-on-morpho-base): a deeper look at the gold market
-- [USDG on Morpho](https://github.com/enviodev/hypersync-recipes/tree/main/usdg-on-morpho): Paxos USDG markets on Morpho
+- [PAXG on Morpho, Base](https://github.com/enviodev/hypersync-recipes/tree/main/rwa-and-funds/paxg-on-morpho-base): a deeper look at the gold market
+- [USDG on Morpho](https://github.com/enviodev/hypersync-recipes/tree/main/lending-and-vaults/usdg-on-morpho): Paxos USDG markets on Morpho
 
 ## Ask your coding agent
 

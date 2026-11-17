@@ -84,5 +84,5 @@ most pools and the most swaps.
 - [Index Robinhood data with HyperIndex](https://docs.envio.dev/blog/index-robinhood-chain-data): a step-by-step tutorial
 - [Live apps on Robinhood, verified onchain](https://docs.envio.dev/blog/robinhood-chain-ecosystem): the apps building there, with an open source indexer ([repo](https://github.com/enviodev/robinhood-ecosystem-indexer))
 - [Uniswap v4 multichain indexer example](https://docs.envio.dev/docs/HyperIndex/example-uniswap-v4-multi-chain-indexer): index v4 pools and swaps across chains ([repo](https://github.com/enviodev/uniswap-v4-indexer))
-- [Uniswap v4 hooks on Ethereum](https://github.com/enviodev/hypersync-recipes/tree/main/uniswap-v4-hooks-ethereum): the Ethereum recipe this one builds on
+- [Uniswap v4 hooks on Ethereum](https://github.com/enviodev/hypersync-recipes/tree/main/dexs-and-trading/uniswap-v4-hooks-ethereum): the Ethereum recipe this one builds on
 - [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview): how the queries in this script work

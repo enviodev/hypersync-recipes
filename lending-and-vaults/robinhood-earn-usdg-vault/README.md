@@ -60,6 +60,6 @@ total deposited per wallet, and new wallets per day, then compare net deposits w
 ## Learn more
 
 - [Robinhood on Envio](https://envio.dev/chains/robinhood): HyperSync and HyperIndex support for Robinhood
-- [USDG on Morpho](https://github.com/enviodev/hypersync-recipes/tree/main/usdg-on-morpho): every Morpho market lending USDG, by chain
-- [Uniswap v4 hooks on Robinhood](https://github.com/enviodev/hypersync-recipes/tree/main/uniswap-v4-hooks-robinhood): every v4 pool and hook on Robinhood
+- [USDG on Morpho](https://github.com/enviodev/hypersync-recipes/tree/main/lending-and-vaults/usdg-on-morpho): every Morpho market lending USDG, by chain
+- [Uniswap v4 hooks on Robinhood](https://github.com/enviodev/hypersync-recipes/tree/main/dexs-and-trading/uniswap-v4-hooks-robinhood): every v4 pool and hook on Robinhood
 - [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview): how the queries in this script work

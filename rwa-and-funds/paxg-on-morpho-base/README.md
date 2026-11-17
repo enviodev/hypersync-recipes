@@ -55,7 +55,7 @@ It also prints the 3 smaller PAXG markets and the biggest market's collateral an
 - [HyperIndex overview](https://docs.envio.dev/docs/HyperIndex/overview): turn these events into a live indexer with a GraphQL API
 - [Dynamic contracts](https://docs.envio.dev/docs/HyperIndex/dynamic-contracts): track markets as they are created
 - [Liqo](https://docs.envio.dev/showcase/liqo): a lending liquidation tracker built on HyperIndex that covers Morpho
-- [USDG on Morpho](https://github.com/enviodev/hypersync-recipes/tree/main/usdg-on-morpho): a sister recipe for Paxos USDG markets on Morpho
+- [USDG on Morpho](https://github.com/enviodev/hypersync-recipes/tree/main/lending-and-vaults/usdg-on-morpho): a sister recipe for Paxos USDG markets on Morpho
 
 ## Ask your coding agent
 

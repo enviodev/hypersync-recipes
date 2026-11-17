@@ -93,7 +93,7 @@ as a 7 x 24 grid in New York time.
 ## Learn more
 
 - [Robinhood on Envio](https://envio.dev/chains/robinhood): HyperSync and HyperIndex support for Robinhood
-- [Uniswap v4 hooks on Robinhood](https://github.com/enviodev/hypersync-recipes/tree/main/uniswap-v4-hooks-robinhood): every v4 pool and hook on Robinhood
-- [Ondo stocks on Robinhood](https://github.com/enviodev/hypersync-recipes/tree/main/ondo-stocks-robinhood): the first week of Ondo's tokenized stocks on Robinhood
+- [Uniswap v4 hooks on Robinhood](https://github.com/enviodev/hypersync-recipes/tree/main/dexs-and-trading/uniswap-v4-hooks-robinhood): every v4 pool and hook on Robinhood
+- [Ondo stocks on Robinhood](https://github.com/enviodev/hypersync-recipes/tree/main/tokenized-stocks/ondo-stocks-robinhood): the first week of Ondo's tokenized stocks on Robinhood
 - [Uniswap v4 multichain indexer example](https://docs.envio.dev/docs/HyperIndex/example-uniswap-v4-multi-chain-indexer): index v4 pools and swaps across chains
 - [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview): how the queries in this script work
