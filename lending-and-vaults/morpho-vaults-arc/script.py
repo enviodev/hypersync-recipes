@@ -8,7 +8,7 @@ totalAssets() over RPC.
 
     export ENVIO_API_TOKEN=your-token
     python script.py            # up to the latest block
-    python script.py 30581168   # rerun the snapshot used in the post
+    python script.py 30839502   # rerun the snapshot in the README
 """
 import collections, datetime as dt, json, os, sys, time, urllib.request
 

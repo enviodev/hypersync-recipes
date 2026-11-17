@@ -1,6 +1,6 @@
 # Morpho vaults on Arc
 
-Up to Arc block 30,839,502, **1.7K wallets had put $173.6M of USDC, net of withdrawals, into Morpho vaults on Arc**, across 7.9K deposits into 39 vaults. Most of it is lent against cirBTC, Circle's wrapped bitcoin. 329 wallets have borrowed in the two USDC/cirBTC markets, with $155.6M of principal outstanding, and 84% of the USDC in the vaults sits in those two markets.
+Up to Arc block 30,839,502 (12 Nov 2026), **1.7K wallets had put $173.6M of USDC, net of withdrawals, into Morpho vaults on Arc**, across 7.9K deposits into 39 vaults. Most of it is lent against cirBTC, Circle's wrapped bitcoin. 329 wallets have borrowed in the two USDC/cirBTC markets, with $155.6M of principal outstanding, and 84% of the USDC in the vaults sits in those two markets.
 
 | | Up to block 30,839,502 |
 | --- | --- |
