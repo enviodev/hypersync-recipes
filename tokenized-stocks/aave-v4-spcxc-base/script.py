@@ -32,6 +32,21 @@ LIQUIDATION = "0x2a1f12d996f530f89d8038aa293f9fde81cac44b6dfd6225e3358d09b78a4a3
 DEFICIT = "0x59932f333b3a5e3fec86e662babe8dd767529ed207420e7468bd220cdfb3f076"      # ReportDeficit(uint256,address,uint256,(int256,int256,uint256))
 COLLATERAL = "0x4763df430bc5274807f8ab4ce0734e7898513638418d6eec0c5285ef85f7f51f"   # SetUsingAsCollateral(uint256,address,address,bool)
 
+ANSWER_UPDATED = "0x0559884fd3a460db3073b7fc896cc77986f16e378210ded43186175bf646fc5f"  # AnswerUpdated(int256 indexed current, uint256 indexed roundId, uint256 updatedAt)
+# Chainlink aggregators (8 decimals) behind the market's oracle, by reserve id. Found with the oracle's
+# getReserveSource(reserveId), which returns a price feed proxy, then the proxy's aggregator().
+FEEDS = {
+    0: ("AAPL", "0xc37B6F754e90D4Cca1f533F5a08f7d532b3d0d9D"),
+    1: ("AMZN", "0x4816cb7EE43eE12C0BC9D3C597246f34D5CFdb7C"),
+    2: ("GOOGL", "0x6bF33b7855eB8047dDe206D9F6321D7d02CfB308"),
+    3: ("META", "0xA7155928bEE40052EFb3094a046c5498202FD3EE"),
+    4: ("MSFT", "0xD72B34be6c2180Ad0d28dbb415AEfdE8a55F3eD3"),
+    5: ("NVDA", "0xF72B1eB5932800F3d2a5EeC5f99e6cD586479675"),
+    6: ("TSLA", "0x0288234d9311C33BE6c3a34b051bff8A799dAA82"),
+    7: ("USDC", "0x68bE4C50235205Ede361ac8244B1ee221CDDA5E2"),
+    8: ("SPCX", "0xa994B7fC3123AE0EF4EE53ab5e3545f2639187a7"),
+}
+
 TOKEN = os.environ.get("ENVIO_API_TOKEN")
 if not TOKEN:
     sys.exit("Set ENVIO_API_TOKEN (get one at https://envio.dev/app/api-tokens)")
@@ -66,6 +81,35 @@ def logs(selections):
         body["from_block"] = res["next_block"]
     rows.sort(key=lambda l: (l["block_number"], l["log_index"]))
     return rows, times, res["archive_height"] - 1
+
+
+def latest_answers(feeds, end):
+    """Latest AnswerUpdated of each feed before block `end`, read with HyperSync. Looks back over a growing window
+    of blocks until every feed has an answer. Returns {reserve id: (price in USD, updatedAt)}."""
+    by_addr = {a.lower(): rid for rid, (_n, a) in feeds.items()}
+    found, window = {}, 400_000
+    while len(found) < len(feeds):
+        body = {"from_block": max(end - window, 0), "to_block": end,
+                "logs": [{"address": list(by_addr), "topics": [[ANSWER_UPDATED]]}],
+                "field_selection": {"log": ["block_number", "log_index", "address", "topic0", "topic1", "data"]}}
+        latest = {}
+        while True:
+            res = request(HYPERSYNC, body, auth=True)
+            for batch in res["data"]:
+                for log in batch.get("logs") or []:
+                    rid = by_addr.get(log["address"].lower())
+                    if rid is not None and log["topic0"] == ANSWER_UPDATED:
+                        key = (log["block_number"], log["log_index"])
+                        if rid not in latest or key > latest[rid][0]:
+                            latest[rid] = (key, int(log["topic1"], 16) / 1e8, int(log["data"], 16))
+            if res["next_block"] >= end:
+                break
+            body["from_block"] = res["next_block"]
+        found = latest
+        if end - window <= 0:
+            break
+        window *= 4
+    return {rid: (v[1], v[2]) for rid, v in found.items()}
 
 
 def words(data):
@@ -190,26 +234,32 @@ def assets(shares, rate):
 
 
 oracle_dec = call(ORACLE, "0x313ce567", block=block)[0]
+answers = latest_answers(FEEDS, head + 1)
 print(f"\nAave v4 tokenized stocks market on Base (Hub {HUB}, spoke {SPOKE}), rebuilt from spoke events")
-print(f"  {'reserve':8}{'asset':8}{'supplied now':>20}{'oracle price':>14}{'value':>16}{'borrowed now':>18}")
-collateral_usd, checks = 0, []
+print(f"  {'reserve':8}{'asset':8}{'supplied now':>20}{'feed price':>14}{'value':>16}{'borrowed now':>18}")
+collateral_usd, checks, oracle_usd, price_checks = 0, [], 0, []
 for rid, v in sorted(info.items()):
     supplied = assets(supply_shares[rid], supply_rate.get(rid)) / 10 ** v["dec"]
     debt = assets(drawn_shares[rid], drawn_rate.get(rid)) / 10 ** v["dec"]
-    price = call(ORACLE, "0xd45c35ff", rid, block=block)[0] / 10 ** oracle_dec    # getReservePrice
+    price = answers[rid][0]                                                       # latest Chainlink answer, from HyperSync logs
+    oracle_price = call(ORACLE, "0xd45c35ff", rid, block=block)[0] / 10 ** oracle_dec  # getReservePrice, check only
     v.update(supplied=supplied, debt=debt, price=price)
     if rid != usdc_rid:
         collateral_usd += supplied * price
+        oracle_usd += supplied * oracle_price
+        price_checks.append(f"  {v['symbol']:8}feed ${price:>10,.4f}  oracle ${oracle_price:>10,.4f}  (feed updated {when(answers[rid][1])})")
     print(f"  {rid:<8}{v['symbol']:8}{supplied:>20,.4f}{price:>14,.4f}{supplied * price:>16,.0f}{debt:>18,.2f}")
     rpc_supplied = call(SPOKE, "0x2fd00527", rid, block=block)[0] / 10 ** v["dec"]   # getReserveSuppliedAssets
     rpc_debt = call(SPOKE, "0x1cdc762c", rid, block=block)[0] / 10 ** v["dec"]       # getReserveTotalDebt
     checks.append(f"  {rid:<8}{v['symbol']:8}{rpc_supplied:>20,.4f} (gap {supplied - rpc_supplied:,.4f}){rpc_debt:>18,.2f} (gap {debt - rpc_debt:,.2f})")
 stocks = [v["symbol"] for r, v in sorted(info.items()) if r != usdc_rid]
 print(f"  {len(stocks)} stocks listed: {', '.join(stocks)}")
-print(f"  stock collateral supplied: ${collateral_usd:,.0f} at Aave oracle prices")
+print(f"  stock collateral supplied: ${collateral_usd:,.0f} at Chainlink feed prices read with HyperSync")
 print(f"  USDC supplied: {info[usdc_rid]['supplied']:,.0f}, USDC borrowed (drawn debt, without premium): {info[usdc_rid]['debt']:,.0f}")
 print("  Check (RPC getReserveSuppliedAssets, getReserveTotalDebt at the same block)")
 print("\n".join(checks))
+print(f"  Check (Aave oracle getReservePrice over RPC): stock collateral ${oracle_usd:,.0f}, gap {100 * (collateral_usd - oracle_usd) / oracle_usd:+.2f}%")
+print("\n".join(price_checks))
 
 # 3. SPCXc since it was listed
 dec = info[spcxc_rid]["dec"]
