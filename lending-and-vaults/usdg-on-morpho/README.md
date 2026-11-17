@@ -1,6 +1,6 @@
 # Paxos USDG on Morpho
 
-**HyperSync finds 386 Morpho markets that lend Paxos USDG** across Robinhood Chain, Arbitrum and Ethereum. Rebuilt from their events in a run on 17 Nov 2026, they held $663.6M of USDG, and $590.5M of it (89%) was borrowed. Robinhood Chain had 375 of the markets and $510.7M, and Arbitrum had 8 markets and $152.9M.
+**HyperSync finds 386 Morpho markets that lend Paxos USDG** across Robinhood Chain, Arbitrum and Ethereum. Rebuilt from their events in a run on 17 Nov 2026, they had $663.6M of USDG supplied, and $590.5M of it (89%) was borrowed. Robinhood Chain had 375 of the markets and $510.7M, and Arbitrum had 8 markets and $152.9M.
 
 | 17 Nov 2026 | USDG markets | Supplied |
 | --- | --- | --- |
@@ -12,6 +12,10 @@
 ## Why it's interesting
 
 Morpho lets anyone create a lending market, so a stablecoin can end up in hundreds of them without a list anywhere. Reading every `CreateMarket` event is the reliable way to find them all. Most of the USDG here is lent against yield-bearing dollars like USDe and syrupUSDG, which tells you what borrowers are using it for.
+
+## How to read "supplied"
+
+Supplied is what Morpho's markets record as supplied, not how much USDG sits in Morpho. The same USDG can be supplied, borrowed, supplied again in another market and borrowed again, so total supplied can be larger than the token's whole supply. What Morpho actually holds is supplied minus borrowed. On Arbitrum in this run that is about $15.6M for the biggest market, in line with the roughly $16.4M of USDG held by Morpho there.
 
 ## What it pulls
 
