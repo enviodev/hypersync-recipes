@@ -13,9 +13,7 @@ Scripts for DEXs, perps and prediction markets. Pull every swap, pool and positi
 | [yieldbasis-weth-propamm](yieldbasis-weth-propamm) | Ethereum | Compare Yield Basis pool volume and fees before and after oracle pricing |
 | [metric-first-month-ethereum](../metric-first-month-ethereum) | Ethereum | Pull every swap on Metric's pools, per day |
 | [ostium-markets-arbitrum](ostium-markets-arbitrum) | Arbitrum | Pull every Ostium position and group it by market |
-| [phoenix-perps-signups](../phoenix-perps-signups) | Solana | Track Phoenix trading accounts and USDC deposits on Solana |
 | [polymarket-election-day](polymarket-election-day) | Polygon | Get Polymarket trading volume by hour on US election day |
 | [polymarket-election-night](polymarket-election-night) | Polygon | Get Polymarket trading volume hour by hour on US election night |
-| [metadao-launchpad-raises](../metadao-launchpad-raises) | Solana | Pull every MetaDAO launchpad raise on Solana |
 
 To run one, grab a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow that example's README. The [main README](../README.md) has every topic.

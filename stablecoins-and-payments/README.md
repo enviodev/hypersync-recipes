@@ -13,8 +13,5 @@ Scripts for stablecoins and payments. Pull every mint, burn and transfer of a st
 | [base-usdc-micropayments](base-usdc-micropayments) | Base | Pull every gasless USDC payment on Base and size it down to the cent |
 | [uniswap-stable-volume-by-chain](uniswap-stable-volume-by-chain) | 22 EVM chains | Get Uniswap stablecoin-to-stablecoin volume on 22 chains |
 | [etherfi-cash-card-payments](../etherfi-cash-card-payments) | Optimism | Pull every ether.fi Cash card payment settled onchain |
-| [phantom-cash-supply](../phantom-cash-supply) | Solana | Track Phantom CASH stablecoin supply week by week |
-| [sofiusd-solana](../sofiusd-solana) | Solana | Rebuild SoFiUSD supply on Solana from every mint and burn |
-| [huma-payfi-solana](../huma-payfi-solana) | Solana | Pull every Huma Institutional drawdown and repayment on Solana |
 
 To run one, grab a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow that example's README. The [main README](../README.md) has every topic.

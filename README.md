@@ -37,9 +37,6 @@ Every folder has its own README with what we found, what the script pulls, how t
 | [base-usdc-micropayments](stablecoins-and-payments/base-usdc-micropayments) | Base | Pull every gasless USDC payment on Base and size it down to the cent |
 | [uniswap-stable-volume-by-chain](stablecoins-and-payments/uniswap-stable-volume-by-chain) | 22 EVM chains | Get Uniswap stablecoin-to-stablecoin volume on 22 chains |
 | [etherfi-cash-card-payments](etherfi-cash-card-payments) | Optimism | Pull every ether.fi Cash card payment settled onchain |
-| [phantom-cash-supply](phantom-cash-supply) | Solana | Track Phantom CASH stablecoin supply week by week |
-| [sofiusd-solana](sofiusd-solana) | Solana | Rebuild SoFiUSD supply on Solana from every mint and burn |
-| [huma-payfi-solana](huma-payfi-solana) | Solana | Pull every Huma Institutional drawdown and repayment on Solana |
 
 ### Tokenized stocks
 
@@ -54,19 +51,15 @@ Every folder has its own README with what we found, what the script pulls, how t
 | [aero-tokenized-stocks-base](tokenized-stocks/aero-tokenized-stocks-base) | Base | Get Coinbase tokenized stock volume on Aero, in and out of market hours |
 | [base-tokenized-stock-holders](tokenized-stocks/base-tokenized-stock-holders) | Base | Find every holder of Coinbase tokenized stocks on Base |
 | [aave-v4-spcxc-base](tokenized-stocks/aave-v4-spcxc-base) | Base | Track SPCXc holders and the Aave v4 tokenized stocks market on Base |
-| [jupiter-lend-stock-collateral](jupiter-lend-stock-collateral) | Solana | Pull every Jupiter Lend borrow position, grouped by collateral |
-| [backpack-stocks-solana](backpack-stocks-solana) | Solana | Track Backpack tokenized stock holders, mints and burns on Solana |
 
 ### Tokenized funds and real-world assets
 
 | Example | Chain | How to |
 | --- | --- | --- |
 | [blackrock-buidl-by-chain](rwa-and-funds/blackrock-buidl-by-chain) | EVM chains | Track BlackRock BUIDL supply on each chain from every mint and burn |
-| [tokenized-treasuries-solana](rwa-and-funds/tokenized-treasuries-solana) | Solana | Track the supply of tokenized Treasury funds on Solana, day by day |
 | [ondo-intelligent-portfolios](rwa-and-funds/ondo-intelligent-portfolios) | Ethereum, BNB Chain | Track Ondo Intelligent Portfolios supply and holders |
 | [spiko-safo](rwa-and-funds/spiko-safo) | Ethereum, Arbitrum, Polygon, Base | Track Spiko SAFO supply and holders by chain and share class |
 | [grove-basin-jtrsy](rwa-and-funds/grove-basin-jtrsy) | Ethereum | Pull every Grove Basin swap of JTRSY into USDC |
-| [kamino-rwa-collateral](kamino-rwa-collateral) | Solana | Find real-world credit used as collateral on Kamino Lend |
 | [pendle-strcx](rwa-and-funds/pendle-strcx) | Ethereum | Find every STRCx holder and how much sits in Pendle |
 | [paxg-on-morpho-base](rwa-and-funds/paxg-on-morpho-base) | Base | Track USDC borrowed against Paxos Gold (PAXG) on Morpho |
 
@@ -98,10 +91,8 @@ Every folder has its own README with what we found, what the script pulls, how t
 | [yieldbasis-weth-propamm](dexs-and-trading/yieldbasis-weth-propamm) | Ethereum | Compare Yield Basis pool volume and fees before and after oracle pricing |
 | [metric-first-month-ethereum](metric-first-month-ethereum) | Ethereum | Pull every swap on Metric's pools, per day |
 | [ostium-markets-arbitrum](dexs-and-trading/ostium-markets-arbitrum) | Arbitrum | Pull every Ostium position and group it by market |
-| [phoenix-perps-signups](phoenix-perps-signups) | Solana | Track Phoenix trading accounts and USDC deposits on Solana |
 | [polymarket-election-day](dexs-and-trading/polymarket-election-day) | Polygon | Get Polymarket trading volume by hour on US election day |
 | [polymarket-election-night](dexs-and-trading/polymarket-election-night) | Polygon | Get Polymarket trading volume hour by hour on US election night |
-| [metadao-launchpad-raises](metadao-launchpad-raises) | Solana | Pull every MetaDAO launchpad raise on Solana |
 
 ### Chain activity, wallets and accounts
 
@@ -120,7 +111,23 @@ Every folder has its own README with what we found, what the script pulls, how t
 | [safe-shared-signer](chain-activity/safe-shared-signer) | Ethereum | Decode every new Safe's owners and find the most common signer |
 | [circles-trust-gnosis](chain-activity/circles-trust-gnosis) | Gnosis | Count Circles v2 humans and trust links on Gnosis Chain |
 | [uni-new-holders](chain-activity/uni-new-holders) | Ethereum | Count new UNI holders per day since 2020 |
-| [solana-durable-nonces](chain-activity/solana-durable-nonces) | Solana | Count Solana transactions that use durable nonces |
+
+### Solana
+
+| Example | Chain | How to |
+| --- | --- | --- |
+| [phantom-cash-supply](phantom-cash-supply) | Solana | Track Phantom CASH stablecoin supply week by week |
+| [sofiusd-solana](sofiusd-solana) | Solana | Rebuild SoFiUSD supply on Solana from every mint and burn |
+| [huma-payfi-solana](huma-payfi-solana) | Solana | Pull every Huma Institutional drawdown and repayment on Solana |
+| [jupiter-lend-stock-collateral](jupiter-lend-stock-collateral) | Solana | Pull every Jupiter Lend borrow position, grouped by collateral |
+| [backpack-stocks-solana](backpack-stocks-solana) | Solana | Track Backpack tokenized stock holders, mints and burns on Solana |
+| [tokenized-treasuries-solana](solana/tokenized-treasuries-solana) | Solana | Track the supply of tokenized Treasury funds on Solana, day by day |
+| [kamino-rwa-collateral](kamino-rwa-collateral) | Solana | Find real-world credit used as collateral on Kamino Lend |
+| [phoenix-perps-signups](phoenix-perps-signups) | Solana | Track Phoenix trading accounts and USDC deposits on Solana |
+| [metadao-launchpad-raises](metadao-launchpad-raises) | Solana | Pull every MetaDAO launchpad raise on Solana |
+| [solana-durable-nonces](solana/solana-durable-nonces) | Solana | Count Solana transactions that use durable nonces |
+
+The Solana indexers are listed under HyperIndex indexers below.
 
 ### HyperIndex indexers
 

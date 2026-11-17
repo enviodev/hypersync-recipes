@@ -17,6 +17,5 @@ Scripts for chain-wide activity. Count transactions, active addresses, fees, Saf
 | [safe-shared-signer](safe-shared-signer) | Ethereum | Decode every new Safe's owners and find the most common signer |
 | [circles-trust-gnosis](circles-trust-gnosis) | Gnosis | Count Circles v2 humans and trust links on Gnosis Chain |
 | [uni-new-holders](uni-new-holders) | Ethereum | Count new UNI holders per day since 2020 |
-| [solana-durable-nonces](solana-durable-nonces) | Solana | Count Solana transactions that use durable nonces |
 
 To run one, grab a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow that example's README. The [main README](../README.md) has every topic.
