@@ -38,6 +38,7 @@ Every folder has its own README with what we found, what the script pulls, how t
 | [ousd-supply-by-chain](stablecoins-and-payments/ousd-supply-by-chain) | Ethereum, Base, Tempo | Track Open USD (OUSD) supply and holders on each chain |
 | [base-usdc-micropayments](stablecoins-and-payments/base-usdc-micropayments) | Base | Pull every gasless USDC payment on Base and size it down to the cent |
 | [uniswap-stable-volume-by-chain](stablecoins-and-payments/uniswap-stable-volume-by-chain) | 22 EVM chains | Get Uniswap stablecoin-to-stablecoin volume on 22 chains |
+| [usdg-arbitrum-where-it-sits](stablecoins-and-payments/usdg-arbitrum-where-it-sits) | Arbitrum | Find every USDG balance on Arbitrum and see how much sits in GMX markets, Morpho and wallets |
 | [etherfi-cash-card-payments](etherfi-cash-card-payments) | Optimism | Pull every ether.fi Cash card payment settled onchain |
 
 ### Tokenized stocks

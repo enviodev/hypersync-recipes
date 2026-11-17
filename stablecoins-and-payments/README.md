@@ -12,6 +12,7 @@ Scripts for stablecoins and payments. Pull every mint, burn and transfer of a st
 | [ousd-supply-by-chain](ousd-supply-by-chain) | Ethereum, Base, Tempo | Track Open USD (OUSD) supply and holders on each chain |
 | [base-usdc-micropayments](base-usdc-micropayments) | Base | Pull every gasless USDC payment on Base and size it down to the cent |
 | [uniswap-stable-volume-by-chain](uniswap-stable-volume-by-chain) | 22 EVM chains | Get Uniswap stablecoin-to-stablecoin volume on 22 chains |
+| [usdg-arbitrum-where-it-sits](usdg-arbitrum-where-it-sits) | Arbitrum | Find every USDG balance on Arbitrum and see how much sits in GMX markets, Morpho and wallets |
 | [etherfi-cash-card-payments](../etherfi-cash-card-payments) | Optimism | Pull every ether.fi Cash card payment settled onchain |
 
 ### Also on Solana
