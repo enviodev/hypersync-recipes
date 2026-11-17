@@ -13,6 +13,7 @@ Scripts for tokenized stocks. Find everyone holding a stock token, pull every tr
 | [aero-tokenized-stocks-base](aero-tokenized-stocks-base) | Base | Get Coinbase tokenized stock volume on Aero, in and out of market hours |
 | [base-tokenized-stock-holders](base-tokenized-stock-holders) | Base | Find every holder of Coinbase tokenized stocks on Base |
 | [aave-v4-spcxc-base](aave-v4-spcxc-base) | Base | Track SPCXc holders and the Aave v4 tokenized stocks market on Base |
+| [pendle-strcx](pendle-strcx) | Ethereum | Find every STRCx holder and how much sits in Pendle |
 
 ### Also on Solana
 

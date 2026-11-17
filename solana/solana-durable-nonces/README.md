@@ -1,32 +1,30 @@
 # Durable nonce transactions on Solana
 
-Counts every Solana transaction that opens with a System Program `AdvanceNonceAccount` instruction, day by day, using [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/solana). It also counts the nonce accounts and fee payers behind them and estimates their share of all successful transactions.
+Over the 30 UTC days from 10 Oct to 8 Nov 2026, **178M successful Solana transactions used a durable nonce, about 6M a day and 5.7% of successful non-vote transactions**. They came from 930K distinct nonce accounts and 620K fee payers. The quietest day had 3.2M and the busiest 10.6M.
 
-These are the numbers behind Envio's post on how much Solana activity still runs on durable nonces. The Solana Foundation plans to retire durable nonces and names Anza's Programmatic Signer and Blueshift's Vector as candidate replacements. No date is set yet. Details are on the [Durable Nonce Deprecation](https://solana.com/upgrades/durable-nonce-deprecation) page.
+## Why it's interesting
 
-## What we found
+Durable nonces let a transaction be signed now and sent later, which custody setups, offline signers and some trading flows rely on. The Solana Foundation plans to replace them, with candidate successors named on the [Durable Nonce Deprecation](https://solana.com/upgrades/durable-nonce-deprecation) page and no date set yet. If you run or build on any of those flows, this is how to measure how much activity uses them, and the same instruction filter works for any program and instruction on Solana.
 
-Over the 30 UTC days from 10th October to 8th November 2026:
+## What it pulls
 
-- 178M successful durable nonce transactions, about 6M a day on average (3.2M on the quietest day, 10.6M on the busiest)
-- About 1 in 18 successful non-vote transactions (5.7%, sampled)
-- 930k distinct nonce accounts and 620k distinct fee payers
-- 453 fee payers sent 90% of the transactions
+- Every top-level call to the System Program `11111111111111111111111111111111` whose first four data bytes are `04000000` (`AdvanceNonceAccount`, instruction 4, little-endian) at `instruction_address` `[0]`, from [HyperSync on Solana](https://docs.envio.dev/docs/HyperSync/solana). A durable nonce transaction has to open with that instruction.
+- The parent transaction of each call, joined on `(slot, transaction_index)`, for the fee payer.
+- Block times to find each UTC day's first slot, and 48 random 20-slot windows per day of all successful non-vote transactions for the share.
+
+Every number here comes from HyperSync. Account 0 of the instruction is the nonce account. HyperSync serves successful transactions' instructions with vote transactions left out, so every count is of successful non-vote transactions. Scaling the sample windows' nonce counts up to a full day lands within 11% of the exact daily count on every day, so the share is a close estimate.
 
 ## Run it
 
-You need Python 3 and a HyperSync API token from the [Envio Dashboard](https://envio.dev/app/api-tokens). The script has no other dependencies.
+You need Python 3 (standard library only) and a free HyperSync API token from [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens).
 
 ```bash
 export ENVIO_API_TOKEN=your-token
-python script.py
+python3 script.py      # the last 30 UTC days
+python3 script.py 7    # the last 7 UTC days
 ```
 
-Pass a number of days to change the window, for example `python script.py 7`. A 30-day run reads about 180M instruction rows and takes a little over an hour.
-
-## What it prints
-
-One row per UTC day, then the totals for the window. This is the 30-day run from 9th November.
+A 30-day run reads about 180M instruction rows and takes a little over an hour. Sample output from the 30-day run on 9 Nov 2026:
 
 ```
 Day            Nonce txs  Nonce accts  Fee payers   Share
@@ -37,37 +35,40 @@ Day            Nonce txs  Nonce accts  Fee payers   Share
 
 30 days: 178.0M nonce transactions, 930k nonce accounts, 620k fee payers
 Share of successful non-vote transactions (sampled): 5.7%
-Fee payers behind 90% of them: 453
+...
 ```
 
-## How it counts
+## Change the window or chain
 
-- A durable nonce transaction must open with `AdvanceNonceAccount`, so the script asks HyperSync for top-level System Program instruction calls whose first four data bytes are `04000000` (instruction 4, little-endian), then keeps the ones at `instruction_address` `[0]`.
-- Account 0 of that instruction is the nonce account. The fee payer comes from the parent transaction, joined on `(slot, transaction_index)`.
-- HyperSync serves successful transactions' instructions, so every count here is of successful transactions. Vote transactions are excluded at ingest.
-- Day boundaries are found from block times, so each day runs from 00:00 to 24:00 UTC.
-- The share comes from 48 random 20-slot windows per day. Scaling those windows' nonce counts up to the full day lands within 11% of the exact daily count on every day.
-- We checked nine slots across 12th October, 25th October, 3rd November and 9th November against Solana RPC `getBlock`. Successful non-vote transactions and durable nonce transactions matched exactly in every slot.
+- **Window.** Pass a number of days. A 7-day run takes about a quarter of the time.
+- **Another instruction.** Swap the program id and the four-byte discriminator to count any instruction on Solana, like a token program's `MintTo` or a DEX's swap. The [Solana query reference](https://docs.envio.dev/docs/HyperSync/solana-query) lists every filter and field.
 
-## Ask your coding agent
+## Check the numbers
+
+Nine slots across 12 Oct, 25 Oct, 3 Nov and 9 Nov were checked against Solana RPC `getBlock` as the comparison. Successful non-vote transactions and durable nonce transactions matched exactly in every slot.
+
+## Build your own with an AI agent
 
 Paste this into Claude Code, Cursor or any coding agent:
 
-```
-Use Envio HyperSync for Solana (https://docs.envio.dev/docs/HyperSync/solana-query) to find
-every top-level instruction call to the System Program 11111111111111111111111111111111
-with d4 = 04000000 (AdvanceNonceAccount) at instruction_address [0] over the last 7 days.
-My API token is in the ENVIO_API_TOKEN environment variable. Count them per UTC day, with
-distinct nonce accounts (a0) and fee payers, and chart the daily totals.
+```text
+Read script.py and README.md in this folder. It uses HyperSync on Solana
+(https://docs.envio.dev/docs/HyperSync/solana) to count every successful transaction
+that opens with System Program AdvanceNonceAccount, per UTC day, with the nonce
+accounts and fee payers behind them. My HyperSync token is in the ENVIO_API_TOKEN
+environment variable.
+
+Add an hour-of-day breakdown in UTC of nonce transactions for the window and write it
+to hourly.csv. Keep the standard library only. Run it with 1 day first. Then check that
+the 24 hourly counts add up to that day's total in the daily table.
 ```
 
-## Learn more
+## Links
 
-- [Solana on Envio](https://envio.dev/chains/solana)
-- [Solana HyperSync overview](https://docs.envio.dev/docs/HyperSync/solana)
-- [Solana HyperSync query and response reference](https://docs.envio.dev/docs/HyperSync/solana-query)
+- [HyperSync on Solana](https://docs.envio.dev/docs/HyperSync/solana)
+- [Solana query and response reference](https://docs.envio.dev/docs/HyperSync/solana-query)
 - [Solana curl examples](https://docs.envio.dev/docs/HyperSync/solana-curl-examples)
-- [Indexing on Solana with HyperIndex](https://docs.envio.dev/docs/HyperIndex/solana)
-- [Solana instruction handlers in HyperIndex](https://docs.envio.dev/docs/HyperIndex/solana/instruction-handlers)
-- [How to index and track stablecoin transfers on Solana](https://docs.envio.dev/blog/index-solana-stablecoin-transfers)
-- [Query Builder for Solana](https://builder.hypersync.xyz/#solana)
+- [Indexing Solana with HyperIndex](https://docs.envio.dev/docs/HyperIndex/solana)
+- [Solana on Envio](https://envio.dev/chains/solana)
+- [Durable Nonce Deprecation](https://solana.com/upgrades/durable-nonce-deprecation)
+- [Envio Discord](https://discord.gg/envio)

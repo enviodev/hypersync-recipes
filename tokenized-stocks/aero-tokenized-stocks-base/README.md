@@ -1,25 +1,36 @@
-# Coinbase tokenized stocks on Aero (Base)
+# Coinbase tokenized stocks on Aero, in and out of market hours
 
-Finds every Aero pool on Base that holds a Coinbase tokenized stock, then reads every swap in those pools with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview). It prints the USDC-paired volume per stock and how much of it traded while US stock markets were closed and at the weekend.
+In the 7 days from 28 Oct to 4 Nov 2026 (09:40 UTC), **Coinbase's tokenized stocks did $780.8M of USDC-paired volume on Aero on Base, across 775K swaps, and 77.5% of it traded while US markets were closed**. $192.3M of that came on Saturday and Sunday. MSTRc and SNDKc led with $135.8M and $131.9M.
 
-These are the numbers behind Envio's post on tokenized stock trading on Aero.
+| Stock | USDC volume | Closed-market share | Weekend |
+| --- | --- | --- | --- |
+| MSTRc | $135.8M | 70.5% | $36.6M |
+| SNDKc | $131.9M | 79.5% | $31.4M |
+| METAc | $76.6M | 79.7% | $14.7M |
+
+## Why it's interesting
+
+Coinbase's stock tokens trade around the clock on Base, and Aero is where a lot of that liquidity sits. Most of the volume lands when Wall Street is shut, including a big weekend share. The script also shows how to cover a DEX with several pool factories in one pass, which is the awkward part of tracking Aero.
+
+## What it pulls
+
+- The stock token list from Coinbase's [Tokenized Stocks API](https://docs.base.org/sdks/tokenized-stocks/overview), `https://api.coinbase.com/v1/tokenized-stocks`.
+- `PoolCreated` events from five pool factories on Base, from [HyperSync](https://docs.envio.dev/docs/HyperSync/overview). That's the Aerodrome classic factory `0x420dd381b31aef6683db6b902084cb0ffece40da` ([contracts](https://github.com/aerodrome-finance/contracts)), three Slipstream deployments ([Slipstream](https://github.com/aerodrome-finance/slipstream)) and the Aero CL factory ([deployment addresses](https://github.com/dromos-labs/metadex-slipstream-public/blob/main/deployment-addresses/cl-base.json)).
+- Every `Swap` in the pools that hold a stock token over the window, with block timestamps, from HyperSync. Every number here comes from HyperSync.
+
+Volume is the USDC side of each swap in a stock/USDC pool, using [USDC on Base](https://basescan.org/token/0x833589fcd6edb6e08f4c7c32d4f71b54bda02913). Swaps against other tokens aren't priced, so they're not in the totals. US markets count as open 9:30 to 16:00 New York time on weekdays.
 
 ## Run it
 
-You need Python 3 and a HyperSync API token from the [Envio Dashboard](https://envio.dev/app/api-tokens). The script has no other dependencies.
+You need Python 3 (standard library only) and a free HyperSync API token from [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens).
 
 ```bash
 export ENVIO_API_TOKEN=your-token
-python script.py 7
+python3 script.py 7                         # the last 7 days
+python3 script.py 7 2026-11-04T09:40:09     # the window above
 ```
 
-The first argument is the number of days. Add an end time in UTC to rerun a past window exactly:
-
-```bash
-python script.py 7 2026-11-04T09:40:09
-```
-
-## What it prints
+Sample output for the window above:
 
 ```
 Coinbase tokenized stocks on Aero (Base), 28 Oct 09:40 UTC to 04 Nov 09:40 UTC
@@ -32,21 +43,33 @@ Saturday and Sunday (ET): $192.3M
   ...
 ```
 
-## How it counts
+## Change the window or chain
 
-- Stock tokens come from Coinbase's [Tokenized Stocks API](https://docs.base.org/sdks/tokenized-stocks/overview).
-- Pools come from the PoolCreated events of the Aerodrome classic and Slipstream factories ([contracts](https://github.com/aerodrome-finance/contracts), [Slipstream](https://github.com/aerodrome-finance/slipstream)) and the Aero CL factory ([deployment addresses](https://github.com/dromos-labs/metadex-slipstream-public/blob/main/deployment-addresses/cl-base.json)).
-- Volume is the USDC side of each swap in a stock/USDC pool. Swaps against other tokens are not priced.
-- US markets count as open 9:30am to 4pm ET on weekdays.
+- **Window.** The first argument is the number of days. Add an end time in UTC, like `2026-11-04T09:40:09`, to rerun a past window exactly.
+- **Quote token.** Volume is priced from the USDC side. To include stock/ETH pools, add a WETH price from the same swaps and value the ETH side with it.
+- **Token list.** Swap the Coinbase API call for any list of Base tokens to get the same in-hours and after-hours split for them.
+- **Chain.** Aero's factories in this script are on Base. For another chain, swap `URL` for that chain's endpoint from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks) and `FACTORIES` and `USDC` for that chain's addresses.
 
-## Ask your coding agent
+## Build your own with an AI agent
 
 Paste this into Claude Code, Cursor or any coding agent:
 
+```text
+Read script.py and README.md in this folder. It uses HyperSync
+(https://docs.envio.dev/docs/HyperSync/overview) on Base to find every Aero pool that
+holds a Coinbase tokenized stock and sum USDC-paired swap volume in and out of US market
+hours. My HyperSync token is in the ENVIO_API_TOKEN environment variable.
+
+Add an hour-by-weekday grid of USDC volume in New York time and write it to
+heatmap.csv. Keep the standard library only. Then check that the grid adds up to the
+total USDC-paired volume the script prints for the same window.
 ```
-Use Envio HyperSync (https://docs.envio.dev/docs/HyperSync/overview) to read every swap
-in Aero pools on Base that hold a Coinbase tokenized stock
-(token list: https://api.coinbase.com/v1/tokenized-stocks). My API token is in the
-ENVIO_API_TOKEN environment variable. Chart USDC volume per stock per hour for the last
-7 days, and shade the hours when US stock markets were open.
-```
+
+## Links
+
+- [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview)
+- [HyperSync query reference](https://docs.envio.dev/docs/HyperSync/hypersync-query)
+- [HyperSync supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks)
+- [Coinbase tokenized stocks](https://docs.base.org/sdks/tokenized-stocks/overview)
+- [Aerodrome contracts](https://github.com/aerodrome-finance/contracts)
+- [Envio Discord](https://discord.gg/envio)

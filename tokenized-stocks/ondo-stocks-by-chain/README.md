@@ -1,27 +1,40 @@
-# Ondo Stocks by chain
+# Where Ondo stocks moved, chain by chain
 
-Reads every transfer of every Ondo stock and ETF token on Ethereum, BNB Chain, HyperEVM and Robinhood for one week, using [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview). It prints how many transfers each chain carried, what they were worth, the most-moved tickers, and every LayerZero bridge hop an Ondo stock made between those chains.
+In the week of 3 to 9 Nov 2026, **$402M of Ondo stock and ETF tokens moved onchain across 1M transfers**, valued at prices on the day of the run. The value split almost evenly between BNB Chain ($204M) and Ethereum ($198M). BNB Chain did it in about 13 times as many transfers, with an average transfer of $217 against $2.8K on Ethereum. 74 LayerZero bridge hops moved $1.3M between the chains.
 
-These are the numbers behind Envio's post on where Ondo stocks moved in the week of 3 November 2026. That week $402M of Ondo stocks moved onchain, split almost evenly between BNB Chain ($204M) and Ethereum ($198M). BNB Chain needed about 13 times as many transfers to do it, with an average transfer of $217 against $2.8K on Ethereum.
+| Chain | Transfers | Value | Avg transfer | Wallets |
+| --- | --- | --- | --- | --- |
+| Ethereum | 69,897 | $198.4M | $2.8K | 3,341 |
+| BNB Chain | 936,890 | $203.6M | $217 | 26,693 |
+| Robinhood Chain | 180 | $24.8K | $138 | 74 |
+| HyperEVM | 9 | $113 | $13 | 3 |
+
+## Why it's interesting
+
+Ondo issues the same 450 stock and ETF tokens on several chains, and each chain gets used differently. Ethereum carries fewer, larger transfers. BNB Chain carries a lot of small ones, and its top ticker that week was the FXI China ETF rather than a US tech name. If you're choosing where to list, build or market a stock token product, this is the per-chain picture in one run.
+
+## What it pulls
+
+- Token addresses from Ondo's token sheet, linked from the Ondo Stocks section of [docs.ondo.finance/addresses](https://docs.ondo.finance/addresses). The script keeps the 450 tokens marked Stock or ETF and leaves out USDon and the portfolio tokens.
+- Every ERC-20 `Transfer` log from those tokens on Ethereum (1), BNB Chain (56), HyperEVM (999) and Robinhood Chain (4663), with the transaction that sent it, from [HyperSync](https://docs.envio.dev/docs/HyperSync/overview). Transfer counts, wallets and bridge hops come from HyperSync.
+- LayerZero `OFTSent` events in the same transaction as an Ondo token burn, from HyperSync. The destination comes from the LayerZero endpoint id (Ethereum 30101, BNB Chain 30102, HyperEVM 30367, Robinhood Chain 30416).
+- Today's price for each token from CoinGecko's public price API, using the ids in Ondo's sheet. The dollar values come from these prices, not from HyperSync, and use the price on the day you run it rather than at the time of each transfer.
+
+Every Ondo stock token has 18 decimals. A swap that routes through several contracts counts once per hop. The wallet is the address that sent the transaction.
+
+When one wallet moves the same token through its own address 20 or more times in a New York day and ends within 10% of where it started, those transfers are left out of every number. Mints, burns and transfers with Ondo's mint and redeem contracts (GMTokenManager, GMIssuerManager and GMTokenLimitOrder from the addresses page) don't count towards that, since they're issuance.
 
 ## Run it
 
-You need Python 3.9 or newer and a HyperSync API token from the [Envio Dashboard](https://envio.dev/app/api-tokens). The script has no other dependencies.
+You need Python 3.9 or newer (standard library only) and a free HyperSync API token from [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens).
 
 ```bash
 export ENVIO_API_TOKEN=your-token
-python script.py
+python3 script.py               # the 7 full UTC days before today
+python3 script.py 2026-11-03    # the week above
 ```
 
-It covers the 7 full UTC days before today. Pass a start date to choose another week:
-
-```bash
-python script.py 2026-11-03
-```
-
-A week takes two or three minutes. BNB Chain has close to a million transfers, so the script splits each chain's blocks into 8 parts and reads them in parallel. It also writes everything to `results.json`.
-
-## What it prints
+A week takes two or three minutes. BNB Chain has close to a million transfers, so the script splits each chain into 8 block ranges and reads them in parallel. It also writes everything to `results.json`. Sample output for the week above:
 
 ```
 Ondo stocks by chain, 2026-11-03 to 2026-11-10 (UTC, end exclusive)
@@ -47,29 +60,33 @@ Bridge hops (LayerZero) 74, $1.3M
   BNB Chain -> Robinhood  1
 ```
 
-## How it counts
+## Change the window or chain
 
-- Token addresses come from Ondo's token sheet, linked from the Ondo Stocks section of [docs.ondo.finance/addresses](https://docs.ondo.finance/addresses). The script downloads it on every run. It keeps the 450 tokens marked Stock or ETF and leaves out USDon and the portfolio tokens.
-- One HyperSync query per chain reads every `Transfer` log from those token contracts, with the transaction that contains it (HyperSync's default join). Only logs whose address is an Ondo token and whose first topic is `Transfer` are kept. The wallet is the address that sent the transaction.
-- Value is each transfer's amount times the token's price on CoinGecko when you run the script, using the CoinGecko ids in Ondo's sheet. Every Ondo stock token has 18 decimals. Because it uses today's price, it is an estimate of the week's value, not the price at the time of each transfer. A swap that routes through several contracts counts once per hop.
-- Wash check: when one wallet moves the same token through its own address 20 or more times in a New York day and ends the day within 10% of where it started, those transactions are one actor cycling volume and are left out of every number. Mints, burns and transfers with Ondo's own mint and redeem contracts (GMTokenManager, GMIssuerManager and GMTokenLimitOrder from the addresses page) don't count towards it, because that is issuance, not trading.
-- A bridge hop is a LayerZero `OFTSent` event in the same transaction as an Ondo token burn. Its destination comes from the event's LayerZero endpoint id (Ethereum 30101, BNB Chain 30102, HyperEVM 30367, Robinhood 30416).
-- Solana is not included. Ondo Stocks also live there, but this recipe reads EVM chains only.
+- **Week.** Pass any start date as `YYYY-MM-DD` and the script reads the 7 days from there.
+- **Chains.** Ondo also deploys on other chains. Add one by giving the script its HyperSync subdomain from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks), the matching column in Ondo's sheet, and its LayerZero endpoint id. Ondo's Solana tokens aren't covered here since this script reads EVM chains.
+- **Value at the time.** To value each transfer at its own day's price instead of today's, swap the CoinGecko call for a daily price per token.
 
-## Ask your coding agent
+## Build your own with an AI agent
 
 Paste this into Claude Code, Cursor or any coding agent:
 
-```
-Use Envio HyperSync (https://docs.envio.dev/docs/HyperSync/overview) to read every Transfer of every
-Ondo stock token on Ethereum (1), BNB Chain (56), HyperEVM (999) and Robinhood (4663) for the last 7 days.
-Token addresses are in the token sheet linked from https://docs.ondo.finance/addresses.
-My API token is in the ENVIO_API_TOKEN environment variable. Show transfers, value and wallets per chain,
-the most-moved tickers, and LayerZero OFTSent bridge hops between the chains.
+```text
+Read script.py and README.md in this folder. It uses HyperSync
+(https://docs.envio.dev/docs/HyperSync/overview) to read every Transfer of every Ondo
+stock and ETF token on Ethereum, BNB Chain, HyperEVM and Robinhood Chain for one week,
+plus LayerZero OFTSent bridge hops. My HyperSync token is in the ENVIO_API_TOKEN
+environment variable.
+
+Add a per-day breakdown of transfers and wallets for each chain and write it to
+daily.csv. Keep the standard library only. Then check that the daily transfer counts
+for each chain add up to the weekly totals the script prints.
 ```
 
-## Learn more
+## Links
 
-- [Ondo stocks on Robinhood](https://github.com/enviodev/hypersync-recipes/tree/main/tokenized-stocks/ondo-stocks-robinhood): the first week of Ondo's tokenized stocks on Robinhood
-- [Tokenized stocks on Ethereum](https://github.com/enviodev/hypersync-recipes/tree/main/tokenized-stocks/tokenized-stocks-ethereum)
-- [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview): how the queries in this script work
+- [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview)
+- [HyperSync query reference](https://docs.envio.dev/docs/HyperSync/hypersync-query)
+- [HyperSync supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks)
+- [Ondo token addresses](https://docs.ondo.finance/addresses)
+- [LayerZero endpoint ids](https://docs.layerzero.network/v2/deployments/deployed-contracts)
+- [Envio Discord](https://discord.gg/envio)

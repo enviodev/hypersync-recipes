@@ -53,6 +53,7 @@ Every folder has its own README with what we found, what the script pulls, how t
 | [aero-tokenized-stocks-base](tokenized-stocks/aero-tokenized-stocks-base) | Base | Get Coinbase tokenized stock volume on Aero, in and out of market hours |
 | [base-tokenized-stock-holders](tokenized-stocks/base-tokenized-stock-holders) | Base | Find every holder of Coinbase tokenized stocks on Base |
 | [aave-v4-spcxc-base](tokenized-stocks/aave-v4-spcxc-base) | Base | Track SPCXc holders and the Aave v4 tokenized stocks market on Base |
+| [pendle-strcx](tokenized-stocks/pendle-strcx) | Ethereum | Find every STRCx holder and how much sits in Pendle |
 
 ### Tokenized funds and real-world assets
 
@@ -62,7 +63,6 @@ Every folder has its own README with what we found, what the script pulls, how t
 | [ondo-intelligent-portfolios](rwa-and-funds/ondo-intelligent-portfolios) | Ethereum, BNB Chain | Track Ondo Intelligent Portfolios supply and holders |
 | [spiko-safo](rwa-and-funds/spiko-safo) | Ethereum, Arbitrum, Polygon, Base | Track Spiko SAFO supply and holders by chain and share class |
 | [grove-basin-jtrsy](rwa-and-funds/grove-basin-jtrsy) | Ethereum | Pull every Grove Basin swap of JTRSY into USDC |
-| [pendle-strcx](rwa-and-funds/pendle-strcx) | Ethereum | Find every STRCx holder and how much sits in Pendle |
 | [paxg-on-morpho-base](rwa-and-funds/paxg-on-morpho-base) | Base | Track USDC borrowed against Paxos Gold (PAXG) on Morpho |
 
 ### Lending and vaults
