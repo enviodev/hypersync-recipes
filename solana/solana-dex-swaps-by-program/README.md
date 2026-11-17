@@ -2,18 +2,10 @@
 
 A [HyperIndex](https://docs.envio.dev/docs/HyperIndex/solana) indexer that counts every successful swap on Solana's main DEX programs, day by day, and splits each count into swaps sent straight to the DEX and swaps another program called in for you. Jupiter routes are counted on their own row.
 
-These are the numbers behind Envio's post on who carries Solana's trading, ahead of Breakpoint. Solana Compass relayed a Fidelity stat that Solana DEXs log about 15% as many trades as the major US stock exchanges, with no breakdown. This is the breakdown.
-
-## What we found
-
-We counted 220M successful swaps across the ten programs over the seven UTC days from 3rd to 9th November 2026, about 31M a day.
-
-- PumpSwap carried just over half of them.
-- Meteora DAMM v2 came second with about 1 in 6, more than Orca Whirlpool, Raydium CLMM and Meteora DLMM put together. More than 9 in 10 DAMM v2 swaps were sent to it directly.
-- Orca Whirlpool, Raydium CLMM and Meteora DLMM work the other way. More than 8 in 10 of their swaps were called in by another program, such as the Jupiter aggregator, rather than sent to them directly.
+Over the seven UTC days from 3 to 9 Nov 2026, **we counted 220.2M successful swaps across ten DEX programs, about 31M a day**. PumpSwap carried just over half. Meteora DAMM v2 came second with about 1 in 6, and more than 9 in 10 of its swaps were sent to it directly. Orca Whirlpool, Raydium CLMM and Meteora DLMM work the other way, with more than 8 in 10 of their swaps called in by another program such as the Jupiter aggregator.
 
 | Program | Swaps | Share | Called by another program |
-|---|---:|---:|---:|
+| --- | ---: | ---: | ---: |
 | PumpSwap | 119.6M | 54.3% | 13% |
 | Meteora DAMM v2 | 35.7M | 16.2% | 7% |
 | Pump.fun curve | 28.3M | 12.8% | 76% |
@@ -29,9 +21,13 @@ We counted 220M successful swaps across the ten programs over the seven UTC days
 
 Meteora DAMM v2's daily share stayed between 13% and 18% all week.
 
-## Programs and swap instructions
+## Why it's interesting
 
-Program IDs and instruction discriminators come from each project's own GitHub repo or published IDL. Only instructions that trade are listed in `config.yaml`, so liquidity, fee, position and event-logging calls never match.
+On Solana a lot of trading never touches a DEX directly. An aggregator, a bot or another program calls the pool for you, and that swap only shows up as an inner (CPI) instruction. Count only top-level instructions and you'd miss most of the swaps on venues like Orca, Raydium CLMM and Meteora DLMM. HyperIndex sees both, and `isInner` tells them apart, so you get the real picture of who carries Solana's trading and how it reaches them.
+
+## What it indexes and stores
+
+Only instructions that trade are listed in `config.yaml`, so liquidity, fee, position and event-logging calls never match. Program IDs and instruction discriminators come from each project's own GitHub repo or published IDL.
 
 | Program | Program ID | Swap instructions |
 |---|---|---|
@@ -47,61 +43,78 @@ Program IDs and instruction discriminators come from each project's own GitHub r
 | Pump.fun bonding curve | `6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P` | buy, sell, buy_exact_sol_in, the v2 and v3 buys and sells, multi_hop_curve_swap |
 | Jupiter v6 (routes only) | `JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4` | route, shared_accounts_route, exact_out_route and their v2, token-ledger and attestation variants |
 
-Sources: [raydium-amm](https://github.com/raydium-io/raydium-amm), [raydium-idl](https://github.com/raydium-io/raydium-idl), [orca-so/whirlpools](https://github.com/orca-so/whirlpools), [dlmm-sdk](https://github.com/MeteoraAG/dlmm-sdk), [damm-v1-sdk](https://github.com/MeteoraAG/damm-v1-sdk), [damm-v2](https://github.com/MeteoraAG/damm-v2), [pump-public-docs](https://github.com/pump-fun/pump-public-docs), [jupiter-cpi](https://github.com/jup-ag/jupiter-cpi).
+Sources are [raydium-amm](https://github.com/raydium-io/raydium-amm), [raydium-idl](https://github.com/raydium-io/raydium-idl), [orca-so/whirlpools](https://github.com/orca-so/whirlpools), [dlmm-sdk](https://github.com/MeteoraAG/dlmm-sdk), [damm-v1-sdk](https://github.com/MeteoraAG/damm-v1-sdk), [damm-v2](https://github.com/MeteoraAG/damm-v2), [pump-public-docs](https://github.com/pump-fun/pump-public-docs) and [jupiter-cpi](https://github.com/jup-ag/jupiter-cpi).
+
+The handler is [`src/handlers/swaps.ts`](src/handlers/swaps.ts). It stores one entity, `DailyVenueSwaps`, with one row per UTC day and program holding `swaps`, `topLevel` and `inner`.
+
+How it counts.
+
+- A swap is one matched swap instruction, top-level or inner.
+- Jupiter routes are kept on their own row and left out of every share. The pool swaps a route triggers are already counted under each DEX, so adding the route as well would count the same trade twice.
+- A multi-hop instruction counts once per program it runs in. A PumpSwap multi-hop that also trades on the Pump.fun curve shows up once under each.
+- Only successful transactions count, since HyperSync doesn't serve the instructions of failed transactions.
+- Days are UTC. The slot at each midnight was found from block times.
+- Venues that publish no IDL or swap layout, such as private market makers that only quote through aggregators, and order books such as Phoenix and OpenBook aren't covered.
 
 ## Run it
 
-You need Node.js 22.15 or newer, pnpm, Docker for the local Postgres, and an API token from the [Envio Dashboard](https://envio.dev/app/api-tokens).
+You need Node.js 22.15 or newer, pnpm, Docker for the local Postgres, and a free API token from [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens).
 
 ```bash
-cp .env.example .env   # then paste your token into it
+git clone https://github.com/enviodev/hypersync-use-cases.git
+cd hypersync-use-cases/solana/solana-dex-swaps-by-program
+cp .env.example .env   # then paste your token into ENVIO_API_TOKEN
 pnpm install
 pnpm codegen
 pnpm dev
 ```
 
-`config.yaml` covers one UTC day, 9 Nov 2026 (slots 467108373 to 467510826). Change `start_slot` and `end_slot` to index another window. A day is about 34M matched instructions. On a laptop one day took about 20 minutes, so for the week we ran one copy of the indexer per day, side by side, each with its own database.
+`config.yaml` covers one UTC day, 9 Nov 2026 (slots 467,108,373 to 467,510,826). A day is about 34M matched instructions and took about 20 minutes on a laptop. For the week above we ran one copy of the indexer per day, side by side, each with its own database. Change `start_slot` and `end_slot` to index another window.
 
-When it finishes, query the `DailyVenueSwaps` entity in the GraphQL playground at http://localhost:8080, or straight from Postgres:
+When it finishes, query `DailyVenueSwaps` in the GraphQL playground at http://localhost:8080 (local admin secret `testing`).
 
-```sql
-select day, program, swaps, "topLevel", "inner"
-from "DailyVenueSwaps"
-order by day, swaps desc;
+```graphql
+{
+  DailyVenueSwaps(order_by: [{ day: asc }, { swaps: desc }]) { day program swaps topLevel inner }
+}
 ```
 
-## How it counts
+### Make it live
 
-- A swap is one matched swap instruction, top-level or inner. Inner instructions are calls another program made by CPI, such as an aggregator or a trading bot. HyperIndex sees both, and `isInner` tells them apart.
-- Jupiter routes are kept on their own row and left out of every share. The pool swaps a route triggers are already counted under each DEX, so adding the route as well would count the same trade twice.
-- A multi-hop instruction counts once per program it runs in. A PumpSwap multi-hop that also trades on the Pump.fun curve shows up once under each.
-- Only successful transactions count. HyperSync does not serve the instructions of failed transactions.
-- Days are UTC. The slot at each midnight was found from block times.
-- Not covered: venues that publish no IDL or swap layout (the private market makers that only quote through aggregators, such as HumidiFi, SolFi, Tessera V, GoonFi and ZeroFi), and order books such as Phoenix and OpenBook. Their trades are not in these numbers.
+To follow Solana in real time instead of one fixed day, set `start_slot: latest` and remove `end_slot` in `config.yaml`.
 
-## How we checked it
+### Deploy it
 
-- On two windows, 100 slots and 2,000 slots (467300000 to 467301999, run from a clean copy of this folder), the indexer's counts matched a direct HyperSync count of the same instructions exactly, for every program.
-- In four single slots spread across the week (464700001, 465900123, 466800777 and 467400555) we decoded every successful transaction from Solana RPC `getBlock`, top-level and inner, and counted the same instructions. Every program matched exactly.
+Push your fork to GitHub and deploy it on [Envio Cloud](https://docs.envio.dev/docs/HyperIndex/hosted-service) to get a hosted GraphQL endpoint.
 
-## Ask your coding agent
+## Check the numbers
 
-Paste this into Claude Code, Cursor or any coding agent:
+- **HyperSync.** On two windows, 100 slots and 2,000 slots (467,300,000 to 467,301,999, run from a clean copy of this folder), the indexer's counts matched a direct HyperSync count of the same instructions exactly, for every program.
+- **Solana RPC, as the comparison.** In four single slots spread across the week (464,700,001, 465,900,123, 466,800,777 and 467,400,555) we decoded every successful transaction from Solana RPC [`getBlock`](https://solana.com/docs/rpc/http/getblock), top-level and inner, and counted the same instructions. Every program matched exactly.
 
+## Build your own with an AI agent
+
+Paste this into Claude Code, Cursor or any coding agent from this folder.
+
+```text
+This is an Envio HyperIndex indexer for Solana (ecosystem: svm). Read README.md,
+config.yaml, schema.graphql and src/handlers/swaps.ts, then the Solana docs at
+https://docs.envio.dev/docs/HyperIndex/solana. My API token is in the
+ENVIO_API_TOKEN environment variable.
+
+Add a new DEX program to config.yaml and SWAPS in the handler, taking its program
+ID and swap instruction discriminators from the project's own IDL or repo, and
+list only instructions that trade. Then add an hourly rollup next to
+DailyVenueSwaps. Set start_slot and end_slot to a 100-slot window, run
+`pnpm codegen` and `pnpm dev`, and check the new program's count against a
+direct HyperSync query for the same instructions and slots.
 ```
-Build an Envio HyperIndex indexer on Solana (https://docs.envio.dev/docs/HyperIndex/solana)
-that counts swap instructions per UTC day for these programs: Raydium AMM v4, CLMM, CPMM,
-Orca Whirlpool, Meteora DLMM and DAMM v2, PumpSwap and the Pump.fun bonding curve.
-Take each program ID and swap instruction discriminator from the project's own IDL or repo,
-match only swap instructions, and split every count into top-level and inner (CPI) calls
-using instruction.isInner. Count Jupiter v6 routes separately so routed trades aren't
-counted twice. My API token is in the ENVIO_API_TOKEN environment variable.
-```
 
-## Learn more
+## Links
 
-- [Indexing on Solana with HyperIndex](https://docs.envio.dev/docs/HyperIndex/solana)
+- [Indexing Solana with HyperIndex](https://docs.envio.dev/docs/HyperIndex/solana)
 - [Solana instruction handlers](https://docs.envio.dev/docs/HyperIndex/solana/instruction-handlers)
 - [Solana configuration file](https://docs.envio.dev/docs/HyperIndex/solana/configuration)
-- [How to index and track stablecoin transfers on Solana](https://docs.envio.dev/blog/index-solana-stablecoin-transfers)
-- [Solana on Envio](https://envio.dev/chains/solana)
+- [HyperSync on Solana](https://docs.envio.dev/docs/HyperSync/solana)
+- [Envio Cloud](https://docs.envio.dev/docs/HyperIndex/hosted-service)
+- [Envio Discord](https://discord.gg/envio)
