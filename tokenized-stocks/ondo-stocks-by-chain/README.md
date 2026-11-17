@@ -1,6 +1,6 @@
 # Where Ondo stocks moved, chain by chain
 
-In the week of 3 to 9 Nov 2026, **$402M of Ondo stock and ETF tokens moved onchain across 1M transfers**, valued at prices on the day of the run. The value split almost evenly between BNB Chain ($204M) and Ethereum ($198M). BNB Chain did it in about 13 times as many transfers, with an average transfer of $217 against $2.8K on Ethereum. 74 LayerZero bridge hops moved $1.3M between the chains.
+In the week of 3 to 9 Nov 2026, **$402M of Ondo stock and ETF tokens moved onchain across 1M transfers**, valued at CoinGecko prices on 10 Nov 2026, the day of the run. The value split almost evenly between BNB Chain ($204M) and Ethereum ($198M). BNB Chain did it in about 13 times as many transfers, with an average transfer of $217 against $2.8K on Ethereum. 74 LayerZero bridge hops moved $1.3M between the chains.
 
 | Chain | Transfers | Value | Avg transfer | Wallets |
 | --- | --- | --- | --- | --- |
@@ -34,7 +34,7 @@ python3 script.py               # the 7 full UTC days before today
 python3 script.py 2026-11-03    # the week above
 ```
 
-A week takes two or three minutes. BNB Chain has close to a million transfers, so the script splits each chain into 8 block ranges and reads them in parallel. It also writes everything to `results.json`. Sample output for the week above:
+A week takes two or three minutes. BNB Chain has close to a million transfers, so the script splits each chain into 8 block ranges and reads them in parallel. It also writes everything to `results.json`. Sample output for the week above, run on 10 Nov 2026.
 
 ```
 Ondo stocks by chain, 2026-11-03 to 2026-11-10 (UTC, end exclusive)
@@ -68,7 +68,7 @@ Bridge hops (LayerZero) 74, $1.3M
 
 ## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
 ```text
 Read script.py and README.md in this folder. It uses HyperSync
