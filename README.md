@@ -4,11 +4,10 @@ Curated, ready-to-run scripts that pull onchain data with [HyperSync](https://do
 
 Pick the one closest to what you need, swap in your contract, chain or dates, and you've got the start of your own dashboard, backfill or pipeline. Each one also has a prompt you can paste into Claude Code or Cursor if you'd rather your agent did the editing.
 
-- **74 examples** across Ethereum, Base, Arbitrum, Optimism, Polygon, BNB Chain, Avalanche, Monad, Gnosis, Ink, Arc, Robinhood Chain, HyperEVM, Tempo and Solana.
+- **69 examples** across Ethereum, Base, Arbitrum, Optimism, Polygon, BNB Chain, Avalanche, Monad, Gnosis, Ink, Arc, Robinhood Chain, HyperEVM, Tempo and Solana.
 - **Plain Python.** Standard library only, so there's nothing to install and no node to run.
-- **A few HyperIndex indexers** for when you want the data live behind a GraphQL API.
 
-New to HyperSync? The [hypersync-examples](https://github.com/enviodev/hypersync-examples) repo walks through the basics of the API first.
+New to HyperSync? The [hypersync-examples](https://github.com/enviodev/hypersync-examples) repo walks through the basics of the API first. Looking for live data behind a GraphQL API? See [hyperindex-use-cases](https://github.com/enviodev/hyperindex-use-cases) for HyperIndex indexers.
 
 ## Quick start
 
@@ -130,24 +129,6 @@ Every folder has its own README with what we found, what the script pulls, how t
 | [metadao-launchpad-raises](metadao-launchpad-raises) | Solana | Pull every MetaDAO launchpad raise on Solana |
 | [solana-durable-nonces](solana/solana-durable-nonces) | Solana | Count Solana transactions that use durable nonces |
 
-These HyperIndex indexers keep Solana data live behind a GraphQL API.
-
-| Indexer | Chain | How to |
-| --- | --- | --- |
-| [solana-dex-swaps-by-program](solana/solana-dex-swaps-by-program) | Solana | Index every swap on Solana's main DEX programs, direct and routed |
-| [solana-subscriptions](solana/solana-subscriptions) | Solana | Index every plan, subscription and pull on Solana's Subscriptions program |
-| [privacy-rings-solana](solana/privacy-rings-solana) | Solana | Index every deposit, withdrawal and private transfer on a Solana privacy program |
-
-### EVM indexers
-
-These HyperIndex indexers run live behind a GraphQL API. You can deploy them on [Envio Cloud](https://docs.envio.dev/docs/HyperIndex/hosted-service).
-
-| Indexer | Chain | How to |
-| --- | --- | --- |
-| [metamask-money-account](metamask-money-account) | Monad | Index every MetaMask Money Account deposit, withdrawal and balance |
-| [elysium-uniswap-v4-pools](elysium-uniswap-v4-pools) | Elysium | Index every Uniswap v4 pool on Elysium over RPC |
-| [elysium-hype-deposits](elysium-hype-deposits) | HyperEVM | Index every HYPE deposit into Elysium through its bridge |
-
 ## Use these examples with an AI agent
 
 Each example's README ends with a prompt written for that example. If you want something new, open the repo in Claude Code, Cursor or whatever agent you use and paste this:
@@ -188,7 +169,7 @@ The full list is [here](https://docs.envio.dev/docs/HyperSync/hypersync-supporte
 No, the scripts just make HTTP requests. For bigger pipelines there are [clients](https://docs.envio.dev/docs/HyperSync/hypersync-clients) for Python, Rust and Node.js.
 
 **When should I use HyperIndex instead?**
-A script is great when you want an answer or a one-off backfill. Reach for [HyperIndex](https://docs.envio.dev/docs/HyperIndex/overview) when you need the data kept up to date and served over GraphQL.
+A script is great when you want an answer or a one-off backfill. Reach for [HyperIndex](https://docs.envio.dev/docs/HyperIndex/overview) when you need the data kept up to date and served over GraphQL, and see [hyperindex-use-cases](https://github.com/enviodev/hyperindex-use-cases) for ready-to-run indexers.
 
 ## Links
 

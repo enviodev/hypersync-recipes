@@ -24,7 +24,5 @@ Scripts for chain-wide activity. Count transactions, active addresses, fees, Saf
 | Example | How to |
 | --- | --- |
 | [solana-durable-nonces](../solana/solana-durable-nonces) | Count Solana transactions that use durable nonces |
-| [solana-subscriptions](../solana/solana-subscriptions) | Index every plan, subscription and pull on Solana's Subscriptions program |
-| [privacy-rings-solana](../solana/privacy-rings-solana) | Index every deposit, withdrawal and private transfer on a Solana privacy program |
 
 To run one, grab a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow that example's README. The [main README](../README.md) has every topic.

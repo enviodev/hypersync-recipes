@@ -20,7 +20,6 @@ Scripts for DEXs, perps and prediction markets. Pull every swap, pool and positi
 
 | Example | How to |
 | --- | --- |
-| [solana-dex-swaps-by-program](../solana/solana-dex-swaps-by-program) | Index every swap on Solana's main DEX programs, direct and routed |
 | [phoenix-perps-signups](../phoenix-perps-signups) | Track Phoenix trading accounts and USDC deposits on Solana |
 | [metadao-launchpad-raises](../metadao-launchpad-raises) | Pull every MetaDAO launchpad raise on Solana |
 

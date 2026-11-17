@@ -1,6 +1,6 @@
 # Solana
 
-Scripts for Solana. Pull every instruction a program runs, every mint and burn of an SPL token, or every token balance change, all with [HyperSync on Solana](https://docs.envio.dev/docs/HyperSync/solana). The HyperIndex indexers further down keep Solana data live behind a GraphQL API.
+Scripts for Solana. Pull every instruction a program runs, every mint and burn of an SPL token, or every token balance change, all with [HyperSync on Solana](https://docs.envio.dev/docs/HyperSync/solana). For live Solana data behind a GraphQL API, see [hyperindex-use-cases](https://github.com/enviodev/hyperindex-use-cases).
 
 | Example | Chain | How to |
 | --- | --- | --- |
@@ -14,15 +14,5 @@ Scripts for Solana. Pull every instruction a program runs, every mint and burn o
 | [phoenix-perps-signups](../phoenix-perps-signups) | Solana | Track Phoenix trading accounts and USDC deposits on Solana |
 | [metadao-launchpad-raises](../metadao-launchpad-raises) | Solana | Pull every MetaDAO launchpad raise on Solana |
 | [solana-durable-nonces](solana-durable-nonces) | Solana | Count Solana transactions that use durable nonces |
-
-### Indexers
-
-These HyperIndex indexers keep Solana data live behind a GraphQL API.
-
-| Indexer | Chain | How to |
-| --- | --- | --- |
-| [solana-dex-swaps-by-program](solana-dex-swaps-by-program) | Solana | Index every swap on Solana's main DEX programs, direct and routed |
-| [solana-subscriptions](solana-subscriptions) | Solana | Index every plan, subscription and pull on Solana's Subscriptions program |
-| [privacy-rings-solana](privacy-rings-solana) | Solana | Index every deposit, withdrawal and private transfer on a Solana privacy program |
 
 To run one, grab a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow that example's README. The [main README](../README.md) has every topic.
