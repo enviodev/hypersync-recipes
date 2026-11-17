@@ -1,6 +1,0 @@
-node_modules
-.envio
-generated
-*.log
-.env
-.pnpm-store
