@@ -38,13 +38,13 @@ The full scan splits the range into 50K-block chunks across worker processes (`W
 ## Change the window or chain
 
 - **Window.** Set `FROM_BLOCK` and `TO_BLOCK`. `TO_BLOCK` is exclusive, and leaving it out runs to the chain head. Arbiscan's [block by date](https://arbiscan.io/blockdateconverter) tool gives you a start block for any day.
-- **Chain.** Any Arbitrum chain on ArbOS 61 or later works the same way. Swap `URL` for its HyperSync endpoint from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks) and set `FROM_BLOCK` to the block where priority fees were switched on there.
+- **Chain.** Any Arbitrum chain on ArbOS 61 or later works the same way. Change the `URL` constant in `script.py` to its HyperSync endpoint from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks) and set `FROM_BLOCK` to the block where priority fees were switched on there.
 
 ## Check the numbers
 
 - **Against an RPC, as the comparison.** For blocks 524,000,000 to 524,000,299, call `eth_getBlockByNumber` for `baseFeePerGas` and `eth_getBlockReceipts` for each `effectiveGasPrice` and `gasUsed` on the public Arbitrum RPC. Both the RPC and the script give 1,412 transactions, 797 with a priority fee and 1,838,517,634,556,150 wei in fees. The quick-try command above runs exactly that range.
 - **Against Arbitrum's figure.** The running total column passes 35M on 10 Nov, the day Arbitrum shared it.
-- **Before the switch.** 20 to 22 Sep show no transactions above the base fee, which is what you'd expect before priority fees were collected.
+- **Before the switch.** Run with `FROM_BLOCK` set to the start of 20 Sep and `TO_BLOCK=507945268`. 20 to 22 Sep show no transactions above the base fee, which is what you'd expect before priority fees were collected.
 
 ## Build your own with an AI agent
 
