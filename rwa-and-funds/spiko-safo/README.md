@@ -1,6 +1,6 @@
 # Spiko SAFO on four EVM chains
 
-**Spiko's SAFO fund held $727.2M across Ethereum, Arbitrum, Polygon and Base, with 83% in its euro share classes and 1.2K holders** across the four chains. Arbitrum was the largest at $474.9M.
+In a run on 4 Nov 2026, **Spiko's SAFO fund held $727.2M across Ethereum, Arbitrum, Polygon and Base, with 83% in its euro share classes and 1.2K holders** across the four chains. Arbitrum was the largest at $474.9M.
 
 | Chain | Value | In euro classes | Holders |
 | --- | --- | --- | --- |
@@ -29,7 +29,7 @@ export ENVIO_API_TOKEN=your-token
 python3 script.py
 ```
 
-Sample output:
+Sample output from the 4 Nov 2026 run.
 
 ```
 Spiko SAFO on Ethereum, Arbitrum, Polygon and Base
@@ -44,9 +44,9 @@ People subscribe and redeem every day, so your numbers will differ a little.
 
 ## Change the window or chain
 
-- **Another Spiko fund.** The API lists every Spiko fund. Change the SAFO filter to another fund code to run the same breakdown on it.
-- **Chain.** If a class is on another EVM chain, add that chain's HyperSync subdomain from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks) to the chain map.
-- **Over time.** The script reads every transfer with its block. Group mints and burns by week to chart supply per chain and currency.
+- **Another Spiko fund.** The API lists every Spiko fund. Change `SAFO_FUND` to another fund's id from `/share-classes/` to run the same breakdown on it.
+- **Chain.** If a class is on another EVM chain, add that chain to `CHAINS`, using the network name the API uses and the HyperSync subdomain from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks).
+- **Over time.** Add `block_number` to the log fields and `"block": ["number", "timestamp"]` to the field selection, then group mints and burns by week to chart supply per chain and currency.
 
 ## Check the numbers
 
@@ -54,7 +54,7 @@ Each rebuilt supply matches the token's `totalSupply()` onchain, and you can che
 
 ## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
 ```text
 Read script.py and README.md in this folder. It uses HyperSync
