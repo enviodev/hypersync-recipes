@@ -1,6 +1,7 @@
 # SPCXc (Coinbase's tokenized SpaceX stock) on the Aave v4 tokenized stocks market on Base, with Envio HyperSync.
-# Replays every SPCXc Transfer to count holders, reads every Supply, Withdraw, Borrow and Repay on the
-# market's spoke, then reads the market's live state and Aave oracle prices with eth_call.
+# Replays every SPCXc Transfer to count holders and rebuild supply, then replays every Supply, Withdraw, Borrow,
+# Repay, LiquidationCall, ReportDeficit and SetUsingAsCollateral on the market's spoke to rebuild what is
+# supplied and borrowed. Base's public RPC gives Aave oracle prices and labelled cross-checks of the spoke's state.
 # Python 3 standard library only. Set ENVIO_API_TOKEN first.
 import datetime
 import json
@@ -27,6 +28,9 @@ SUPPLY = "0xd986db228cb1fe8392c5f45ff5f2c639b7db6cbd9ca7d1fe70b2de90c2c8c961"
 WITHDRAW = "0xfe7813e2866053d5c3938554e517b554fce6666a6561bed9eaa7419b29fa9b68"
 BORROW = "0xef18174796a5d2f91d51dc5e907a4d7867bbd6e800f6225168e0453d581d0dcd"
 REPAY = "0xd765a0263e8a360da8dd4fdb8c0dc5553adec12a96f29a462cdb45e5bea407dd"
+LIQUIDATION = "0x2a1f12d996f530f89d8038aa293f9fde81cac44b6dfd6225e3358d09b78a4a37"  # LiquidationCall(uint256,uint256,address,address,bool,uint256,uint256,(int256,int256,uint256),uint256,uint256,uint256)
+DEFICIT = "0x59932f333b3a5e3fec86e662babe8dd767529ed207420e7468bd220cdfb3f076"      # ReportDeficit(uint256,address,uint256,(int256,int256,uint256))
+COLLATERAL = "0x4763df430bc5274807f8ab4ce0734e7898513638418d6eec0c5285ef85f7f51f"   # SetUsingAsCollateral(uint256,address,address,bool)
 
 TOKEN = os.environ.get("ENVIO_API_TOKEN")
 if not TOKEN:
@@ -105,14 +109,15 @@ multiplier = call(SPCXC, "0xa60bf13d", block=block)[0]  # uiMultiplier(), 1e18 m
 holders = sum(1 for v in balances.values() if v > 0)
 print(f"SPCXc {SPCXC} at block {head:,}")
 print(f"  decimals {decimals}, UI multiplier {multiplier / 1e18:g}")
-print(f"  totalSupply (eth_call)       {supply / 10 ** decimals:,.8f}")
-print(f"  minted - burned (Transfers)  {(minted - burned) / 10 ** decimals:,.8f}  "
+print(f"  supply, minted - burned (HyperSync Transfers)  {(minted - burned) / 10 ** decimals:,.8f}")
+print(f"  Check (RPC totalSupply()):                     {supply / 10 ** decimals:,.8f}  "
       f"{'matches' if minted - burned == supply else 'DOES NOT MATCH'}")
+supply = minted - burned
 print(f"  holders with a nonzero balance: {holders:,} (from {len(transfers):,} Transfer events)")
 
 # 2. The market: assets on the Hub, reserves on the spoke, and every user action on the spoke
 rows, times, _ = logs([{"address": [HUB], "topics": [[ADD_ASSET]]},
-                       {"address": [SPOKE], "topics": [[ADD_RESERVE, SUPPLY, WITHDRAW, BORROW, REPAY]]}])
+                       {"address": [SPOKE], "topics": [[ADD_RESERVE, SUPPLY, WITHDRAW, BORROW, REPAY, LIQUIDATION, DEFICIT, COLLATERAL]]}])
 rows = [l for l in rows if l["block_number"] <= head]
 underlying, reserves = {}, {}
 for log in rows:
@@ -137,22 +142,74 @@ spcxc_rid = next(r for r, v in info.items() if v["token"] == SPCXC)
 usdc_rid = next(r for r, v in info.items() if v["token"] == USDC)
 listed_at = info[spcxc_rid]["listed"]
 
+# Replay the spoke. Aave v4 tracks positions in shares, so the script keeps supply shares and drawn (debt) shares
+# per reserve and per user, and turns shares into assets with the rate in the reserve's latest event
+# (amount / shares in the last Supply or Withdraw for supply, the last Borrow for debt).
+supply_shares, drawn_shares = defaultdict(int), defaultdict(int)
+supply_rate, drawn_rate = {}, {}
+user_supply, user_drawn, user_collateral = defaultdict(int), defaultdict(int), {}
+for log in rows:
+    if log["address"].lower() != SPOKE or log["topic0"] in (ADD_RESERVE,):
+        continue
+    t, w, rid = log["topic0"], words(log["data"]), int(log["topic1"], 16)
+    if t == SUPPLY:
+        supply_shares[rid] += w[0]
+        supply_rate[rid] = (w[1], w[0])
+        user_supply[rid, addr(log["topic3"])] += w[0]
+    elif t == WITHDRAW:
+        supply_shares[rid] -= w[0]
+        supply_rate[rid] = (w[1], w[0])
+        user_supply[rid, addr(log["topic3"])] -= w[0]
+    elif t == BORROW:
+        drawn_shares[rid] += w[0]
+        drawn_rate[rid] = (w[1], w[0])
+        user_drawn[rid, addr(log["topic3"])] += w[0]
+    elif t == REPAY:
+        drawn_shares[rid] -= w[0]
+        user_drawn[rid, addr(log["topic3"])] -= w[0]
+    elif t == DEFICIT:
+        drawn_shares[rid] -= w[0]
+        user_drawn[rid, addr(log["topic2"])] -= w[0]
+    elif t == LIQUIDATION:
+        # data: liquidator, receiveShares, debtRestored, drawnSharesLiquidated, premiumDelta (3 words),
+        #       collateralAmountRemoved, collateralSharesLiquidated, collateralSharesToLiquidator
+        debt_rid, user, liquidator = int(log["topic2"], 16), addr(log["topic3"]), "0x" + format(w[0], "040x")
+        drawn_shares[debt_rid] -= w[3]
+        user_drawn[debt_rid, user] -= w[3]
+        supply_shares[rid] -= w[8]
+        user_supply[rid, user] -= w[8]
+        if w[1]:  # the liquidator took supply shares, which stay in the reserve
+            supply_shares[rid] += w[9]
+            user_supply[rid, liquidator] += w[9]
+    elif t == COLLATERAL:
+        user_collateral[rid, addr(log["topic3"])] = bool(w[0])
+
+
+def assets(shares, rate):
+    return shares * rate[0] // rate[1] if rate and rate[1] else 0
+
+
 oracle_dec = call(ORACLE, "0x313ce567", block=block)[0]
-print(f"\nAave v4 tokenized stocks market on Base (Hub {HUB}, spoke {SPOKE})")
+print(f"\nAave v4 tokenized stocks market on Base (Hub {HUB}, spoke {SPOKE}), rebuilt from spoke events")
 print(f"  {'reserve':8}{'asset':8}{'supplied now':>20}{'oracle price':>14}{'value':>16}{'borrowed now':>18}")
-collateral_usd = 0
+collateral_usd, checks = 0, []
 for rid, v in sorted(info.items()):
-    supplied = call(SPOKE, "0x2fd00527", rid, block=block)[0] / 10 ** v["dec"]   # getReserveSuppliedAssets
-    debt = call(SPOKE, "0x1cdc762c", rid, block=block)[0] / 10 ** v["dec"]       # getReserveTotalDebt
+    supplied = assets(supply_shares[rid], supply_rate.get(rid)) / 10 ** v["dec"]
+    debt = assets(drawn_shares[rid], drawn_rate.get(rid)) / 10 ** v["dec"]
     price = call(ORACLE, "0xd45c35ff", rid, block=block)[0] / 10 ** oracle_dec    # getReservePrice
     v.update(supplied=supplied, debt=debt, price=price)
     if rid != usdc_rid:
         collateral_usd += supplied * price
     print(f"  {rid:<8}{v['symbol']:8}{supplied:>20,.4f}{price:>14,.4f}{supplied * price:>16,.0f}{debt:>18,.2f}")
+    rpc_supplied = call(SPOKE, "0x2fd00527", rid, block=block)[0] / 10 ** v["dec"]   # getReserveSuppliedAssets
+    rpc_debt = call(SPOKE, "0x1cdc762c", rid, block=block)[0] / 10 ** v["dec"]       # getReserveTotalDebt
+    checks.append(f"  {rid:<8}{v['symbol']:8}{rpc_supplied:>20,.4f} (gap {supplied - rpc_supplied:,.4f}){rpc_debt:>18,.2f} (gap {debt - rpc_debt:,.2f})")
 stocks = [v["symbol"] for r, v in sorted(info.items()) if r != usdc_rid]
 print(f"  {len(stocks)} stocks listed: {', '.join(stocks)}")
 print(f"  stock collateral supplied: ${collateral_usd:,.0f} at Aave oracle prices")
-print(f"  USDC supplied: {info[usdc_rid]['supplied']:,.0f}, USDC borrowed (debt incl. interest): {info[usdc_rid]['debt']:,.0f}")
+print(f"  USDC supplied: {info[usdc_rid]['supplied']:,.0f}, USDC borrowed (drawn debt, without premium): {info[usdc_rid]['debt']:,.0f}")
+print("  Check (RPC getReserveSuppliedAssets, getReserveTotalDebt at the same block)")
+print("\n".join(checks))
 
 # 3. SPCXc since it was listed
 dec = info[spcxc_rid]["dec"]
@@ -165,25 +222,23 @@ print(f"\nSPCXc on the market, reserve {spcxc_rid}, listed {when(times[listed_at
 print(f"  first supply {when(times[supplies[0]['block_number']])}" if supplies else "  no supplies yet")
 print(f"  {len(supplies)} Supply events from {len(depositors)} addresses, {in_amt / 10 ** dec:,.4f} SPCXc in")
 print(f"  {len(withdraws)} Withdraw events, {out_amt / 10 ** dec:,.4f} SPCXc out, net {(in_amt - out_amt) / 10 ** dec:,.4f}")
-print(f"  supplied now (eth_call): {info[spcxc_rid]['supplied']:,.4f} SPCXc = "
+print(f"  supplied now: {info[spcxc_rid]['supplied']:,.4f} SPCXc = "
       f"${info[spcxc_rid]['supplied'] * info[spcxc_rid]['price']:,.0f} at ${info[spcxc_rid]['price']:,.4f}")
 print(f"  share of all SPCXc: {info[spcxc_rid]['supplied'] / (supply / 10 ** dec):.1%}")
 
 # USDC borrowed by addresses that have supplied SPCXc. They may hold other stocks as collateral too.
 borrows_since = [l for l in rows if l["topic0"] == BORROW and int(l["topic1"], 16) == usdc_rid and l["block_number"] >= listed_at]
 by_spcxc = [l for l in borrows_since if addr(l["topic3"]) in depositors]
-debt_now, collateral_on, holding = 0, 0, 0
-for user in depositors:
-    if call(SPOKE, "0xf1568a89", spcxc_rid, user, block=block)[0] > 0:          # getUserSuppliedAssets
-        holding += 1
-        enabled, _ = call(SPOKE, "0xa2a522f1", spcxc_rid, user, block=block)   # getUserReserveStatus
-        collateral_on += enabled
-    debt_now += call(SPOKE, "0x9b7172a6", usdc_rid, user, block=block)[0]      # getUserTotalDebt
+holding = [user for user in depositors if user_supply[spcxc_rid, user] > 0]
+collateral_on = sum(1 for user in holding if user_collateral.get((spcxc_rid, user)))
+debt_now = sum(assets(user_drawn[usdc_rid, user], drawn_rate.get(usdc_rid)) for user in depositors)
 u = 10 ** info[usdc_rid]["dec"]
-print(f"  {holding} addresses still supply SPCXc, {collateral_on} with it enabled as collateral")
-print(f"  USDC owed now by SPCXc suppliers: {debt_now / u:,.2f}")
+print(f"  {len(holding)} addresses still supply SPCXc, {collateral_on} with it enabled as collateral")
+print(f"  USDC owed now by SPCXc suppliers (drawn debt): {debt_now / u:,.2f}")
 print(f"  USDC Borrow events since listing: {len(borrows_since)} market-wide ({sum(words(l['data'])[1] for l in borrows_since) / u:,.0f} USDC), "
       f"{len(by_spcxc)} by SPCXc suppliers ({sum(words(l['data'])[1] for l in by_spcxc) / u:,.0f} USDC)")
+rpc_debt_now = sum(call(SPOKE, "0x9b7172a6", usdc_rid, user, block=block)[0] for user in depositors)  # getUserTotalDebt
+print(f"  Check (RPC getUserTotalDebt, summed): {rpc_debt_now / u:,.2f}, gap {(debt_now - rpc_debt_now) / u:,.2f}")
 
 # 4. Cross-check against Coinbase's tokenized stocks API
 listing, page = None, None
