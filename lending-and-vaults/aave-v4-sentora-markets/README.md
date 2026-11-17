@@ -9,7 +9,7 @@ On 16 Nov 2026 (Ethereum block 26,427,832), **Sentora's three Aave v4 markets he
 | kBTC | $35.74M |
 | Total | $156.74M |
 
-Valued at today's prices, the markets passed $100M on 8 Nov, ten days after the first large deposit.
+Valued at 16 Nov 2026 prices, the markets passed $100M on 8 Nov, ten days after the first large deposit.
 
 ## Why it's interesting
 
