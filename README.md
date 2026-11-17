@@ -99,6 +99,7 @@ Every folder has its own README with what we found, what the script pulls, how t
 
 | Example | Chain | How to |
 | --- | --- | --- |
+| [base-smart-accounts-gas-covered](chain-activity/base-smart-accounts-gas-covered) | Base | Count ERC-4337 smart accounts and how many had gas covered by a paymaster |
 | [active-addresses-without-dusting](chain-activity/active-addresses-without-dusting) | EVM chains | Count daily active addresses with dusting filtered out |
 | [monad-biggest-apps](chain-activity/monad-biggest-apps) | Monad | Rank Monad apps by transactions over 30 days |
 | [monad-volatility-day](chain-activity/monad-volatility-day) | Monad | Compare one day on Monad with a 30-day baseline, hour by hour |

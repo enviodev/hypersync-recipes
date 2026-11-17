@@ -4,6 +4,7 @@ Scripts for chain-wide activity. Count transactions, active addresses, fees, Saf
 
 | Example | Chain | How to |
 | --- | --- | --- |
+| [base-smart-accounts-gas-covered](base-smart-accounts-gas-covered) | Count ERC-4337 smart accounts and how many had gas covered by a paymaster |
 | [active-addresses-without-dusting](active-addresses-without-dusting) | EVM chains | Count daily active addresses with dusting filtered out |
 | [monad-biggest-apps](monad-biggest-apps) | Monad | Rank Monad apps by transactions over 30 days |
 | [monad-volatility-day](monad-volatility-day) | Monad | Compare one day on Monad with a 30-day baseline, hour by hour |
