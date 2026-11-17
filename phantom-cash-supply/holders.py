@@ -1,35 +1,131 @@
-"""Count wallets holding Phantom CASH right now, over Solana RPC (getProgramAccounts).
+"""Count wallets holding Phantom CASH, with Envio HyperSync.
 
-Reads every Token-2022 account for the CASH mint, sums balances per owner, and checks the
-total against getTokenSupply. The response is large (a few hundred MB), so use your own RPC
-if the public one times out:  SOLANA_RPC=https://your-rpc python holders.py
+HyperSync's account_activity table has one row for every token account a transaction touched, with the
+balance after the transaction. Filter it by the CASH mint, keep the latest row for each token account, and
+you have every holder's balance without asking an RPC node for program accounts.
+
+HyperSync's Solana history starts at slot 391,000,000 (3 Jan 2026). A CASH account that hasn't moved since
+then has no row, so the script reads Solana RPC getTokenSupply at the end only as a labelled check and prints
+how much CASH sits in accounts HyperSync hasn't seen. It writes the supply and its slot to snapshot.json, which
+script.py starts from.
+
+The full range is about 80M slots, so the script works through it in 200K-slot pieces, saves each piece
+under chunks/ and picks up where it left off if you stop it.
+
+Usage:
+    export ENVIO_API_TOKEN=your-token
+    python holders.py
+    WORKERS=16 python holders.py
 """
-import base64, collections, json, os, urllib.request
+import collections, glob, json, os, pickle, sys, time, urllib.request
+from multiprocessing import Pool
 
+HS = "https://solana.hypersync.xyz"
 RPC = os.environ.get("SOLANA_RPC", "https://api.mainnet-beta.solana.com")
-T22 = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+TOKEN = os.environ.get("ENVIO_API_TOKEN") or sys.exit("Set ENVIO_API_TOKEN (https://envio.dev/app/api-tokens)")
 CASH = "CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH"
+DECIMALS = 6
+START = 391_000_000  # the start of HyperSync's Solana history
+CHUNK = 200_000
+WORKERS = int(os.environ.get("WORKERS", 16))
+HERE = os.path.dirname(os.path.abspath(__file__))
+CACHE = os.path.join(HERE, "chunks")
 
 
-def rpc(method, params):
-    body = {"jsonrpc": "2.0", "id": 1, "method": method, "params": params}
-    req = urllib.request.Request(RPC, json.dumps(body).encode(), {"Content-Type": "application/json"})
-    return json.load(urllib.request.urlopen(req, timeout=600))["result"]
+def post(url, body, auth=True):
+    headers = {"Content-Type": "application/json"}
+    if auth:
+        headers["Authorization"] = "Bearer " + TOKEN
+    for attempt in range(60):
+        try:
+            req = urllib.request.Request(url, json.dumps(body).encode(), headers)
+            return json.load(urllib.request.urlopen(req, timeout=300))
+        except Exception:  # 429s and timeouts: back off and retry
+            time.sleep(min(30, 2 * (attempt + 1)))
+    sys.exit("Request kept failing: " + url)
 
 
-# token account layout: mint 0..32, owner 32..64, amount 64..72
-accounts = rpc("getProgramAccounts", [T22, {"encoding": "base64", "dataSlice": {"offset": 32, "length": 40},
-                                             "filters": [{"memcmp": {"offset": 0, "bytes": CASH}}]}])
-owners = collections.Counter()
-for a in accounts:
-    raw = base64.b64decode(a["account"]["data"][0])
-    amount = int.from_bytes(raw[32:40], "little")
-    if amount:
-        owners[raw[:32]] += amount
-supply = int(rpc("getTokenSupply", [CASH])["value"]["amount"])
-print(f"token accounts            {len(accounts):,}")
-print(f"wallets with any CASH     {len(owners):,}")
-print(f"wallets with >= $1        {sum(1 for v in owners.values() if v >= 1_000_000):,}")
-print(f"wallets with >= $10       {sum(1 for v in owners.values() if v >= 10_000_000):,}")
-print(f"sum of balances           ${sum(owners.values()) / 1e6:,.2f}")
-print(f"getTokenSupply            ${supply / 1e6:,.2f}")
+def pull(ab):
+    """Latest balance row for every CASH token account touched in [a, b)."""
+    a, b = ab
+    path = os.path.join(CACHE, f"{a}-{b}.pkl")
+    if os.path.exists(path):
+        return 0
+    last, rows, stalls = {}, 0, 0
+    body = {"from_slot": a, "to_slot": b, "account_activity": [{"mint": [CASH]}],
+            "field_selection": {"account_activity": ["slot", "transaction_index", "account", "mint",
+                                                     "post_owner", "post_token_balance"]}}
+    while body["from_slot"] < b:
+        r = post(HS + "/query", body)
+        for batch in r.get("account_activity") or []:
+            for x in batch:
+                if x.get("mint") != CASH:
+                    continue
+                rows += 1
+                key = (x["slot"], x["transaction_index"])
+                prev = last.get(x["account"])
+                if prev is None or key >= prev[0]:
+                    last[x["account"]] = (key, x.get("post_owner"), int(x.get("post_token_balance") or 0))
+        if r["next_slot"] <= body["from_slot"]:
+            stalls += 1
+            if stalls > 20:
+                raise RuntimeError(f"no progress at slot {body['from_slot']}")
+            time.sleep(2)
+            continue
+        stalls = 0
+        body["from_slot"] = r["next_slot"]
+    pickle.dump((rows, last), open(path + ".tmp", "wb"))
+    os.rename(path + ".tmp", path)
+    return rows
+
+
+def main():
+    os.makedirs(CACHE, exist_ok=True)
+    end_file = os.path.join(CACHE, "end_slot.txt")
+    if os.path.exists(end_file):  # keep one snapshot slot across restarts
+        end = int(open(end_file).read())
+    else:
+        end = int(urllib.request.urlopen(HS + "/height").read())
+        open(end_file, "w").write(str(end))
+    done = [tuple(map(int, os.path.basename(p)[:-4].split("-"))) for p in glob.glob(os.path.join(CACHE, "*-*.pkl"))]
+    ranges = [(a, min(a + CHUNK, end)) for a in range(START, end, CHUNK)
+              if not any(x <= a and min(a + CHUNK, end) <= y for x, y in done)]
+    with Pool(WORKERS) as pool:
+        for i, _ in enumerate(pool.imap_unordered(pull, ranges)):
+            if i % 25 == 0:
+                print(f"{i}/{len(ranges)} slot ranges", file=sys.stderr, flush=True)
+
+    last, rows = {}, 0
+    for path in glob.glob(os.path.join(CACHE, "*-*.pkl")):
+        n, part = pickle.load(open(path, "rb"))
+        rows += n
+        for account, v in part.items():
+            if account not in last or v[0] >= last[account][0]:
+                last[account] = v
+
+    owners = collections.Counter()
+    for _, owner, balance in last.values():
+        if owner and balance:
+            owners[owner] += balance
+    held = sum(owners.values())
+    one = 10 ** DECIMALS
+    print(f"slots {START:,} to {end:,}, {rows:,} balance rows read")
+    print(f"token accounts seen       {len(last):,}")
+    print(f"wallets with any CASH     {len(owners):,}")
+    print(f"wallets with >= $1        {sum(1 for v in owners.values() if v >= one):,}")
+    print(f"wallets with >= $10       {sum(1 for v in owners.values() if v >= 10 * one):,}")
+    print(f"sum of balances           ${held / one:,.2f}")
+
+    json.dump({"slot": end, "supply": held, "rows": rows, "token_accounts": len(last), "wallets": len(owners),
+               "wallets_1": sum(1 for v in owners.values() if v >= one)}, open(os.path.join(HERE, "snapshot.json"), "w"))
+    print(f"wrote snapshot.json (supply and slot for script.py)")
+
+    supply = int(post(RPC, {"jsonrpc": "2.0", "id": 1, "method": "getTokenSupply", "params": [CASH]}, auth=False)
+                 ["result"]["value"]["amount"])
+    print(f"Check (RPC getTokenSupply, read now) ${supply / one:,.2f}")
+    print(f"  CASH in accounts with no activity since slot {START:,}, or moved since slot {end:,}: "
+          f"${(supply - held) / one:,.2f} ({100 * (supply - held) / supply:.2f}% of supply)")
+
+
+if __name__ == "__main__":
+    main()

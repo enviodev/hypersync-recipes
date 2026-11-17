@@ -1,29 +1,28 @@
 # Phantom CASH supply on Solana
 
-From slot 391,000,000 (3 Jan 2026) to slot 470,148,462 (16 Nov 2026), **[Phantom](https://phantom.com)'s CASH stablecoin grew 41% on Solana, from $92.3M to $130.4M**. 723 mints added $186.9M and 7.3K burns removed $148.7M. On the same day, 216.7K wallets held at least $1 of CASH and 763.3K held some.
+From slot 391,000,000 (3 Jan 2026) to slot 470,490,275 (17 Nov 2026), **[Phantom](https://phantom.com)'s CASH stablecoin grew 40% on Solana, from $92.1M to $128.9M**. 723 mints added $186.9M and 7.3K burns removed $150.0M. At the same slot, 211.3K wallets held at least $1 of CASH and 746.1K held some. HyperSync produced every one of these numbers.
 
 | | |
 |---|---:|
-| Supply on 3 Jan 2026 | $92.26M |
+| Supply on 3 Jan 2026 (slot 391,000,000) | $92.07M |
 | Minted (723 mints) | $186.85M |
-| Burned (7,340 burns) | $148.69M |
-| Supply on 16 Nov 2026 | $130.42M |
-| Wallets holding at least $1 | 216,688 |
-| Wallets holding any CASH | 763,252 |
+| Burned (7,347 burns) | $150.01M |
+| Supply on 17 Nov 2026 (slot 470,490,275) | $128.92M |
+| Wallets holding at least $1 | 211,327 |
+| Wallets holding any CASH | 746,131 |
 
 ## Why it's interesting
 
-CASH is a Token-2022 stablecoin, so every unit enters and leaves through `MintTo` and `Burn` instructions on the Token-2022 program. Pull those for one mint and you have its whole supply history. The same query works for any SPL or Token-2022 stablecoin. Just change the mint.
+CASH is a Token-2022 stablecoin, so every unit enters and leaves through `MintTo` and `Burn` instructions on the Token-2022 program, and every balance it touches shows up in HyperSync's `account_activity` table. Pull those for one mint and you have its supply, its holders and its whole history since 3 Jan. The same queries work for any SPL or Token-2022 stablecoin. Just change the mint.
 
 ## What it pulls
 
 - **Token.** CASH, mint `CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH`, from [Phantom's docs](https://docs.phantom.com/cash).
-- **Program.** [Token-2022](https://spl.solana.com/token-2022), `TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb`.
-- **Instructions.** `MintTo` (tag 7) and `MintToChecked` (14), where account 0 is the mint, and `Burn` (8) and `BurnChecked` (15), where account 1 is the mint. Top-level and inner calls, successful transactions only.
-- **Filter.** One `instruction_calls` selection per side, matched on the server by program, the first data byte (`d1`) and the mint's account position (`a0` or `a1`). The [query reference](https://docs.envio.dev/docs/HyperSync/solana-query#instructionselection) has the details.
-- **Window.** Slot 391,000,000 (3 Jan 2026, where HyperSync's Solana history starts) to the chain head.
+- **Supply and holders (`holders.py`).** Every `account_activity` row for the CASH mint from slot 391,000,000, where HyperSync's Solana history starts, to the chain head. That's 123.2M balance rows across 2.4M token accounts. The script keeps the latest balance of each token account, adds them up for the supply and groups them by owner for the holder counts, then saves the supply and its slot to `snapshot.json`.
+- **Mints and burns (`script.py`).** `MintTo` (tag 7) and `MintToChecked` (14), where account 0 is the mint, and `Burn` (8) and `BurnChecked` (15), where account 1 is the mint. Top-level and inner calls, successful transactions only, matched on the server by program, the first data byte (`d1`) and the mint's account position (`a0` or `a1`). The [query reference](https://docs.envio.dev/docs/HyperSync/solana-query#instructionselection) has the details.
+- **Supply over time.** `script.py` starts from the supply in `snapshot.json` and works back through every mint and burn, so the 3 Jan supply and the weekly series come from HyperSync too.
 
-Here's where each number comes from. The mints, burns and weekly changes come from [HyperSync on Solana](https://docs.envio.dev/docs/HyperSync/solana). The 16 Nov supply comes from Solana RPC `getTokenSupply` at run time, and the 3 Jan supply is that figure minus every mint and burn HyperSync returned in between. The holder counts come from `holders.py`, which reads every CASH token account with Solana RPC `getProgramAccounts`.
+The supply, the holder counts, the mints and burns and the weekly series all come from [HyperSync on Solana](https://docs.envio.dev/docs/HyperSync/solana). Solana RPC `getTokenSupply` is read only as a labelled check.
 
 ## Run it
 
@@ -31,42 +30,71 @@ You need Python 3 and a free API token from [envio.dev/app/api-tokens](https://e
 
 ```bash
 export ENVIO_API_TOKEN=your-token
+python3 holders.py    # supply and wallets holding CASH, from HyperSync balances
 python3 script.py     # mints, burns and weekly supply since 3 Jan 2026
-python3 holders.py    # wallets holding CASH right now, over Solana RPC
 ```
 
-`script.py` splits the range into 5M-slot chunks and pulls them in parallel. It backs off and retries on rate limits, and stops with an error rather than return a partial range. It prints the totals and the supply at the end of each week, and writes every row to `cash_mint_burn.json`.
+Run `holders.py` first. It reads the full range in 200K-slot pieces and `script.py` in 500K-slot pieces. Both run in parallel, save each piece as they go (under `chunks/` and `mint_burn/`) and pick up where they left off if you stop them. A full first run takes about an hour. `script.py` also writes every mint and burn to `cash_mint_burn.json`.
 
-`holders.py` pulls a few hundred MB from `getProgramAccounts`, so point `SOLANA_RPC` at your own RPC if the public one times out.
+Sample output from the 17 Nov 2026 run.
+
+```
+$ python3 holders.py
+slots 391,000,000 to 470,490,275, 123,151,538 balance rows read
+token accounts seen       2,402,708
+wallets with any CASH     746,131
+wallets with >= $1        211,327
+wallets with >= $10       92,185
+sum of balances           $128,916,353.76
+...
+$ python3 script.py
+slots 391,000,000 to 470,490,275
+mints 723  burns 7,347
+minted $186,850,398.16  burned $150,007,404.78  net $36,842,993.38
+supply at slot 470,490,275 (HyperSync balances, holders.py) $128,916,353.76
+supply at slot 391,000,000 (that minus net) $92,073,360.38
+change +40.0%
+Check (RPC getTokenSupply at slot 470,559,958, less 0.00 net minted since)
+  $129,099,940.53 at slot 470,490,275
+  HyperSync is $183,586.77 lower (0.14%)
+  CASH in accounts with no activity since slot 391,000,000
+
+week of     supply at week end
+2025-12-29  $92,073,351
+...
+2026-11-02  $130,177,774
+2026-11-09  $131,645,810
+2026-11-16  $128,916,354
+```
 
 ## Change the window or token
 
-- **Start later.** `FROM_SLOT=440000000 python3 script.py` starts the pull at that slot.
-- **Speed.** `WORKERS` (default 8) sets how many chunks run at once.
-- **Another stablecoin.** Swap `CASH` for another mint and `DECIMALS` for its decimals. For a token on the classic SPL Token program, swap `T22` for `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`.
-- **Your own RPC.** Set `SOLANA_RPC` for the `getTokenSupply` call and for `holders.py`.
+- **Start later.** `FROM_SLOT=440000000 python3 script.py` starts the mint and burn pull at that slot.
+- **Speed.** `WORKERS` sets how many pieces run at once (16 for `holders.py`, 24 for `script.py`).
+- **Another stablecoin.** Swap `CASH` for another mint and `DECIMALS` for its decimals in both scripts. For a token on the classic SPL Token program, swap `T22` for `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`. If the token is older than 3 Jan 2026, some of its accounts may not have moved since, and the check line tells you how much that leaves out.
 
 ## Check the numbers
 
-- **Supply on 16 Nov.** `holders.py` adds up every CASH token account's balance and prints it next to `getTokenSupply`. The two matched to the cent.
-- **Supply at the start.** A public CASH supply chart showed $92,256,948 for 3 Jan 2026, as the comparison. The script's figure is $92,256,947.15, so the mint and burn history checks out to within a dollar.
-- **Single transactions.** Every row carries its slot. Look any of them up on a Solana explorer and compare the amount.
+- **Supply on 17 Nov.** Both scripts print Solana RPC `getTokenSupply` as the comparison. RPC read $129,099,940.53 at slot 470,559,958, and HyperSync saw no CASH mints or burns between slot 470,490,275 and that slot, so it's the same supply. HyperSync's $128,916,353.76 is $183,586.77 (0.14%) lower. That's CASH in token accounts that haven't moved since 3 Jan 2026, before HyperSync's Solana history starts, so they have no `account_activity` row yet. The holder counts are lower bounds for the same reason.
+- **Supply on 3 Jan.** On RPC numbers the same mint and burn history gives $92,256,947.15, which matches a public CASH supply chart's $92,256,948 for that day to within a dollar.
+- **Single transactions.** Every mint and burn row carries its slot. Look any of them up on a Solana explorer and compare the amount.
 
 ## Build your own with an AI agent
 
 Paste this into Claude Code, Cursor or any coding agent.
 
 ```text
-Read script.py and README.md in this folder. It uses HyperSync on Solana
-(https://docs.envio.dev/docs/HyperSync/solana-query) to pull every MintTo,
-MintToChecked, Burn and BurnChecked instruction on Token-2022 for the CASH mint
-CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH and rebuilds supply week by week.
+Read holders.py, script.py and README.md in this folder. They use HyperSync on
+Solana (https://docs.envio.dev/docs/HyperSync/solana-query) to add up every CASH
+balance from account_activity rows and to pull every MintTo, MintToChecked, Burn
+and BurnChecked instruction on Token-2022 for the CASH mint
+CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH, then rebuild supply week by week.
 My HyperSync token is in the ENVIO_API_TOKEN environment variable.
 
-Point it at <ANOTHER STABLECOIN MINT> instead, with the right program and decimals,
-and print daily supply for the last 30 days. Keep the standard library only. Run it
-on a short slot range first, then check that the latest supply matches
-getTokenSupply for that mint.
+Point both at <ANOTHER STABLECOIN MINT> instead, with the right program and
+decimals, and print daily supply for the last 30 days. Keep the standard library
+only. Run it on a short slot range first, then check that the latest supply
+matches getTokenSupply for that mint.
 ```
 
 ## Links
