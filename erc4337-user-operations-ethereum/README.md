@@ -21,7 +21,7 @@ A user operation is how a smart account sends a transaction, and the paymaster f
 | v0.7 | [`0x0000000071727De22E5E9d8BAf0edAc6f37da032`](https://etherscan.io/address/0x0000000071727De22E5E9d8BAf0edAc6f37da032) |
 | v0.8 | [`0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108`](https://etherscan.io/address/0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108) |
 
-- One event is one user operation. Failed user operations still emit it and are counted. In this window 98.96% succeeded.
+- One event is one user operation. Failed user operations still emit it and are counted. In this window 98.96% succeeded, read from the event's `success` field, which the script doesn't print.
 - An account is the event's `sender`, counted once across the whole window.
 - "Gas paid by a paymaster" means the `paymaster` field isn't the zero address. That covers sponsored transactions and ones where the account pays the paymaster back in a token such as USDC.
 - Pimlico's paymasters are the three addresses on Pimlico's [contract addresses](https://docs.pimlico.io/references/paymaster/erc20-paymaster/contract-addresses) page, one per EntryPoint version.
@@ -59,7 +59,7 @@ day         user ops  accounts  paymaster  pimlico
 ## Change the window or chain
 
 - **Window.** Pass a start and an end date. The script works out a start block from the chain head at 7,200 blocks a day, adds a little slack, and then keeps only events whose block timestamp falls in the window.
-- **Chain.** The EntryPoint addresses are the same on most EVM chains. Swap `HS` for the chain's HyperSync URL from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks), for example `https://base.hypersync.xyz`, and change `BLOCKS_PER_DAY` to match its block time (43,200 on Base). Check that chain's Pimlico addresses on their page too.
+- **Chain.** The EntryPoint addresses are the same on most EVM chains. In `script.py`, change `HS` to the chain's HyperSync URL from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks), for example `https://base.hypersync.xyz`, and change `BLOCKS_PER_DAY` to match its block time (43,200 on Base). Check that chain's Pimlico addresses on their page too.
 
 ## Check the numbers
 
