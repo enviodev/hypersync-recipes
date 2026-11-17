@@ -15,7 +15,7 @@ Jupiter Lend took its first position backed by a tokenized stock on 24 Mar 2026 
 | cbBTC | 855 | 689 |
 | INF | 816 | 649 |
 
-A position here is one `init_position` instruction, which a wallet runs before it first supplies collateral to a vault. The table counts positions opened, not dollars. By value, SOL, JupSOL and JLP are much larger.
+A position here is one `init_position` instruction, which a wallet runs before it first supplies collateral to a vault. The table counts positions opened, not dollars.
 
 ## Why it's interesting
 
