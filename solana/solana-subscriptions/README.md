@@ -6,14 +6,13 @@ From the program's first transaction (1 May 2026) to slot 468,089,736 (11 Nov 20
 
 | | Pulls | USDC pulled |
 | --- | ---: | ---: |
-| Subscription plans, merchant `GjHgEpmTBUWwqhooG3krbZW4rKoxj1xEoiftFMS7kMCq` | 791 | 202,080 |
-| Subscription plans, every other merchant | 514 | 18,641 |
+| Subscription plans | 1,305 | 220,721 |
 | Recurring allowances | 122,673 | 586,650 |
 | Fixed allowances | 36 | 4 |
 
 Rows count USDC pulls only. 435 more pulls moved other tokens and are in the `Pull` entity.
 
-One merchant, `GjHgEpmTBUWwqhooG3krbZW4rKoxj1xEoiftFMS7kMCq`, pulled 202,080 USDC in 791 pulls from 434 wallets, all paid into one USDC token account, `G2wv6MCDcaiqhbP4JqP6RB76utwAhhG4BoZ71r58zgk6`. Across all merchants there were about 80 USDC subscription pulls a week for the last four full weeks of the window (79, 83, 71 and 80, for the weeks starting 12 Oct to 2 Nov 2026).
+Merchant `GjHgEpmTBUWwqhooG3krbZW4rKoxj1xEoiftFMS7kMCq` is the one checked against RPC below. It pulled 202,080 USDC in 791 pulls from 434 wallets, all paid into one USDC token account, `G2wv6MCDcaiqhbP4JqP6RB76utwAhhG4BoZ71r58zgk6`. Across all merchants there were about 80 USDC subscription pulls a week for the last four full weeks of the window (79, 83, 71 and 80, for the weeks starting 12 Oct to 2 Nov 2026).
 
 ## Why it's interesting
 
@@ -108,8 +107,8 @@ token is in the ENVIO_API_TOKEN environment variable.
 Add a Merchant entity with plans, subscribers, pulls and USDC pulled per
 merchant, updated from createPlan, subscribe and transferSubscription. Add a
 test for it next to the existing one, run `pnpm codegen` and `pnpm test` until
-they pass, then run `pnpm full-run` and check that each merchant's USDC pulled matches the sum of its plans' pulled
-amounts in out/summary.json.
+they pass, then run `pnpm full-run` and check that each merchant's USDC
+pulled matches the sum of its plans' pulled amounts in out/summary.json.
 ```
 
 ## Links
