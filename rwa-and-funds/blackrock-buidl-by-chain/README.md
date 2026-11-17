@@ -1,6 +1,6 @@
 # Where BlackRock's BUIDL sits, chain by chain
 
-In one run, **BlackRock's BUIDL fund had $1.08B on the seven EVM chains BlackRock lists, and Avalanche held the most at $416.8M (38.7%)**. That's more than Ethereum, OP Mainnet, Arbitrum and Polygon combined. $2.04B of BUIDL has been minted on Avalanche since launch.
+In a run on 9 Nov 2026, **BlackRock's BUIDL fund had $1.08B on the seven EVM chains BlackRock lists, and Avalanche held the most at $416.8M (38.7%)**. That's more than Ethereum, OP Mainnet, Arbitrum and Polygon combined. $2.04B of BUIDL has been minted on Avalanche since launch.
 
 | Chain | Supply | Share |
 | --- | --- | --- |
@@ -45,7 +45,7 @@ export ENVIO_API_TOKEN=your-token
 python3 script.py
 ```
 
-Sample output:
+Sample output from the 9 Nov 2026 run.
 
 ```
 BlackRock BUIDL on EVM chains: $1,077,950,497
@@ -82,7 +82,7 @@ The script checks itself. For each chain it compares the supply rebuilt from Hyp
 
 ## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
 ```text
 Read script.py and README.md in this folder. It uses HyperSync
