@@ -89,6 +89,7 @@ only. Check the total against totalStakedAmount() on
 
 - [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview)
 - [HyperSync query reference](https://docs.envio.dev/docs/HyperSync/hypersync-query)
+- [Raw HTTP query examples](https://docs.envio.dev/docs/HyperSync/hypersync-curl-examples), the same plain requests this script makes
 - [HyperSync supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks)
 - [Safenet contracts and audits](https://docs.safefoundation.org/safenet-aegis/resources/contracts-and-audits)
 - [Safe Foundation Q2 2026 report](https://safefoundation.org/reports/q2-2026)
