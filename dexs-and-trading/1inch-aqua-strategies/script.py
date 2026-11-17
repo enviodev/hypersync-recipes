@@ -1,8 +1,8 @@
-"""Every strategy shipped on 1inch Aqua, on all 15 chains it runs on.
+"""Every strategy created on 1inch Aqua, on all 15 chains it runs on.
 
-Aqua is 1inch's shared liquidity layer. A liquidity provider "ships" a strategy, and one token
+Aqua is 1inch's shared liquidity layer. A liquidity provider creates a strategy, and one token
 balance can back many strategies. The Aqua registry has the same address on every chain and emits
-one Shipped event per strategy. This script reads every Shipped event with Envio HyperSync and
+one event per strategy, named Shipped in the contract. This script reads every one of them with Envio HyperSync and
 prints strategies, distinct LP wallets and the share by chain.
 
 Usage:  ENVIO_API_TOKEN=... python3 script.py
@@ -53,8 +53,8 @@ with ThreadPoolExecutor(6) as ex:
 total = sum(sum(m.values()) for m in results.values())
 all_makers = collections.Counter()
 for m in results.values(): all_makers.update(m)
-print(f"1inch Aqua, all chains: {total:,} strategies shipped by {len(all_makers):,} different wallets")
-print(f"Wallets that shipped 10 or more: {sum(1 for c in all_makers.values() if c >= 10):,}")
+print(f"1inch Aqua, all chains: {total:,} strategies created by {len(all_makers):,} different wallets")
+print(f"Wallets that created 10 or more: {sum(1 for c in all_makers.values() if c >= 10):,}")
 print(f"Chains with at least one strategy: {sum(1 for m in results.values() if m)} of {len(results)}\n")
 print(f"{'chain':12s} {'strategies':>11s} {'share':>7s} {'wallets':>8s}")
 for sub, m in sorted(results.items(), key=lambda kv: -sum(kv[1].values())):

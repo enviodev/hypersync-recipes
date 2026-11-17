@@ -1,6 +1,6 @@
 # 1inch Aqua strategies on every chain
 
-Since 1inch Aqua first appeared onchain on 19 Jul 2026, **2,190 wallets have shipped 186,919 strategies across 15 chains, and 732 of those wallets have shipped 10 or more**. Ethereum has 78.2% of the strategies, Robinhood Chain 12.1% and BSC 8.4%. This was pulled on 17 Nov 2026 with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview).
+Since 1inch Aqua first appeared onchain on 19 Jul 2026, **2,190 wallets have created 186,919 strategies across 15 chains, and 732 of those wallets have created 10 or more**. Ethereum has 78.2% of the strategies, Robinhood Chain 12.1% and BSC 8.4%. This was pulled on 17 Nov 2026 with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview).
 
 | Chain | Strategies | Share | Wallets |
 | --- | --- | --- | --- |
@@ -15,14 +15,14 @@ Since 1inch Aqua first appeared onchain on 19 Jul 2026, **2,190 wallets have shi
 
 ## Why it's interesting
 
-Aqua is 1inch's shared liquidity layer. A liquidity provider keeps their tokens in their own wallet and gives Aqua one approval, then "ships" as many strategies as they like against the same balance. Because every strategy is announced by one event on one contract, you can see how many LPs are using it, how many strategies each has shipped and which chains they chose, without reading any pool.
+Aqua is 1inch's shared liquidity layer. A liquidity provider keeps their tokens in their own wallet and gives Aqua one approval, then creates as many strategies as they like against the same balance. Because every strategy is announced by one event on one contract, you can see how many LPs are using it, how many strategies each has created and which chains they chose, without reading any pool.
 
 ## What it pulls
 
 - Every `Shipped(address maker, address app, bytes32 strategyHash, bytes strategy)` log on the Aqua registry, `0x1111113ccf1426a8e30e2bff5e005d929bf6a90a`. 1inch deploys it at the same address on every chain, listed in [1inch/aqua deployments](https://github.com/1inch/aqua/blob/main/deployments.md).
 - The first word of the event's data is the LP wallet, so counting distinct values gives the number of LPs.
 
-HyperSync filters by address and event on its side, so only the Shipped logs come back. The script reads all 15 chains in parallel.
+HyperSync filters by address and event on its side, so only those logs come back. The script reads all 15 chains in parallel.
 
 ## Run it
 
@@ -36,8 +36,8 @@ python3 script.py
 It takes about a minute. Sample output from a run on 17 Nov 2026.
 
 ```
-1inch Aqua, all chains: 186,919 strategies shipped by 2,190 different wallets
-Wallets that shipped 10 or more: 732
+1inch Aqua, all chains: 186,919 strategies created by 2,190 different wallets
+Wallets that created 10 or more: 732
 Chains with at least one strategy: 15 of 15
 
 chain         strategies   share  wallets
@@ -48,7 +48,7 @@ base                 998    0.5%      179
 ...
 ```
 
-New strategies are shipped every day, so your numbers will be higher.
+New strategies are created every day, so your numbers will be higher.
 
 ## Change the window or chain
 
@@ -58,7 +58,7 @@ New strategies are shipped every day, so your numbers will be higher.
 
 ## Check the numbers
 
-On Gnosis and Avalanche the same count comes from a public RPC with `eth_getLogs`, in chunks the node allows. Avalanche returns 44 Shipped logs from 6 wallets and Gnosis returns 50 from 8, the same as HyperSync. Running the script twice, an hour apart, gave the same totals.
+On Gnosis and Avalanche the same count comes from a public RPC with `eth_getLogs`, in chunks the node allows. Avalanche returns 44 strategy logs from 6 wallets and Gnosis returns 50 from 8, the same as HyperSync. Running the script twice, an hour apart, gave the same totals.
 
 ## Build your own with an AI agent
 
