@@ -1,21 +1,41 @@
-# Yield Basis yb-WETH propAMM, first week
+# Yield Basis yb-WETH, the first week on oracle pricing
 
-Reads every swap on the Yield Basis WETH pool on Ethereum with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/overview), for the 7 days after the pool switched to oracle pricing and the 7 days before. It prints volume, fees, wallets, a day by day split, the busiest hour, the largest swap and how much of the volume came from the most active wallets.
+In its first 7 days on oracle pricing, from 29 Oct 2026 11:38 UTC (block 26,298,152), **the Yield Basis WETH pool on Ethereum traded $28.9M, 6.8x the $4.2M of the week before**. Those swaps paid $424K in fees, across 280 swaps from 86 wallets.
 
-These are the numbers behind Envio's post on the yb-WETH propAMM.
+| First 7 days | |
+| --- | --- |
+| Volume | $28.9M |
+| Week before | $4.2M |
+| Fees | 210,073 crvUSD + 83.32 WETH ($424K) |
+| Swaps | 280 |
+| Wallets | 86 |
+| Largest swap | $5.84M |
+
+## Why it's interesting
+
+A propAMM prices swaps off an external oracle instead of its own curve. This pool started pricing off signed Pyth ETH/USD reports after a governance vote, so you can line up volume before and after one onchain event and see what changed. The same pattern works for any pool upgrade. Find the event that switched it on, then compare the swaps either side.
+
+## What it pulls
+
+All of it comes from HyperSync.
+
+- The pool's last `SetPolicyContract` log, which marks when the policy contract that prices swaps off Pyth reports went live. It was installed by Curve vote 1508 alongside [Yield Basis proposal #60](https://yieldbasis.com/proposal/60).
+- Every `TokenExchange` log on the crvUSD/WETH pool behind Yield Basis market 10 (yb-WETH), [`0x656341Ef90b622c6634e0573772FfB7f3669b9f3`](https://etherscan.io/address/0x656341Ef90b622c6634e0573772FfB7f3669b9f3), from about a week before the switch onwards.
+- The block timestamp and the transaction sender for each swap.
+
+Volume is the crvUSD side of each swap at $1. Swaps under $1 are zero-size calls rather than trades, so they're left out. Fees are the `fee` field of each swap, paid in the coin bought, and WETH fees are valued at that swap's own price, so there's no outside price feed. Wallets are the addresses that sent the swap transactions, so a trade routed through a solver shows the signer. Days are 24 hour blocks from the switch, not calendar days.
 
 ## Run it
 
-You need Python 3 and a HyperSync API token from the [Envio Dashboard](https://envio.dev/app/api-tokens). The script has no other dependencies.
+You need Python 3 and a free API token from [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens). There's nothing else to install.
 
 ```bash
 export ENVIO_API_TOKEN=your-token
-python script.py
+python3 script.py
+python3 script.py --hourly   # also prints volume for each of the 168 hours, for charting
 ```
 
-Add `--hourly` to also print volume for each of the 168 hours, for charting.
-
-## What it prints
+Sample output.
 
 ```
 Yield Basis yb-WETH propAMM, first 7 days
@@ -37,24 +57,40 @@ Yield Basis yb-WETH propAMM, first 7 days
   Top wallet 20%, top 5 47%, top 10 57% of volume
 ```
 
-The week is fixed to the 7 days after the switch, so these numbers will not change.
+The week is fixed to the 7 days after the switch, so these numbers won't change.
 
-## How it counts
+## Change the window or pool
 
-- The pool is the crvUSD/WETH Curve pool behind Yield Basis market 10 (yb-WETH), `0x656341Ef90b622c6634e0573772FfB7f3669b9f3`. The Yield Basis factory returns it for `markets(10)`.
-- The start of the week is the pool's last `SetPolicyContract` event. That is when Curve vote 1508, paired with [Yield Basis proposal #60](https://yieldbasis.com/proposal/60), installed the policy contract that prices swaps off signed Pyth ETH/USD reports.
-- A swap is a `TokenExchange` event on the pool. Volume is the crvUSD side of each swap, valued at $1. Swaps under $1 are left out, since these are zero-size calls rather than trades.
-- Fees are the `fee` field of each swap, paid in the coin bought. WETH fees are valued at that swap's own price. Valuing them at another ETH price moves the dollar total by a few percent, so the script also prints the raw crvUSD and WETH amounts.
-- Wallets are the addresses that sent the swap transactions. A wallet that trades through a router or a solver shows up as the address that signed the transaction.
-- Days are 24 hour blocks from the switch, not calendar days. The busiest hour is a UTC clock hour.
+- **Window.** `WEEK` sets the length of both windows, in seconds. Make it `30 * 86400` to compare 30 days either side. The swap scan starts 60,000 blocks (about 8 days) before the switch, so raise that number in the `logs(TOKEN_EXCHANGE, ...)` call too. The `--hourly` output and the by-day table are sized for 7 days.
+- **Pool.** `POOL` is the pool address. Other Yield Basis markets have their own Curve pool, returned by the Yield Basis factory for `markets(i)`. A pool that never emitted `SetPolicyContract` needs a different start point, such as a block number.
+- **Chain.** For a pool on another chain, change the HyperSync URL in `query()` to that chain's endpoint from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks).
 
-## Ask your coding agent
+## Check the numbers
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste the largest swap's transaction hash into [Etherscan](https://etherscan.io/tx/0x4fa182626c85ca0cdc18ba736930bdbdfbcf5d201d373913317df6ec58d23d61) and the decoded `TokenExchange` log should show the same amounts and fee. The [pool's events on Etherscan](https://etherscan.io/address/0x656341Ef90b622c6634e0573772FfB7f3669b9f3#events) also list the `SetPolicyContract` transaction at block 26,298,152.
 
+## Build your own with an AI agent
+
+Paste this into Claude Code, Cursor or any coding agent.
+
+```text
+Read script.py and README.md in this folder. It uses HyperSync
+(https://docs.envio.dev/docs/HyperSync/overview) to find when the Yield Basis
+yb-WETH pool on Ethereum (0x656341Ef90b622c6634e0573772FfB7f3669b9f3) switched
+to oracle pricing, then reads every TokenExchange in the week before and after.
+My HyperSync token is in the ENVIO_API_TOKEN environment variable.
+
+Extend it to cover every week since the switch, not only the first. Print one
+row per week with volume, fees, swaps and wallets, and write the hourly volume
+to a CSV. Keep the standard library only. Then check that the first week's row
+still shows $28.9M volume and 280 swaps.
 ```
-Use Envio HyperSync (https://docs.envio.dev/docs/HyperSync/overview) to read every TokenExchange event on the
-Yield Basis WETH pool on Ethereum (0x656341Ef90b622c6634e0573772FfB7f3669b9f3) since it switched to oracle
-pricing. My API token is in the ENVIO_API_TOKEN environment variable. Chart daily volume and fees, and show
-how much of the volume each of the top 10 wallets traded.
-```
+
+## Links
+
+- [HyperSync overview](https://docs.envio.dev/docs/HyperSync/overview)
+- [HyperSync query reference](https://docs.envio.dev/docs/HyperSync/hypersync-query)
+- [HyperSync supported networks](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks)
+- [Yield Basis docs](https://docs.yieldbasis.com/dev/overview)
+- [Yield Basis proposal #60](https://yieldbasis.com/proposal/60)
+- [Envio Discord](https://discord.gg/envio)
