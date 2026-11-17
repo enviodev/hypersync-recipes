@@ -1,7 +1,8 @@
 # PAXG on Morpho, Base: every market that lends USDC against Paxos Gold, and what happened in it.
 # Finds the markets with Envio HyperSync (every Morpho CreateMarket event on Base whose collateral is PAXG),
-# then reads every collateral, borrow, repay, supply and liquidation event in them, plus every PAXG mint
-# and burn on Base. Live state (totalBorrowAssets, oracle price) is read from Base's public RPC to check the sums.
+# then reads every collateral, borrow, repay, supply, liquidation and interest event in them, plus every PAXG
+# mint and burn on Base, and rebuilds USDC owed, USDC supplied and PAXG supply from those events.
+# Base's public RPC gives the oracle price and labelled cross-checks (market() and totalSupply()).
 # Python 3 standard library only. Set ENVIO_API_TOKEN first.
 #   python script.py              # full history up to now
 #   python script.py 55200000     # stop at a fixed Base block to rerun a past snapshot exactly
@@ -29,6 +30,7 @@ T = {  # Morpho event signatures (topic0)
     "Liquidate": "0xa4946ede45d0c6f06a0f5ce92c9ad3b4751452d2fe0e25010783bcab57a67e41",
     "Supply": "0xedf8870433c83823eb071d3df1caa8d008f12f6440918c20d75a3602cda30fe0",
     "Withdraw": "0xa56fc0ad5702ec05ce63666221f796fb62437c32db1aa1aa075fc6484cf58fbf",
+    "AccrueInterest": "0x9d9bd501d0657d7dfe415f779a620a62b78bc508ddc0891fbbd8b7ac0f8fce87",
 }
 NAME = {v: k for k, v in T.items()}
 TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
@@ -123,6 +125,9 @@ daily = defaultdict(lambda: defaultdict(float))
 for log in events:
     m, kind, w = log["topic1"], NAME[log["topic0"]], words(log["data"])
     p = per[m]
+    if kind == "AccrueInterest":
+        p["interest"] += w[1] / 1e6   # added to both totalBorrowAssets and totalSupplyAssets
+        continue
     p[kind + "_count"] += 1
     if kind == "SupplyCollateral":
         amount = w[0] / 1e18
@@ -154,14 +159,16 @@ for log in events:
     elif kind == "Withdraw":
         p["withdrawn"] += w[1] / 1e6
 
-# 3. Live state from RPC, to check the event sums and price the collateral.
-block = TO_BLOCK
+# 3. Market state rebuilt from the events. RPC prices the collateral and cross-checks Morpho's market().
+block = snapshot
 rows = []
 for m, info in sorted(markets.items(), key=lambda kv: kv[1]["block"]):
-    s = call(MORPHO, "0x5c60e39a" + m[2:], block)          # market(bytes32)
-    supply_assets, borrow_assets = int(s[0:64], 16) / 1e6, int(s[128:192], 16) / 1e6
-    price = int(call(info["oracle"], "0xa035b1fe", block) or "0", 16) / 1e24  # price(), USDC per PAXG
     p = per[m]
+    borrow_assets = p["borrowed"] - p["repaid"] - p["liq_repaid"] - p["bad_debt"] + p["interest"]  # totalBorrowAssets
+    supply_assets = p["supplied"] - p["withdrawn"] - p["bad_debt"] + p["interest"]                  # totalSupplyAssets
+    s = call(MORPHO, "0x5c60e39a" + m[2:], block)          # market(bytes32), cross-check only
+    rpc_supply, rpc_borrow = int(s[0:64] or "0", 16) / 1e6, int(s[128:192] or "0", 16) / 1e6
+    price = int(call(info["oracle"], "0xa035b1fe", block) or "0", 16) / 1e24  # price(), USDC per PAXG
     coll = p["collateral_in"] - p["collateral_out"] - p["liq_seized"]
     holders = sum(1 for v in collateral_by_user[m].values() if v > 1e-12)
     rows.append((coll * price, m))
@@ -170,9 +177,11 @@ for m, info in sorted(markets.items(), key=lambda kv: kv[1]["block"]):
     print(f"  PAXG collateral: {coll:,.4f} now ({p['collateral_in']:,.4f} in, {p['collateral_out']:,.4f} out, "
           f"{p['liq_seized']:,.4f} seized) ~ ${coll * price:,.0f} at ${price:,.0f} per PAXG")
     print(f"  USDC borrowed: {p['borrowed']:,.2f} in total, {p['repaid'] + p['liq_repaid']:,.2f} repaid, "
-          f"{borrow_assets:,.2f} owed now with interest (RPC)")
+          f"{borrow_assets:,.2f} owed now with interest")
     print(f"  USDC supplied by lenders now: {supply_assets:,.2f}  ({borrow_assets / supply_assets:.0%} lent out)" if supply_assets else
           "  USDC supplied by lenders now: 0")
+    print(f"  Check (RPC market()): {rpc_borrow:,.2f} owed (gap {borrow_assets - rpc_borrow:,.2f}), "
+          f"{rpc_supply:,.2f} supplied (gap {supply_assets - rpc_supply:,.2f})")
     print(f"  {len(borrowers[m])} unique borrowers, {holders} wallets with collateral now, "
           f"{int(p['Liquidate_count'])} liquidations, {int(sum(v for k, v in p.items() if k.endswith('_count')))} events\n")
 
@@ -201,7 +210,9 @@ mints, _ = logs({"address": [PAXG], "topics": [[TRANSFER], [ZERO]]}, 0)
 burns, _ = logs({"address": [PAXG], "topics": [[TRANSFER], [], [ZERO]]}, 0)
 minted = sum(int(l["data"], 16) for l in mints) / 1e18
 burned = sum(int(l["data"], 16) for l in burns) / 1e18
-onchain = int(call(PAXG, "0x18160ddd", block), 16) / 1e18   # totalSupply()
-print(f"\nPAXG on Base: {minted - burned:,.4f} from {len(mints)} mints and {len(burns)} burns "
-      f"(totalSupply() says {onchain:,.4f}), first mint {day(min(l['time'] for l in mints))}")
-print(f"Share of all PAXG on Base sitting as Morpho collateral: {total_coll / onchain:.1%}")
+supply = minted - burned
+onchain = int(call(PAXG, "0x18160ddd", block), 16) / 1e18   # totalSupply(), cross-check only
+print(f"\nPAXG on Base: {supply:,.4f} from {len(mints)} mints and {len(burns)} burns, "
+      f"first mint {day(min(l['time'] for l in mints))}")
+print(f"  Check (RPC totalSupply()): {onchain:,.4f}, gap {supply - onchain:,.4f}")
+print(f"Share of all PAXG on Base sitting as Morpho collateral: {total_coll / supply:.1%}")

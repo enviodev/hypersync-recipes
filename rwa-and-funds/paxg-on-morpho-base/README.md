@@ -1,6 +1,6 @@
 # Borrowing USDC against gold on Base
 
-Up to Base block 55,205,406 on 9 Nov 2026, **35 borrowers had taken 22.3K USDC against Paxos Gold (PAXG) on Morpho on Base, with 11.86 PAXG posted as collateral and no liquidations**. Almost all of it is in one market, created on 27 Oct 2026 with a 77% LLTV. PAXG on Base had grown to 406 PAXG since its first mint on 8 Sep 2026, and 2.9% of it was working as Morpho collateral.
+Up to Base block 55,205,406 on 9 Nov 2026, **35 borrowers had taken 22.3K USDC against Paxos Gold (PAXG) on Morpho on Base, with 11.86 PAXG posted as collateral and no liquidations**. With interest, 21.1K USDC was still owed. Almost all of it is in one market, created on 27 Oct 2026 with a 77% LLTV. PAXG on Base had grown to 406 PAXG since its first mint on 8 Sep 2026, and 2.9% of it was working as Morpho collateral.
 
 ## Why it's interesting
 
@@ -8,13 +8,13 @@ Gold you can borrow against onchain is a simple idea that's only recently got go
 
 ## What it pulls
 
-- Every `CreateMarket` on Morpho on Base whose collateral is PAXG, then every `SupplyCollateral`, `WithdrawCollateral`, `Borrow`, `Repay`, `Supply`, `Withdraw` and `Liquidate` in those markets, from [HyperSync](https://docs.envio.dev/docs/HyperSync/overview). Collateral, total borrowed, borrower counts and liquidations come from HyperSync.
+- Every `CreateMarket` on Morpho on Base whose collateral is PAXG, then every `SupplyCollateral`, `WithdrawCollateral`, `Borrow`, `Repay`, `Supply`, `Withdraw`, `Liquidate` and `AccrueInterest` in those markets, from [HyperSync](https://docs.envio.dev/docs/HyperSync/overview). Collateral, total borrowed, borrower counts, liquidations, USDC owed and USDC supplied all come from HyperSync.
 - Every PAXG mint and burn on Base, from HyperSync. PAXG supply on Base comes from here.
-- Live state over Base's public RPC. `totalBorrowAssets` on Morpho gives the USDC owed now with interest, the market oracle's `price()` gives the dollar value of the collateral, and `totalSupply()` checks the PAXG supply. These figures come from RPC, not from HyperSync.
+- The market oracle's `price()` over Base's public RPC, for the dollar value of the collateral. RPC is also used for the checks below.
 
 Morpho on Base is [`0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb`](https://docs.morpho.org/get-started/resources/addresses) and PAXG on Base is [`0xe904AEA5E1b110c9174728fA2efFc8aeD19E98Ef`](https://docs.paxos.com/guides/stablecoin/paxg/mainnet), with 18 decimals. One PAXG is one fine troy ounce of gold.
 
-Collateral is `SupplyCollateral` minus `WithdrawCollateral` minus collateral seized in `Liquidate`. A borrower is any `onBehalf` address in a `Borrow` event. The active market (`0x48dca3ed...e392`) is supplied by Steakhouse USDC vaults.
+Collateral is `SupplyCollateral` minus `WithdrawCollateral` minus collateral seized in `Liquidate`. USDC owed is `Borrow` minus `Repay`, minus debt repaid or written off in `Liquidate`, plus the interest in each `AccrueInterest`, which is how Morpho keeps `totalBorrowAssets`. USDC supplied works the same way from `Supply`, `Withdraw`, bad debt and interest. A borrower is any `onBehalf` address in a `Borrow` event. The active market (`0x48dca3ed...e392`) is supplied by Steakhouse USDC vaults.
 
 ## Run it
 
@@ -32,12 +32,14 @@ Sample output at block 55,205,406.
 Market 0x48dca3ed245fb30931013a676d3451f7602b11150f92743ad93159628cbbe392
   created 2026-10-27 (block 53,158,097), loan USDC, LLTV 77%, oracle 0x6a47f48780eaeb07ee18ca47a9c33c925961bfad
   PAXG collateral: 11.8555 now (12.3686 in, 0.5131 out, 0.0000 seized) ~ $48,785 at $4,115 per PAXG
-  USDC borrowed: 22,272.99 in total, 1,214.67 repaid, 21,071.58 owed now with interest (RPC)
+  USDC borrowed: 22,272.99 in total, 1,214.67 repaid, 21,071.58 owed now with interest
   USDC supplied by lenders now: 23,290.61  (90% lent out)
+  Check (RPC market()): 21,071.58 owed (gap 0.00), 23,290.61 supplied (gap 0.00)
   35 unique borrowers, 24 wallets with collateral now, 0 liquidations, 774 events
 ...
 
-PAXG on Base: 406.3339 from 262 mints and 276 burns (totalSupply() says 406.3339), first mint 2026-09-08
+PAXG on Base: 406.3339 from 262 mints and 276 burns, first mint 2026-09-08
+  Check (RPC totalSupply()): 406.3339, gap 0.0000
 Share of all PAXG on Base sitting as Morpho collateral: 2.9%
 ```
 
@@ -51,7 +53,7 @@ It also prints the three other PAXG markets and the main market's collateral and
 
 ## Check the numbers
 
-Collateral from the events matches `collateralAssets` from the Morpho GraphQL API (`api.morpho.org/graphql`) to the last unit, and the API lists the same four PAXG markets. PAXG supply rebuilt from mints and burns matches `totalSupply()` read over RPC exactly.
+The script checks itself against Base's public RPC at the same block. USDC owed and supplied, rebuilt from events, match Morpho's `market()` to the cent in all four markets, and PAXG supply rebuilt from mints and burns matches `totalSupply()` exactly. As an outside comparison, collateral from the events matches `collateralAssets` from the Morpho GraphQL API (`api.morpho.org/graphql`) to the last unit, and the API lists the same four PAXG markets.
 
 ## Build your own with an AI agent
 
