@@ -2,7 +2,8 @@
 # Finds the markets with Envio HyperSync (every Morpho CreateMarket event on Base whose collateral is PAXG),
 # then reads every collateral, borrow, repay, supply, liquidation and interest event in them, plus every PAXG
 # mint and burn on Base, and rebuilds USDC owed, USDC supplied and PAXG supply from those events.
-# Base's public RPC gives the oracle price and labelled cross-checks (market() and totalSupply()).
+# The dollar price of PAXG comes from HyperSync too, from the AnswerUpdated logs of the Chainlink aggregator each
+# market's oracle reads. Base's public RPC gives the oracle price and labelled cross-checks (market() and totalSupply()).
 # Python 3 standard library only. Set ENVIO_API_TOKEN first.
 #   python script.py              # full history up to now
 #   python script.py 55200000     # stop at a fixed Base block to rerun a past snapshot exactly
@@ -20,6 +21,18 @@ MORPHO = "0xbbbbbbbbbb9cc5e90e3b3af64bdaf62c37eeffcb"  # https://docs.morpho.org
 PAXG = "0xe904aea5e1b110c9174728fa2effc8aed19e98ef"    # https://docs.paxos.com/guides/stablecoin/paxg/mainnet
 USDC = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
 ZERO = "0x" + "0" * 64
+ANSWER_UPDATED = "0x0559884fd3a460db3073b7fc896cc77986f16e378210ded43186175bf646fc5f"  # AnswerUpdated(int256 indexed current, uint256 indexed roundId, uint256 updatedAt)
+# Each market's oracle prices PAXG from one Chainlink feed with 8 decimals and a 1e16 scale factor, so the USDC price of
+# one PAXG is the feed answer divided by 1e8. Found from the oracle's BASE_FEED_1() (or primaryOracle().BASE_FEED_1()
+# for the wrapper that can fall back to a second feed), then the feed proxy's aggregator().
+XAU_USD = "0x3591ffd547db65020c18e80fce399cf167b2bdce"   # Chainlink XAU / USD, gold per troy ounce
+PAXG_USD = "0x4f478a6e7f47df9f71194b16a4f83d5105150e7e"  # Chainlink PAXG / USD
+ORACLE_FEED = {
+    "0x6a47f48780eaeb07ee18ca47a9c33c925961bfad": XAU_USD,   # active market, primary XAU / USD with a PAXG / USD backup
+    "0x8e67ef9a3ec79839c6602f1259a2567954695125": XAU_USD,
+    "0xd71d59da2d10db7e04c9f30819482a56755193ae": XAU_USD,
+    "0xa1821fa41404233529df32e0b7cebcae2e4a0bfc": PAXG_USD,
+}
 
 T = {  # Morpho event signatures (topic0)
     "CreateMarket": "0xac4b2400f169220b0c0afdde7a0b32e775ba727ea1cb30b35f935cdaab8683ac",
@@ -84,6 +97,33 @@ def logs(selection, from_block):
             break
         body["from_block"] = res["next_block"]
     return out, height
+
+
+def latest_answers(feeds, end):
+    """Latest AnswerUpdated of each Chainlink feed before block `end`, read with HyperSync, as {feed: (USD price, updatedAt)}.
+    Looks back over a growing window of blocks until every feed has an answer."""
+    found, window = {}, 200_000
+    while len(found) < len(feeds):
+        body = {"from_block": max(end - window, 0), "to_block": end,
+                "logs": [{"address": list(feeds), "topics": [[ANSWER_UPDATED]]}],
+                "field_selection": {"log": ["block_number", "log_index", "address", "topic0", "topic1", "data"]}}
+        latest = {}
+        while True:
+            res = request(HYPERSYNC + "/query", body, {"Authorization": "Bearer " + TOKEN})
+            for batch in res["data"]:
+                for log in batch.get("logs") or []:
+                    if log["address"].lower() in feeds and log["topic0"] == ANSWER_UPDATED:
+                        key = (log["block_number"], log["log_index"] if isinstance(log["log_index"], int) else int(log["log_index"], 16))
+                        if log["address"].lower() not in latest or key > latest[log["address"].lower()][0]:
+                            latest[log["address"].lower()] = (key, int(log["topic1"], 16) / 1e8, int(log["data"], 16))
+            if res["next_block"] >= end:
+                break
+            body["from_block"] = res["next_block"]
+        found = latest
+        if end - window <= 0:
+            break
+        window *= 4
+    return {a: (v[1], v[2]) for a, v in found.items()}
 
 
 def words(data):
@@ -159,8 +199,9 @@ for log in events:
     elif kind == "Withdraw":
         p["withdrawn"] += w[1] / 1e6
 
-# 3. Market state rebuilt from the events. RPC prices the collateral and cross-checks Morpho's market().
+# 3. Market state rebuilt from the events. Chainlink answers read with HyperSync price the collateral. RPC cross-checks Morpho's market() and the oracle.
 block = snapshot
+answers = latest_answers({ORACLE_FEED[m["oracle"]] for m in markets.values()}, snapshot + 1)
 rows = []
 for m, info in sorted(markets.items(), key=lambda kv: kv[1]["block"]):
     p = per[m]
@@ -168,14 +209,16 @@ for m, info in sorted(markets.items(), key=lambda kv: kv[1]["block"]):
     supply_assets = p["supplied"] - p["withdrawn"] - p["bad_debt"] + p["interest"]                  # totalSupplyAssets
     s = call(MORPHO, "0x5c60e39a" + m[2:], block)          # market(bytes32), cross-check only
     rpc_supply, rpc_borrow = int(s[0:64] or "0", 16) / 1e6, int(s[128:192] or "0", 16) / 1e6
-    price = int(call(info["oracle"], "0xa035b1fe", block) or "0", 16) / 1e24  # price(), USDC per PAXG
+    price = answers[ORACLE_FEED[info["oracle"]]][0]                           # latest Chainlink answer, USDC per PAXG
+    oracle_price = int(call(info["oracle"], "0xa035b1fe", block) or "0", 16) / 1e24  # oracle price(), cross-check only
     coll = p["collateral_in"] - p["collateral_out"] - p["liq_seized"]
     holders = sum(1 for v in collateral_by_user[m].values() if v > 1e-12)
     rows.append((coll * price, m))
     print(f"Market {m}")
     print(f"  created {day(info['time'])} (block {info['block']:,}), loan USDC, LLTV {info['lltv']:.0%}, oracle {info['oracle']}")
     print(f"  PAXG collateral: {coll:,.4f} now ({p['collateral_in']:,.4f} in, {p['collateral_out']:,.4f} out, "
-          f"{p['liq_seized']:,.4f} seized) ~ ${coll * price:,.0f} at ${price:,.0f} per PAXG")
+          f"{p['liq_seized']:,.4f} seized) ~ ${coll * price:,.0f} at ${price:,.2f} per PAXG (Chainlink feed, HyperSync)")
+    print(f"  Check (oracle price() over RPC): ${oracle_price:,.2f} per PAXG, gap {100 * (price - oracle_price) / oracle_price:+.2f}%")
     print(f"  USDC borrowed: {p['borrowed']:,.2f} in total, {p['repaid'] + p['liq_repaid']:,.2f} repaid, "
           f"{borrow_assets:,.2f} owed now with interest")
     print(f"  USDC supplied by lenders now: {supply_assets:,.2f}  ({borrow_assets / supply_assets:.0%} lent out)" if supply_assets else
