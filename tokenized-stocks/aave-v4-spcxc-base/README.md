@@ -1,6 +1,6 @@
 # SPCXc on Aave v4 on Base
 
-At Base block 53,521,593, **9K addresses held SPCXc, Coinbase's tokenized SpaceX stock**, rebuilt from 1.17M transfers. Aave listed it on its v4 tokenized stocks market on 31 Oct 2026, and by that block 36 addresses had supplied 6.5K SPCXc across 65 supply events. The market had eight stocks listed with $14.3M of stock collateral supplied, and 6M USDC borrowed against it.
+At Base block 53,521,593 on 4 Nov 2026, **9K addresses held SPCXc, Coinbase's tokenized SpaceX stock**, rebuilt from 1.17M transfers. Aave listed it on its v4 tokenized stocks market on 31 Oct 2026, and by that block 36 addresses had supplied 6.5K SPCXc across 65 supply events. The market had eight stocks listed with $14.3M of stock collateral supplied, and 6M USDC borrowed against it.
 
 ## Why it's interesting
 
@@ -26,7 +26,7 @@ export ENVIO_API_TOKEN=your-token
 python3 script.py
 ```
 
-The SPCXc replay covers over a million events, so a run takes a few minutes. Sample output at block 53,521,593:
+The SPCXc replay covers over a million events, so a run takes a few minutes. Sample output at block 53,521,593.
 
 ```
 SPCXc 0xb2000000000000000000007b9fcbd005511acbd5 at block 53,521,593
@@ -56,7 +56,7 @@ The script checks itself. The SPCXc supply rebuilt from HyperSync transfers is c
 
 ## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
 ```text
 Read script.py and README.md in this folder. It uses HyperSync
