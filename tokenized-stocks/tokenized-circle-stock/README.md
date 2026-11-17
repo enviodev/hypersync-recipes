@@ -1,6 +1,6 @@
 # Where tokenized Circle stock lives onchain
 
-Five issuers have put tokenized Circle (CRCL) stock onchain. In one run the script counted **5.1M shares, about $380M at Coinbase's published CRCLc NAV of $73.99**. Binance bStocks was the largest issuer at $158.6M, all on BNB Chain, followed by xStocks at $124M and Ondo at $87.1M. BNB Chain held 60.7% of it.
+Five issuers have put tokenized Circle (CRCL) stock onchain. In a run on 5 Nov 2026 the script counted **5.1M shares, about $380M at Coinbase's published CRCLc NAV of $73.99**. Binance bStocks was the largest issuer at $158.6M, all on BNB Chain, followed by xStocks at $124M and Ondo at $87.1M. BNB Chain held 60.7% of it.
 
 | Issuer | Value | Share | Chains |
 | --- | --- | --- | --- |
@@ -12,7 +12,7 @@ Five issuers have put tokenized Circle (CRCL) stock onchain. In one run the scri
 
 ## Why it's interesting
 
-The same stock now comes in several wrappers from several issuers on a dozen chains. If you want to know how much of one stock is onchain, you have to find every issuer's token first and then add them up. This script does both, from each issuer's own list, and then sorts the EVM supply into wallets, DEX pools and lending markets so you can see how it's being used.
+The same stock comes in several wrappers from several issuers on eight chains. If you want to know how much of one stock is onchain, you have to find every issuer's token first and then add them up. This script does both, from each issuer's own list, and then sorts the EVM supply into wallets, DEX pools and lending markets so you can see how it's being used.
 
 ## What it pulls
 
@@ -35,7 +35,7 @@ export ENVIO_API_TOKEN=your-token
 python3 script.py
 ```
 
-The Robinhood Chain token alone has over a million transfers, so a run takes about 20 minutes. Sample output:
+The Robinhood Chain token alone has over a million transfers, so a run takes about 20 minutes. Sample output from the 5 Nov 2026 run.
 
 ```
 Tokenized Circle (CRCL) stock onchain: 5,141,770 shares, $380.4M at $73.99 (Coinbase CRCLc NAV)
@@ -72,9 +72,9 @@ Tokens are minted, redeemed and traded all the time, so your numbers will differ
 
 ## Change the window or chain
 
-- **Another stock.** The issuer lookups match on the CRCL ticker. Change it to any stock the issuers list, such as NVDA or TSLA, to get the same breakdown for that stock.
+- **Another stock.** The issuer lookups match on `CRCL` (Ondo and Robinhood), `CRCLx`, `CRCLc` and the CRCLB entry in `BSTOCKS`. Change all of them to another stock the issuers list, such as NVDA or TSLA, to get the same breakdown for that stock.
 - **Chains.** `CHAINS` maps each chain to its HyperSync subdomain and a public RPC. Add any EVM chain from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks) where an issuer has deployed.
-- **Holder threshold.** Lower the 0.01% cut-off to classify more holders, at the cost of more RPC calls.
+- **Holder threshold.** Lower the 0.01% cut-off (`v * 10000 >= total`) to classify more holders, at the cost of more RPC calls.
 
 ## Check the numbers
 
@@ -82,7 +82,7 @@ The script checks itself. For each EVM token it compares the supply replayed fro
 
 ## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
 ```text
 Read script.py and README.md in this folder. It uses HyperSync
