@@ -15,4 +15,11 @@ Scripts for lending markets and vaults. Pull every supply, borrow, repay and wit
 | [robinhood-earn-usdg-vault](robinhood-earn-usdg-vault) | Robinhood Chain | Count depositors in the USDG vault behind Robinhood Earn |
 | [safenet-staking](safenet-staking) | Ethereum | Track SAFE staked in Safenet and active stakers week by week |
 
+### Also on Solana
+
+| Example | How to |
+| --- | --- |
+| [jupiter-lend-stock-collateral](../jupiter-lend-stock-collateral) | Pull every Jupiter Lend borrow position, grouped by collateral |
+| [kamino-rwa-collateral](../kamino-rwa-collateral) | Find real-world credit used as collateral on Kamino Lend |
+
 To run one, grab a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow that example's README. The [main README](../README.md) has every topic.

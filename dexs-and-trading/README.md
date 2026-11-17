@@ -16,4 +16,12 @@ Scripts for DEXs, perps and prediction markets. Pull every swap, pool and positi
 | [polymarket-election-day](polymarket-election-day) | Polygon | Get Polymarket trading volume by hour on US election day |
 | [polymarket-election-night](polymarket-election-night) | Polygon | Get Polymarket trading volume hour by hour on US election night |
 
+### Also on Solana
+
+| Example | How to |
+| --- | --- |
+| [solana-dex-swaps-by-program](../solana/solana-dex-swaps-by-program) | Index every swap on Solana's main DEX programs, direct and routed |
+| [phoenix-perps-signups](../phoenix-perps-signups) | Track Phoenix trading accounts and USDC deposits on Solana |
+| [metadao-launchpad-raises](../metadao-launchpad-raises) | Pull every MetaDAO launchpad raise on Solana |
+
 To run one, grab a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow that example's README. The [main README](../README.md) has every topic.

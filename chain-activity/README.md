@@ -18,4 +18,12 @@ Scripts for chain-wide activity. Count transactions, active addresses, fees, Saf
 | [circles-trust-gnosis](circles-trust-gnosis) | Gnosis | Count Circles v2 humans and trust links on Gnosis Chain |
 | [uni-new-holders](uni-new-holders) | Ethereum | Count new UNI holders per day since 2020 |
 
+### Also on Solana
+
+| Example | How to |
+| --- | --- |
+| [solana-durable-nonces](../solana/solana-durable-nonces) | Count Solana transactions that use durable nonces |
+| [solana-subscriptions](../solana/solana-subscriptions) | Index every plan, subscription and pull on Solana's Subscriptions program |
+| [privacy-rings-solana](../solana/privacy-rings-solana) | Index Privacy Rings deposits, withdrawals and private transfers on Solana |
+
 To run one, grab a free API token at [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens), export it as `ENVIO_API_TOKEN` and follow that example's README. The [main README](../README.md) has every topic.
