@@ -76,7 +76,7 @@ events.sort()
 supply, months = 0.0, defaultdict(lambda: [0.0, 0.0, 0.0])
 for slot, amount in events:
     supply += amount
-    month = datetime.datetime.fromtimestamp(block_time[slot], datetime.UTC).strftime("%Y-%m")
+    month = datetime.datetime.fromtimestamp(block_time[slot], datetime.timezone.utc).strftime("%Y-%m")
     months[month][0 if amount > 0 else 1] += abs(amount)
     months[month][2] = supply
 

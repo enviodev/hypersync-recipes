@@ -55,7 +55,7 @@ Compare with Solana RPC getTokenSupply for APhcqtzE73es3KAGiVksZFMLGwJDiAey5qZKU
 
 ## Change the token
 
-- **Another stablecoin.** Swap `SOFIUSD` for another mint and the `/ 1e6` for its decimals. Set `START_SLOT` to a slot before its first mint. HyperSync's Solana history starts at slot 391,001,451 (3 Jan 2026), so a token that launched before then needs its earlier supply added from `getTokenSupply`.
+- **Another stablecoin.** Swap `SOFIUSD` for another mint and the `/ 1e6` for its decimals. Change `START_SLOT` in `script.py` to a slot before its first mint. HyperSync's Solana history starts at slot 391,001,451 (3 Jan 2026), so a token that launched before then needs its earlier supply added from `getTokenSupply`.
 - **Classic SPL tokens.** Swap `TOKEN_2022` for `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`.
 - **Failed transactions.** The selections don't filter on success. For a token where that matters, add `"tx_success": True` to each one in `SELECTION`.
 
