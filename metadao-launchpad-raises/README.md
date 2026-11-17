@@ -1,15 +1,6 @@
 # MetaDAO launchpad raises on Solana
 
-Pulls every instruction run by [MetaDAO](https://metadao.fi)'s launchpad programs on Solana with [Envio HyperSync](https://docs.envio.dev/docs/HyperSync/solana), then adds up what each completed raise asked for and what people committed to it.
-
-## What we found
-
-From slot 391,001,451 (3 Jan 2026) to slot 470,198,554 (16 Nov 2026):
-
-- 25 raises completed. Their goals add up to $16.63M.
-- People committed $244.85M of USDC to them, 14.7 times the goals.
-- 12,916 wallets committed, and all 25 raises reached their goal.
-- One raise set a $250K goal and drew $31.97M. The biggest drew $86.40M from 8,761 wallets.
+From slot 391,001,451 (3 Jan 2026) to slot 470,198,554 (16 Nov 2026), **25 raises completed on [MetaDAO](https://metadao.fi)'s launchpad, and people committed $244.8M of USDC against goals that added up to $16.6M**. That's 14.7 times the goals, from 12.9K wallets. All 25 reached their goal. One set a $250K goal and drew $32M, and the biggest drew $86.4M from 8.8K wallets.
 
 | Raise | First commitment | Goal (USDC) | Committed (USDC) | x goal | Wallets |
 |---|---|---|---|---|---|
@@ -41,32 +32,32 @@ From slot 391,001,451 (3 Jan 2026) to slot 470,198,554 (16 Nov 2026):
 
 Names are the token names each raise set onchain.
 
-## Why it matters
+## Why it's interesting
 
-A MetaDAO raise is three instructions on one program. `initialize_launch` sets the goal, every `fund` is one wallet committing USDC, and `complete_launch` closes it. When a raise is oversubscribed the extra goes back to the backers, so the committed figure is demand, not money kept. Pull one program's instructions and you can see how much demand each raise drew, who showed up and when, with no indexer to host.
+A MetaDAO raise is three instructions on one program. `initialize_launch` sets the goal, every `fund` is one wallet committing USDC, and `complete_launch` closes it. When a raise is oversubscribed the extra goes back to the backers, so the committed figure shows demand, not money kept. Pull one program's instructions and you can see how much demand each raise drew, who showed up and when.
 
 ## What it pulls
 
-| | |
-|---|---|
-| Programs | MetaDAO launchpad v0.4.1 to v0.8.0, IDs from the [MetaDAO programs repo](https://github.com/metaDAOproject/programs#deployments). Every 2026 raise so far ran on v0.7.0, `moontUzsdepotRGe5xsfip7vLPTJnVuafqdUWexVnPM` |
-| Instructions | `initialize_launch` (first argument `minimum_raise_amount`, the goal), `fund` (argument `amount`, both u64 in USDC base units) and `complete_launch`, matched by their Anchor discriminators |
-| Filter | Successful transactions only, deduplicated by slot, transaction index and instruction address. Completed raises with 10 or more wallets, which leaves out test launches |
-| Window | Slot 391,001,451 (3 Jan 2026, the start of HyperSync's Solana history) to the chain head |
+- **Programs.** MetaDAO launchpad v0.4.1 to v0.8.0, with IDs from the [MetaDAO programs repo](https://github.com/metaDAOproject/programs#deployments). The 2026 raises above ran on v0.7.0, `moontUzsdepotRGe5xsfip7vLPTJnVuafqdUWexVnPM`.
+- **Instructions.** `initialize_launch` (its first argument, `minimum_raise_amount`, is the goal), `fund` (its `amount`) and `complete_launch`, matched by their Anchor discriminators. Both amounts are u64 in USDC base units.
+- **Filter.** Successful transactions only, deduplicated by slot, transaction index and instruction address. Only completed raises with 10 or more wallets count, which leaves out test launches.
+- **Window.** Slot 391,001,451 (3 Jan 2026, where HyperSync's Solana history starts) to the chain head.
 
-A wallet is the `funder` account of a `fund` instruction. Wallets that backed several raises are counted once in the 12,916.
+A wallet is the `funder` account of a `fund` instruction. Wallets that backed several raises are counted once in the 12.9K.
+
+Every goal, commitment and wallet count comes from [HyperSync on Solana](https://docs.envio.dev/docs/HyperSync/solana). Solana RPC is only used for the check at the end.
 
 ## Run it
 
-You need Python 3 and a HyperSync API token from the [Envio Dashboard](https://envio.dev/app/api-tokens). There are no other dependencies.
+You need Python 3 and a free API token from [envio.dev/app/api-tokens](https://envio.dev/app/api-tokens). There's nothing else to install.
 
 ```bash
 export ENVIO_API_TOKEN=your-token
-python script.py                      # 3 Jan 2026 to the chain head
-python script.py 391001451 470198554  # the exact window used above
+python3 script.py                      # 3 Jan 2026 to the chain head
+python3 script.py 391001451 470198554  # the exact window used above
 ```
 
-The run ends with the summary:
+It prints one row per raise and ends with this summary.
 
 ```
 Slots 391,001,451 to 470,198,554
@@ -77,32 +68,40 @@ Wallets that committed: 12,916
 Launch accounts whose onchain total matches: 25 of 25
 ```
 
-## Check the numbers yourself
+## Change the window
 
-- **Onchain totals:** every raise has a `Launch` account that stores its total committed amount. The script reads all of them with Solana RPC `getMultipleAccounts` and looks for the HyperSync sum in the account data. All 25 match to the last unit.
-- **MetaDAO's own site:** [metadao.fi](https://metadao.fi) lists Mori Finance as raising $250,000 from 248 owners. The script gives the same goal and the same 248 wallets.
-- **Single transactions:** every row carries its slot. Look any of them up on a Solana explorer and compare the USDC moved.
+- **Slots.** Pass a start and end slot as the two arguments. With none it runs from 3 Jan 2026 to the head, so new raises show up on their own.
+- **Test launches.** `MIN_WALLETS` is 10. Set it to 1 to see every completed launch.
+- **New program versions.** When MetaDAO deploys a new launchpad, add its ID to `PROGRAMS`.
+- **Your own RPC.** Set `SOLANA_RPC` to use your own endpoint for the check.
+
+## Check the numbers
+
+- **Onchain totals.** Every raise has a `Launch` account that stores its total committed amount. The script reads them all with Solana RPC `getMultipleAccounts` as the comparison and looks for the HyperSync sum in the account data. All 25 matched to the last unit.
+- **MetaDAO's own site.** [metadao.fi](https://metadao.fi) listed Mori Finance as raising $250K from 248 owners. The script gives the same goal and the same 248 wallets.
+- **Single transactions.** Look any raise's slot up on a Solana explorer and compare the USDC moved.
 
 ## Build your own with an AI agent
 
-Paste this into Claude Code, Cursor or any coding agent:
+Paste this into Claude Code, Cursor or any coding agent.
 
-```
-Use Envio HyperSync for Solana (https://docs.envio.dev/docs/HyperSync/solana) to pull every
-instruction executed by the MetaDAO launchpad program moontUzsdepotRGe5xsfip7vLPTJnVuafqdUWexVnPM
-from slot 391001451 to the head, successful transactions only. Page with next_slot and retry on
-HTTP 429. My API token is in ENVIO_API_TOKEN. Match instructions by Anchor discriminator, the first
-8 bytes of sha256("global:<name>"), for initialize_launch, fund and complete_launch. The u64 after
-the discriminator is the goal for initialize_launch and the USDC amount for fund, both with 6
-decimals. Account 0 is the launch. Print goal, total committed and distinct funders per completed
-raise. Then turn it into a HyperIndex indexer on Solana with an onInstruction handler for each,
-deployed on Envio Cloud, so new raises show up live.
+```text
+Read script.py and README.md in this folder. It uses HyperSync on Solana
+(https://docs.envio.dev/docs/HyperSync/solana-query) to pull every instruction on
+MetaDAO's launchpad programs and decodes initialize_launch, fund and
+complete_launch by Anchor discriminator. My HyperSync token is in the
+ENVIO_API_TOKEN environment variable.
+
+Add a per-raise breakdown of commitments by size (under $1K, $1K to $10K, $10K to
+$100K, over $100K) and print how many wallets fall in each band. Keep the standard
+library only. Run it on a short slot range around one raise first, then check that
+the bands add up to that raise's total committed and wallet count.
 ```
 
 ## Links
 
-- [HyperSync on Solana](https://docs.envio.dev/docs/HyperSync/solana)
-- [HyperIndex on Solana](https://docs.envio.dev/docs/HyperIndex/solana)
+- [HyperSync on Solana](https://docs.envio.dev/docs/HyperSync/solana) and its [query reference](https://docs.envio.dev/docs/HyperSync/solana-query)
+- [HyperIndex on Solana](https://docs.envio.dev/docs/HyperIndex/solana), if you want new raises live behind a GraphQL API
 - [MetaDAO programs and deployments](https://github.com/metaDAOproject/programs)
 - [MetaDAO docs](https://docs.metadao.fi)
 - [Envio Discord](https://discord.gg/envio)
