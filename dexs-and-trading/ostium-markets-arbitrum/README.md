@@ -80,11 +80,11 @@ Top 5 pairs by open interest
   BRENT/USD  $     0.5M    6.1%
 ```
 
-The 30-day window is fixed by the date, so the positions part stays the same. Open interest is read live, so that part changes every time you run it.
+The 30-day window is fixed by the date, so the positions part stays the same. Open interest is read live at the chain head, so the open interest in the sample is from one past run and will differ every time you run it.
 
 ## Change the window or chain
 
-- **Window.** Pass the end date. The window is the 30 full UTC days before 00:00 on that date, found by binary search on block timestamps. For a different length, change the `30 * 86400` in the script.
+- **Window.** Pass the end date. The window is the 30 full UTC days before 00:00 on that date, found by binary search on block timestamps. For a different length, change the `30 * 86400` in the script and the `days=30` in the line that prints the dates.
 - **Chain.** Ostium runs on Arbitrum. To reuse the pattern for another protocol, swap `HS` for that chain's HyperSync endpoint from the [supported networks list](https://docs.envio.dev/docs/HyperSync/hypersync-supported-networks) and the event signatures and contracts for that protocol's.
 
 ## Check the numbers
