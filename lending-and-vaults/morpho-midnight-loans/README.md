@@ -29,7 +29,7 @@ Up to 11 Nov 2026, **$102.3M had been borrowed on Morpho Midnight across 10K loa
 - `AnswerUpdated` logs from Chainlink's ETH/USD aggregator on Ethereum (`0x7d4E742018fb52E48b08BE73d041C18B21de6Fb5`), to price WETH loans at the time they were taken.
 - Token symbols and decimals, read once per token over each chain's public RPC.
 
-In a `Take`, the buyer lends and the seller borrows. Units first close the buyer's debt and the seller's credit, the same way [`Midnight.sol`](https://github.com/morpho-org/midnight/blob/main/src/Midnight.sol) does, and whatever is left becomes new debt for the seller. Each piece of new debt is one loan, valued at the cash the borrower received. Dollar stablecoins (USDC, PYUSD, USDS, USDG, OUSD) count at $1. Bitcoin is cbBTC and WBTC, and ETH is WETH, weETH, wstETH, cbETH, rETH and wrapped staked ETH. Test tokens and a handful of tiny loans in other tokens are left out and listed at the end of the output.
+In a `Take`, the buyer lends and the seller borrows. Units first close the buyer's debt and the seller's credit, the same way [`Midnight.sol`](https://github.com/morpho-org/midnight/blob/main/src/Midnight.sol) does, and whatever is left becomes new debt for the seller. Each piece of new debt is one loan, valued at the cash the borrower received. Dollar stablecoins (USDC, USDT, PYUSD, USDS, USDG, OUSD) count at $1. Bitcoin is cbBTC, WBTC and cirBTC, and ETH is WETH, weETH, wstETH, cbETH, rETH, savETH and their collateral wrappers. Test tokens and a handful of tiny loans in other tokens are left out and listed at the end of the output.
 
 Every event, and the ETH price, comes from HyperSync. The ETH price is Chainlink's onchain feed, read as logs.
 
