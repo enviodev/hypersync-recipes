@@ -1,16 +1,16 @@
 # Base smart accounts and gas-covered transactions
 
-Over the seven days to midday UTC on 17 Nov 2026, **529K smart accounts sent a transaction through ERC-4337 on Base, and 196K of them had at least one transaction where a paymaster covered the gas**. Across the week that is 2.98M user operations, with about 100K different accounts active on a typical day.
+Over the seven days to the afternoon of 18 Nov 2026 (UTC), **538K smart accounts sent a transaction through ERC-4337 on Base, and 199K of them had at least one transaction where a paymaster covered the gas**. Across the week that is 3.18M user operations, with about 100K different accounts active on a typical day, and 188K accounts had every one of their operations covered.
 
-| 24 hours from midday UTC on | Accounts | With a gas-covered transaction |
+| 24 hours from the afternoon (UTC) of | Accounts | With a gas-covered transaction |
 | --- | --- | --- |
-| Tue 10 Nov | 94,135 | 36,008 |
-| Wed 11 Nov | 88,595 | 32,439 |
-| Thu 12 Nov | 109,089 | 50,189 |
-| Fri 13 Nov | 99,205 | 44,301 |
-| Sat 14 Nov | 106,626 | 52,380 |
-| Sun 15 Nov | 96,773 | 41,844 |
-| Mon 16 Nov | 99,029 | 36,078 |
+| Wed 11 Nov | 92,894 | 34,320 |
+| Thu 12 Nov | 109,555 | 51,138 |
+| Fri 13 Nov | 100,027 | 45,784 |
+| Sat 14 Nov | 104,187 | 50,653 |
+| Sun 15 Nov | 97,925 | 40,831 |
+| Mon 16 Nov | 100,248 | 36,424 |
+| Tue 17 Nov | 97,216 | 35,700 |
 
 ## Why it's interesting
 
@@ -44,7 +44,7 @@ A week on Base is about 3M logs and takes a few minutes. `DAYS=1` is a quick che
 
 ## Check the numbers
 
-Pick a block range and ask any Base RPC for `eth_getLogs` on the two EntryPoint addresses with the `UserOperationEvent` topic. The number of logs, the number with a non-zero `topic3` and the number of distinct `topic2` values should match HyperSync for the same blocks. We checked blocks 57,500,000 to 57,500,999 and got 1,228 operations, 834 gas-covered and 534 accounts from both.
+Pick a block range and ask any Base RPC for `eth_getLogs` on the two EntryPoint addresses with the `UserOperationEvent` topic. The number of logs, the number with a non-zero `topic3` and the number of distinct `topic2` values should match HyperSync for the same blocks. We checked blocks 59,100,000 to 59,100,999 on 18 Nov and got 1,225 operations, 708 gas-covered and 477 accounts from both.
 
 ## Build your own with an AI agent
 
