@@ -1,6 +1,6 @@
 """Count smart accounts on Base (or any EVM chain) and how many had gas covered by a paymaster.
 
-Reads every ERC-4337 UserOperationEvent from EntryPoint 0.6 and 0.7 with HyperSync.
+Reads every ERC-4337 UserOperationEvent from EntryPoint 0.6, 0.7 and 0.8 with HyperSync.
 Standard library only. Needs ENVIO_API_TOKEN.
 
   CHAIN=base DAYS=7 python3 script.py
@@ -15,6 +15,7 @@ URL = f"https://{CHAIN}.hypersync.xyz"
 ENTRYPOINTS = [
     "0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789",  # EntryPoint 0.6
     "0x0000000071727de22e5e9d8baf0edac6f37da032",  # EntryPoint 0.7
+    "0x4337084d9e255ff0702461cf8895ce9e3b5ff108",  # EntryPoint 0.8
 ]
 # UserOperationEvent(bytes32 indexed userOpHash, address indexed sender, address indexed paymaster, ...)
 TOPIC0 = "0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f"
