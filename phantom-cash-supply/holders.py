@@ -126,6 +126,39 @@ def main():
     print(f"  CASH in accounts with no activity since slot {START:,}, or moved since slot {end:,}: "
           f"${(supply - held) / one:,.2f} ({100 * (supply - held) / supply:.2f}% of supply)")
 
+    weekly_holders(end)
+
+
+WEEK = 1_750_000  # about a week of Solana slots
+
+
+def weekly_holders(end):
+    """Wallets holding at least $1, counted again at the end of each slot range, then sampled about weekly."""
+    files = sorted(glob.glob(os.path.join(CACHE, "*-*.pkl")), key=lambda p: int(os.path.basename(p).split("-")[0]))
+    last, steps, one = {}, [], 10 ** DECIMALS
+    for path in files:
+        upto = int(os.path.basename(path)[:-4].split("-")[1])
+        _, part = pickle.load(open(path, "rb"))
+        for account, v in part.items():
+            if account not in last or v[0] >= last[account][0]:
+                last[account] = v
+        owners = collections.Counter()
+        for _, owner, balance in last.values():
+            if owner and balance:
+                owners[owner] += balance
+        steps.append((upto, sum(1 for v in owners.values() if v >= one)))
+    points, x = [], end
+    while x > steps[0][0]:
+        points.append([c for c in steps if c[0] <= x][-1][1])
+        x -= WEEK
+    points.reverse()
+    falls = sum(1 for a, b in zip(points, points[1:]) if b < a)
+    adds = [b - a for a, b in zip(points, points[1:])]
+    print(f"wallets with >= $1, sampled every {WEEK:,} slots (about a week), {len(points)} points")
+    print(f"weeks where the count fell: {falls} of {len(points) - 1}")
+    print(f"added in each of the last 8 weeks: {', '.join(f'{a:,}' for a in adds[-8:])}")
+    json.dump(points, open(os.path.join(HERE, "weekly_wallets_1.json"), "w"))
+
 
 if __name__ == "__main__":
     main()

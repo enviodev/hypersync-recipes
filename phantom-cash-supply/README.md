@@ -1,6 +1,6 @@
 # Phantom CASH supply on Solana
 
-From slot 391,000,000 (3 Jan 2026) to slot 470,988,448 (18 Nov 2026), **[Phantom](https://phantom.com)'s CASH stablecoin grew 41% on Solana, from $92.1M to $130.0M**. 724 mints added $187.9M and 7.4K burns removed $150.0M. At the same slot, 212.5K wallets held at least $1 of CASH and 749.8K held some. HyperSync produced every one of these numbers.
+From slot 391,000,000 (3 Jan 2026) to slot 470,988,448 (18 Nov 2026), **[Phantom](https://phantom.com)'s CASH stablecoin grew 41% on Solana, from $92.1M to $130.0M**. 724 mints added $187.9M and 7.4K burns removed $150.0M. At the same slot, 212.5K wallets held at least $1 of CASH and 749.8K held some. The count of wallets holding at least $1 rose in every one of the 45 weeks measured, from 3.4K to 212.5K, and added 1.4K to 4.1K a week across the last 8. HyperSync produced every one of these numbers.
 
 | | |
 |---|---:|
@@ -18,6 +18,7 @@ CASH is a Token-2022 stablecoin, so every unit enters and leaves through `MintTo
 ## What it pulls
 
 - **Token.** CASH, mint `CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH`, from [Phantom's docs](https://docs.phantom.com/cash).
+- **Wallets by week (`holders.py`).** The script counts the wallets holding at least $1 again at the end of each slot range, samples that about weekly (every 1.75M slots) and prints how many weeks it fell. The series is saved to `weekly_wallets_1.json`. Wallets whose only balance predates HyperSync's Solana history are missed until they move, so the early weeks are lower bounds.
 - **Supply and holders (`holders.py`).** Every `account_activity` row for the CASH mint from slot 391,000,000, where HyperSync's Solana history starts, to the chain head. That's 123.2M balance rows across 2.4M token accounts. The script keeps the latest balance of each token account, adds them up for the supply and groups them by owner for the holder counts, then saves the supply and its slot to `snapshot.json`.
 - **Mints and burns (`script.py`).** `MintTo` (tag 7) and `MintToChecked` (14), where account 0 is the mint, and `Burn` (8) and `BurnChecked` (15), where account 1 is the mint. Top-level and inner calls, successful transactions only, matched on the server by program, the first data byte (`d1`) and the mint's account position (`a0` or `a1`). The [query reference](https://docs.envio.dev/docs/HyperSync/solana-query#instructionselection) has the details.
 - **Supply over time.** `script.py` starts from the supply in `snapshot.json` and works back through every mint and burn, so the 3 Jan supply and the weekly series come from HyperSync too.
@@ -46,6 +47,9 @@ wallets with any CASH     749,777
 wallets with >= $1        212,549
 wallets with >= $10       92,917
 sum of balances           $129,963,449.12
+wallets with >= $1, sampled every 1,750,000 slots (about a week), 46 points
+weeks where the count fell: 0 of 45
+added in each of the last 8 weeks: 4,078, 1,449, 2,196, 2,860, 2,427, 2,597, 2,718, 2,212
 ...
 $ python3 script.py
 slots 391,000,000 to 470,988,448
