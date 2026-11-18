@@ -24,6 +24,8 @@ All of it comes from HyperSync.
 - `topic2` is the smart account (the sender) and `topic3` is the paymaster. A zero paymaster means the account paid its own gas.
 - Block timestamps, to find the start of each 24-hour window by binary search.
 
+A newer EntryPoint at `0x433709009b8330fda32311df1c2afa402ed8d009` carried 1,783 operations from 60 accounts in the same week, which is too few to change any figure above once rounded. Add it to `ENTRYPOINTS` in `script.py` to count it.
+
 An account counts once however many operations it sent. "Gas covered" means the operation named a paymaster.
 
 ## Run it
