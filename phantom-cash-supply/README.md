@@ -1,15 +1,15 @@
 # Phantom CASH supply on Solana
 
-From slot 391,000,000 (3 Jan 2026) to slot 470,490,275 (17 Nov 2026), **[Phantom](https://phantom.com)'s CASH stablecoin grew 40% on Solana, from $92.1M to $128.9M**. 723 mints added $186.9M and 7.3K burns removed $150.0M. At the same slot, 211.3K wallets held at least $1 of CASH and 746.1K held some. HyperSync produced every one of these numbers.
+From slot 391,000,000 (3 Jan 2026) to slot 470,988,448 (18 Nov 2026), **[Phantom](https://phantom.com)'s CASH stablecoin grew 41% on Solana, from $92.1M to $130.0M**. 724 mints added $187.9M and 7.4K burns removed $150.0M. At the same slot, 212.5K wallets held at least $1 of CASH and 749.8K held some. HyperSync produced every one of these numbers.
 
 | | |
 |---|---:|
 | Supply on 3 Jan 2026 (slot 391,000,000) | $92.07M |
-| Minted (723 mints) | $186.85M |
-| Burned (7,347 burns) | $150.01M |
-| Supply on 17 Nov 2026 (slot 470,490,275) | $128.92M |
-| Wallets holding at least $1 | 211,327 |
-| Wallets holding any CASH | 746,131 |
+| Minted (724 mints) | $187.90M |
+| Burned (7,358 burns) | $150.01M |
+| Supply on 18 Nov 2026 (slot 470,988,448) | $129.96M |
+| Wallets holding at least $1 | 212,549 |
+| Wallets holding any CASH | 749,777 |
 
 ## Why it's interesting
 
@@ -36,35 +36,35 @@ python3 script.py     # mints, burns and weekly supply since 3 Jan 2026
 
 Run `holders.py` first. It reads the full range in 200K-slot pieces and `script.py` in 500K-slot pieces. Both run in parallel, save each piece as they go (under `chunks/` and `mint_burn/`) and pick up where they left off if you stop them. A full first run takes about an hour. `script.py` also writes every mint and burn to `cash_mint_burn.json`.
 
-Sample output from the 17 Nov 2026 run.
+Sample output from the 18 Nov 2026 run.
 
 ```
 $ python3 holders.py
-slots 391,000,000 to 470,490,275, 123,151,538 balance rows read
-token accounts seen       2,402,708
-wallets with any CASH     746,131
-wallets with >= $1        211,327
-wallets with >= $10       92,185
-sum of balances           $128,916,353.76
+slots 391,000,000 to 470,988,448, 124,067,719 balance rows read
+token accounts seen       2,418,311
+wallets with any CASH     749,777
+wallets with >= $1        212,549
+wallets with >= $10       92,917
+sum of balances           $129,963,449.12
 ...
 $ python3 script.py
-slots 391,000,000 to 470,490,275
-mints 723  burns 7,347
-minted $186,850,398.16  burned $150,007,404.78  net $36,842,993.38
-supply at slot 470,490,275 (HyperSync balances, holders.py) $128,916,353.76
-supply at slot 391,000,000 (that minus net) $92,073,360.38
-change +40.0%
-Check (RPC getTokenSupply at slot 470,559,958, less 0.00 net minted since)
-  $129,099,940.53 at slot 470,490,275
-  HyperSync is $183,586.77 lower (0.14%)
+slots 391,000,000 to 470,988,448
+mints 724  burns 7,358
+minted $187,897,439.39  burned $150,007,406.39  net $37,890,033.00
+supply at slot 470,988,448 (HyperSync balances, holders.py) $129,963,449.12
+supply at slot 391,000,000 (that minus net) $92,073,416.12
+change +41.2%
+Check (RPC getTokenSupply at slot 470,989,790, less 0.00 net minted since)
+  $130,146,980.14 at slot 470,988,448
+  HyperSync is $183,531.02 lower (0.14%)
   CASH in accounts with no activity since slot 391,000,000
 
 week of     supply at week end
-2025-12-29  $92,073,351
+2025-12-29  $92,073,406
 ...
-2026-11-02  $130,177,774
-2026-11-09  $131,645,810
-2026-11-16  $128,916,354
+2026-11-02  $130,177,830
+2026-11-09  $131,645,866
+2026-11-16  $129,963,449
 ```
 
 ## Change the window or token
@@ -75,7 +75,7 @@ week of     supply at week end
 
 ## Check the numbers
 
-- **Supply on 17 Nov.** Both scripts print Solana RPC `getTokenSupply` as the comparison. RPC read $129,099,940.53 at slot 470,559,958, and HyperSync saw no CASH mints or burns between slot 470,490,275 and that slot, so it's the same supply. HyperSync's $128,916,353.76 is $183,586.77 (0.14%) lower. That's CASH in token accounts that haven't moved since 3 Jan 2026, before HyperSync's Solana history starts, so they have no `account_activity` row yet. The holder counts are lower bounds for the same reason.
+- **Supply on 18 Nov.** Both scripts print Solana RPC `getTokenSupply` as the comparison. RPC read $130,146,980.14 at slot 470,989,790, and the net minted between slot 470,988,448 and that slot was $0.00, so it's the same supply. HyperSync's $129,963,449.12 is $183,531.02 (0.14%) lower. That's CASH in token accounts that haven't moved since 3 Jan 2026, before HyperSync's Solana history starts, so they have no `account_activity` row yet. The holder counts are lower bounds for the same reason.
 - **Supply on 3 Jan.** On RPC numbers the same mint and burn history gives $92,256,947.15, which matches a public CASH supply chart's $92,256,948 for that day to within a dollar.
 - **Single transactions.** Every mint and burn row carries its slot. Look any of them up on a Solana explorer and compare the amount.
 
