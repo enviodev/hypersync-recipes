@@ -9,6 +9,7 @@ Scripts for chain-wide activity. Count transactions, active addresses, fees, Saf
 | [monad-biggest-apps](monad-biggest-apps) | Monad | Rank Monad apps by transactions over 30 days |
 | [monad-volatility-day](monad-volatility-day) | Monad | Compare one day on Monad with a 30-day baseline, hour by hour |
 | [gnosis-biggest-protocols](gnosis-biggest-protocols) | Gnosis | Rank the busiest protocols on Gnosis Chain |
+| [ethereum-priciest-transactions](ethereum-priciest-transactions) | Ethereum | Find the most expensive transactions by gas fee |
 | [ethereum-busiest-nfts](ethereum-busiest-nfts) | Ethereum | Count new liquidity positions and rank the busiest NFT collections |
 | [ink-monthly-activity](ink-monthly-activity) | Ink | Count Ink transactions and active addresses by month |
 | [polygon-october-fees](polygon-october-fees) | Polygon | Find which contracts paid the most gas on Polygon PoS |
