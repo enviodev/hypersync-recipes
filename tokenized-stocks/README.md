@@ -4,7 +4,7 @@ Scripts for tokenized stocks. Find everyone holding a stock token, pull every tr
 
 | Example | Chain | How to |
 | --- | --- | --- |
-| [anthropic-antx-eight-chains](anthropic-antx-eight-chains) | Ethereum, BNB Chain, Arbitrum, Optimism, Mantle, Ink, HyperEVM, Monad | Track a token launch across multiple chains (xStocks ANTx example) |
+| [anthropic-antx-eight-chains](anthropic-antx-eight-chains) | Ethereum, BNB Chain, Arbitrum, Optimism, Mantle, Ink, HyperEVM, Monad | How to track ANTx (tokenized Anthropic) across multiple EVM chains |
 | [tokenized-stocks-ethereum](tokenized-stocks-ethereum) | Ethereum | Track every Ondo Global Markets and xStocks token transfer on Ethereum |
 | [tokenized-circle-stock](tokenized-circle-stock) | EVM chains | Find tokenized Circle (CRCL) stock on every chain, by issuer |
 | [ondo-stocks-by-chain](ondo-stocks-by-chain) | Ethereum, BNB Chain, HyperEVM, Robinhood Chain | Pull every Ondo stock and ETF token transfer, by chain |
