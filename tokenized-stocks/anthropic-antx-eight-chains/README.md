@@ -1,4 +1,4 @@
-# How to track a token launch across multiple chains with HyperSync
+# How to track a multichain token launch across EVM chains with HyperSync
 
 This example follows a real multichain launch. On 18 Nov 2026, **1.5M ANTx, the tokenized Anthropic token from xStocks, were minted on each of eight EVM chains in 83 seconds**, between 19:14:09 and 19:15:32 UTC. Every chain uses the same contract address, `0x909369940f22dc1c143ac78753a33f41597138b1`.
 
